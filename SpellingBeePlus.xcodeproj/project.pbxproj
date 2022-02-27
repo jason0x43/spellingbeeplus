@@ -1,0 +1,968 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 55;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		9607DB5C27CBD87300DBC4E3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9607DB5B27CBD87300DBC4E3 /* AppDelegate.swift */; };
+		9607DB5E27CBD87300DBC4E3 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9607DB5D27CBD87300DBC4E3 /* SceneDelegate.swift */; };
+		9607DB6127CBD87300DBC4E3 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB5F27CBD87300DBC4E3 /* LaunchScreen.storyboard */; };
+		9607DB6427CBD87300DBC4E3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB6227CBD87300DBC4E3 /* Main.storyboard */; };
+		9607DB6D27CBD87300DBC4E3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9607DB6C27CBD87300DBC4E3 /* AppDelegate.swift */; };
+		9607DB7027CBD87300DBC4E3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB6E27CBD87300DBC4E3 /* Main.storyboard */; };
+		9607DB7727CBD87300DBC4E3 /* SpellingBeePlus Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9607DB7627CBD87300DBC4E3 /* SpellingBeePlus Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9607DB8127CBD87400DBC4E3 /* SpellingBeePlus Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9607DB8027CBD87400DBC4E3 /* SpellingBeePlus Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9607DB8727CBD87400DBC4E3 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4227CBD87300DBC4E3 /* Main.html */; };
+		9607DB8827CBD87400DBC4E3 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4227CBD87300DBC4E3 /* Main.html */; };
+		9607DB8927CBD87400DBC4E3 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4427CBD87300DBC4E3 /* Icon.png */; };
+		9607DB8A27CBD87400DBC4E3 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4427CBD87300DBC4E3 /* Icon.png */; };
+		9607DB8B27CBD87400DBC4E3 /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4527CBD87300DBC4E3 /* Style.css */; };
+		9607DB8C27CBD87400DBC4E3 /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4527CBD87300DBC4E3 /* Style.css */; };
+		9607DB8D27CBD87400DBC4E3 /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4627CBD87300DBC4E3 /* Script.js */; };
+		9607DB8E27CBD87400DBC4E3 /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4627CBD87300DBC4E3 /* Script.js */; };
+		9607DB8F27CBD87400DBC4E3 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9607DB4727CBD87300DBC4E3 /* ViewController.swift */; };
+		9607DB9027CBD87400DBC4E3 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9607DB4727CBD87300DBC4E3 /* ViewController.swift */; };
+		9607DB9127CBD87400DBC4E3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4827CBD87300DBC4E3 /* Assets.xcassets */; };
+		9607DB9227CBD87400DBC4E3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4827CBD87300DBC4E3 /* Assets.xcassets */; };
+		9607DB9327CBD87400DBC4E3 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9607DB4A27CBD87300DBC4E3 /* SafariWebExtensionHandler.swift */; };
+		9607DB9427CBD87400DBC4E3 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9607DB4A27CBD87300DBC4E3 /* SafariWebExtensionHandler.swift */; };
+		9607DB9527CBD87400DBC4E3 /* _locales in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4C27CBD87300DBC4E3 /* _locales */; };
+		9607DB9627CBD87400DBC4E3 /* _locales in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4C27CBD87300DBC4E3 /* _locales */; };
+		9607DB9727CBD87400DBC4E3 /* images in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4D27CBD87300DBC4E3 /* images */; };
+		9607DB9827CBD87400DBC4E3 /* images in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4D27CBD87300DBC4E3 /* images */; };
+		9607DB9927CBD87400DBC4E3 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4E27CBD87300DBC4E3 /* manifest.json */; };
+		9607DB9A27CBD87400DBC4E3 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4E27CBD87300DBC4E3 /* manifest.json */; };
+		9607DB9B27CBD87400DBC4E3 /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4F27CBD87300DBC4E3 /* background.js */; };
+		9607DB9C27CBD87400DBC4E3 /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4F27CBD87300DBC4E3 /* background.js */; };
+		9607DB9D27CBD87400DBC4E3 /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB5027CBD87300DBC4E3 /* content.js */; };
+		9607DB9E27CBD87400DBC4E3 /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB5027CBD87300DBC4E3 /* content.js */; };
+		9607DB9F27CBD87400DBC4E3 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB5127CBD87300DBC4E3 /* popup.html */; };
+		9607DBA027CBD87400DBC4E3 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB5127CBD87300DBC4E3 /* popup.html */; };
+		9607DBA127CBD87400DBC4E3 /* popup.css in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB5227CBD87300DBC4E3 /* popup.css */; };
+		9607DBA227CBD87400DBC4E3 /* popup.css in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB5227CBD87300DBC4E3 /* popup.css */; };
+		9607DBA327CBD87400DBC4E3 /* popup.js in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB5327CBD87300DBC4E3 /* popup.js */; };
+		9607DBA427CBD87400DBC4E3 /* popup.js in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB5327CBD87300DBC4E3 /* popup.js */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9607DB7827CBD87300DBC4E3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9607DB3C27CBD87300DBC4E3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9607DB7527CBD87300DBC4E3;
+			remoteInfo = "SpellingBeePlus Extension (iOS)";
+		};
+		9607DB8227CBD87400DBC4E3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9607DB3C27CBD87300DBC4E3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9607DB7F27CBD87400DBC4E3;
+			remoteInfo = "SpellingBeePlus Extension (macOS)";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		9607DBAA27CBD87400DBC4E3 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				9607DB7727CBD87300DBC4E3 /* SpellingBeePlus Extension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9607DBB127CBD87400DBC4E3 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				9607DB8127CBD87400DBC4E3 /* SpellingBeePlus Extension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		9607DB4327CBD87300DBC4E3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = ../Base.lproj/Main.html; sourceTree = "<group>"; };
+		9607DB4427CBD87300DBC4E3 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		9607DB4527CBD87300DBC4E3 /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
+		9607DB4627CBD87300DBC4E3 /* Script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Script.js; sourceTree = "<group>"; };
+		9607DB4727CBD87300DBC4E3 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		9607DB4827CBD87300DBC4E3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9607DB4A27CBD87300DBC4E3 /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		9607DB4C27CBD87300DBC4E3 /* _locales */ = {isa = PBXFileReference; lastKnownFileType = folder; path = _locales; sourceTree = "<group>"; };
+		9607DB4D27CBD87300DBC4E3 /* images */ = {isa = PBXFileReference; lastKnownFileType = folder; path = images; sourceTree = "<group>"; };
+		9607DB4E27CBD87300DBC4E3 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = manifest.json; sourceTree = "<group>"; };
+		9607DB4F27CBD87300DBC4E3 /* background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = background.js; sourceTree = "<group>"; };
+		9607DB5027CBD87300DBC4E3 /* content.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = content.js; sourceTree = "<group>"; };
+		9607DB5127CBD87300DBC4E3 /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = popup.html; sourceTree = "<group>"; };
+		9607DB5227CBD87300DBC4E3 /* popup.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = popup.css; sourceTree = "<group>"; };
+		9607DB5327CBD87300DBC4E3 /* popup.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = popup.js; sourceTree = "<group>"; };
+		9607DB5827CBD87300DBC4E3 /* SpellingBeePlus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpellingBeePlus.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9607DB5B27CBD87300DBC4E3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		9607DB5D27CBD87300DBC4E3 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		9607DB6027CBD87300DBC4E3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		9607DB6327CBD87300DBC4E3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		9607DB6527CBD87300DBC4E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		9607DB6A27CBD87300DBC4E3 /* SpellingBeePlus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpellingBeePlus.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9607DB6C27CBD87300DBC4E3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		9607DB6F27CBD87300DBC4E3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		9607DB7127CBD87300DBC4E3 /* SpellingBeePlus.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SpellingBeePlus.entitlements; sourceTree = "<group>"; };
+		9607DB7627CBD87300DBC4E3 /* SpellingBeePlus Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "SpellingBeePlus Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9607DB7B27CBD87300DBC4E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		9607DB8027CBD87400DBC4E3 /* SpellingBeePlus Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "SpellingBeePlus Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9607DB8527CBD87400DBC4E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		9607DB8627CBD87400DBC4E3 /* SpellingBeePlus.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SpellingBeePlus.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9607DB5527CBD87300DBC4E3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9607DB6727CBD87300DBC4E3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9607DB7327CBD87300DBC4E3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9607DB7D27CBD87400DBC4E3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		9607DB3B27CBD87300DBC4E3 = {
+			isa = PBXGroup;
+			children = (
+				9607DB4027CBD87300DBC4E3 /* Shared (App) */,
+				9607DB4927CBD87300DBC4E3 /* Shared (Extension) */,
+				9607DB5A27CBD87300DBC4E3 /* iOS (App) */,
+				9607DB6B27CBD87300DBC4E3 /* macOS (App) */,
+				9607DB7A27CBD87300DBC4E3 /* iOS (Extension) */,
+				9607DB8427CBD87400DBC4E3 /* macOS (Extension) */,
+				9607DB5927CBD87300DBC4E3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		9607DB4027CBD87300DBC4E3 /* Shared (App) */ = {
+			isa = PBXGroup;
+			children = (
+				9607DB4727CBD87300DBC4E3 /* ViewController.swift */,
+				9607DB4827CBD87300DBC4E3 /* Assets.xcassets */,
+				9607DB4127CBD87300DBC4E3 /* Resources */,
+			);
+			path = "Shared (App)";
+			sourceTree = "<group>";
+		};
+		9607DB4127CBD87300DBC4E3 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				9607DB4227CBD87300DBC4E3 /* Main.html */,
+				9607DB4427CBD87300DBC4E3 /* Icon.png */,
+				9607DB4527CBD87300DBC4E3 /* Style.css */,
+				9607DB4627CBD87300DBC4E3 /* Script.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		9607DB4927CBD87300DBC4E3 /* Shared (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				9607DB4A27CBD87300DBC4E3 /* SafariWebExtensionHandler.swift */,
+				9607DB4B27CBD87300DBC4E3 /* Resources */,
+			);
+			path = "Shared (Extension)";
+			sourceTree = "<group>";
+		};
+		9607DB4B27CBD87300DBC4E3 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				9607DB4C27CBD87300DBC4E3 /* _locales */,
+				9607DB4D27CBD87300DBC4E3 /* images */,
+				9607DB4E27CBD87300DBC4E3 /* manifest.json */,
+				9607DB4F27CBD87300DBC4E3 /* background.js */,
+				9607DB5027CBD87300DBC4E3 /* content.js */,
+				9607DB5127CBD87300DBC4E3 /* popup.html */,
+				9607DB5227CBD87300DBC4E3 /* popup.css */,
+				9607DB5327CBD87300DBC4E3 /* popup.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		9607DB5927CBD87300DBC4E3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				9607DB5827CBD87300DBC4E3 /* SpellingBeePlus.app */,
+				9607DB6A27CBD87300DBC4E3 /* SpellingBeePlus.app */,
+				9607DB7627CBD87300DBC4E3 /* SpellingBeePlus Extension.appex */,
+				9607DB8027CBD87400DBC4E3 /* SpellingBeePlus Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9607DB5A27CBD87300DBC4E3 /* iOS (App) */ = {
+			isa = PBXGroup;
+			children = (
+				9607DB5B27CBD87300DBC4E3 /* AppDelegate.swift */,
+				9607DB5D27CBD87300DBC4E3 /* SceneDelegate.swift */,
+				9607DB5F27CBD87300DBC4E3 /* LaunchScreen.storyboard */,
+				9607DB6227CBD87300DBC4E3 /* Main.storyboard */,
+				9607DB6527CBD87300DBC4E3 /* Info.plist */,
+			);
+			path = "iOS (App)";
+			sourceTree = "<group>";
+		};
+		9607DB6B27CBD87300DBC4E3 /* macOS (App) */ = {
+			isa = PBXGroup;
+			children = (
+				9607DB6C27CBD87300DBC4E3 /* AppDelegate.swift */,
+				9607DB6E27CBD87300DBC4E3 /* Main.storyboard */,
+				9607DB7127CBD87300DBC4E3 /* SpellingBeePlus.entitlements */,
+			);
+			path = "macOS (App)";
+			sourceTree = "<group>";
+		};
+		9607DB7A27CBD87300DBC4E3 /* iOS (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				9607DB7B27CBD87300DBC4E3 /* Info.plist */,
+			);
+			path = "iOS (Extension)";
+			sourceTree = "<group>";
+		};
+		9607DB8427CBD87400DBC4E3 /* macOS (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				9607DB8527CBD87400DBC4E3 /* Info.plist */,
+				9607DB8627CBD87400DBC4E3 /* SpellingBeePlus.entitlements */,
+			);
+			path = "macOS (Extension)";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		9607DB5727CBD87300DBC4E3 /* SpellingBeePlus (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9607DBAB27CBD87400DBC4E3 /* Build configuration list for PBXNativeTarget "SpellingBeePlus (iOS)" */;
+			buildPhases = (
+				9607DB5427CBD87300DBC4E3 /* Sources */,
+				9607DB5527CBD87300DBC4E3 /* Frameworks */,
+				9607DB5627CBD87300DBC4E3 /* Resources */,
+				9607DBAA27CBD87400DBC4E3 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9607DB7927CBD87300DBC4E3 /* PBXTargetDependency */,
+			);
+			name = "SpellingBeePlus (iOS)";
+			productName = "SpellingBeePlus (iOS)";
+			productReference = 9607DB5827CBD87300DBC4E3 /* SpellingBeePlus.app */;
+			productType = "com.apple.product-type.application";
+		};
+		9607DB6927CBD87300DBC4E3 /* SpellingBeePlus (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9607DBB227CBD87400DBC4E3 /* Build configuration list for PBXNativeTarget "SpellingBeePlus (macOS)" */;
+			buildPhases = (
+				9607DB6627CBD87300DBC4E3 /* Sources */,
+				9607DB6727CBD87300DBC4E3 /* Frameworks */,
+				9607DB6827CBD87300DBC4E3 /* Resources */,
+				9607DBB127CBD87400DBC4E3 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9607DB8327CBD87400DBC4E3 /* PBXTargetDependency */,
+			);
+			name = "SpellingBeePlus (macOS)";
+			productName = "SpellingBeePlus (macOS)";
+			productReference = 9607DB6A27CBD87300DBC4E3 /* SpellingBeePlus.app */;
+			productType = "com.apple.product-type.application";
+		};
+		9607DB7527CBD87300DBC4E3 /* SpellingBeePlus Extension (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9607DBA727CBD87400DBC4E3 /* Build configuration list for PBXNativeTarget "SpellingBeePlus Extension (iOS)" */;
+			buildPhases = (
+				9607DB7227CBD87300DBC4E3 /* Sources */,
+				9607DB7327CBD87300DBC4E3 /* Frameworks */,
+				9607DB7427CBD87300DBC4E3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "SpellingBeePlus Extension (iOS)";
+			productName = "SpellingBeePlus Extension (iOS)";
+			productReference = 9607DB7627CBD87300DBC4E3 /* SpellingBeePlus Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		9607DB7F27CBD87400DBC4E3 /* SpellingBeePlus Extension (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9607DBAE27CBD87400DBC4E3 /* Build configuration list for PBXNativeTarget "SpellingBeePlus Extension (macOS)" */;
+			buildPhases = (
+				9607DB7C27CBD87400DBC4E3 /* Sources */,
+				9607DB7D27CBD87400DBC4E3 /* Frameworks */,
+				9607DB7E27CBD87400DBC4E3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "SpellingBeePlus Extension (macOS)";
+			productName = "SpellingBeePlus Extension (macOS)";
+			productReference = 9607DB8027CBD87400DBC4E3 /* SpellingBeePlus Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		9607DB3C27CBD87300DBC4E3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1320;
+				LastUpgradeCheck = 1320;
+				TargetAttributes = {
+					9607DB5727CBD87300DBC4E3 = {
+						CreatedOnToolsVersion = 13.2.1;
+					};
+					9607DB6927CBD87300DBC4E3 = {
+						CreatedOnToolsVersion = 13.2.1;
+					};
+					9607DB7527CBD87300DBC4E3 = {
+						CreatedOnToolsVersion = 13.2.1;
+					};
+					9607DB7F27CBD87400DBC4E3 = {
+						CreatedOnToolsVersion = 13.2.1;
+					};
+				};
+			};
+			buildConfigurationList = 9607DB3F27CBD87300DBC4E3 /* Build configuration list for PBXProject "SpellingBeePlus" */;
+			compatibilityVersion = "Xcode 13.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 9607DB3B27CBD87300DBC4E3;
+			productRefGroup = 9607DB5927CBD87300DBC4E3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9607DB5727CBD87300DBC4E3 /* SpellingBeePlus (iOS) */,
+				9607DB6927CBD87300DBC4E3 /* SpellingBeePlus (macOS) */,
+				9607DB7527CBD87300DBC4E3 /* SpellingBeePlus Extension (iOS) */,
+				9607DB7F27CBD87400DBC4E3 /* SpellingBeePlus Extension (macOS) */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9607DB5627CBD87300DBC4E3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9607DB8927CBD87400DBC4E3 /* Icon.png in Resources */,
+				9607DB6127CBD87300DBC4E3 /* LaunchScreen.storyboard in Resources */,
+				9607DB8727CBD87400DBC4E3 /* Main.html in Resources */,
+				9607DB8D27CBD87400DBC4E3 /* Script.js in Resources */,
+				9607DB9127CBD87400DBC4E3 /* Assets.xcassets in Resources */,
+				9607DB6427CBD87300DBC4E3 /* Main.storyboard in Resources */,
+				9607DB8B27CBD87400DBC4E3 /* Style.css in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9607DB6827CBD87300DBC4E3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9607DB8A27CBD87400DBC4E3 /* Icon.png in Resources */,
+				9607DB8C27CBD87400DBC4E3 /* Style.css in Resources */,
+				9607DB7027CBD87300DBC4E3 /* Main.storyboard in Resources */,
+				9607DB8E27CBD87400DBC4E3 /* Script.js in Resources */,
+				9607DB9227CBD87400DBC4E3 /* Assets.xcassets in Resources */,
+				9607DB8827CBD87400DBC4E3 /* Main.html in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9607DB7427CBD87300DBC4E3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9607DB9B27CBD87400DBC4E3 /* background.js in Resources */,
+				9607DBA127CBD87400DBC4E3 /* popup.css in Resources */,
+				9607DB9F27CBD87400DBC4E3 /* popup.html in Resources */,
+				9607DB9727CBD87400DBC4E3 /* images in Resources */,
+				9607DB9927CBD87400DBC4E3 /* manifest.json in Resources */,
+				9607DB9527CBD87400DBC4E3 /* _locales in Resources */,
+				9607DB9D27CBD87400DBC4E3 /* content.js in Resources */,
+				9607DBA327CBD87400DBC4E3 /* popup.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9607DB7E27CBD87400DBC4E3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9607DB9C27CBD87400DBC4E3 /* background.js in Resources */,
+				9607DBA227CBD87400DBC4E3 /* popup.css in Resources */,
+				9607DBA027CBD87400DBC4E3 /* popup.html in Resources */,
+				9607DB9827CBD87400DBC4E3 /* images in Resources */,
+				9607DB9A27CBD87400DBC4E3 /* manifest.json in Resources */,
+				9607DB9627CBD87400DBC4E3 /* _locales in Resources */,
+				9607DB9E27CBD87400DBC4E3 /* content.js in Resources */,
+				9607DBA427CBD87400DBC4E3 /* popup.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9607DB5427CBD87300DBC4E3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9607DB8F27CBD87400DBC4E3 /* ViewController.swift in Sources */,
+				9607DB5C27CBD87300DBC4E3 /* AppDelegate.swift in Sources */,
+				9607DB5E27CBD87300DBC4E3 /* SceneDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9607DB6627CBD87300DBC4E3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9607DB9027CBD87400DBC4E3 /* ViewController.swift in Sources */,
+				9607DB6D27CBD87300DBC4E3 /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9607DB7227CBD87300DBC4E3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9607DB9327CBD87400DBC4E3 /* SafariWebExtensionHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9607DB7C27CBD87400DBC4E3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9607DB9427CBD87400DBC4E3 /* SafariWebExtensionHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9607DB7927CBD87300DBC4E3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9607DB7527CBD87300DBC4E3 /* SpellingBeePlus Extension (iOS) */;
+			targetProxy = 9607DB7827CBD87300DBC4E3 /* PBXContainerItemProxy */;
+		};
+		9607DB8327CBD87400DBC4E3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9607DB7F27CBD87400DBC4E3 /* SpellingBeePlus Extension (macOS) */;
+			targetProxy = 9607DB8227CBD87400DBC4E3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		9607DB4227CBD87300DBC4E3 /* Main.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9607DB4327CBD87300DBC4E3 /* Base */,
+			);
+			name = Main.html;
+			sourceTree = "<group>";
+		};
+		9607DB5F27CBD87300DBC4E3 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9607DB6027CBD87300DBC4E3 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		9607DB6227CBD87300DBC4E3 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9607DB6327CBD87300DBC4E3 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		9607DB6E27CBD87300DBC4E3 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9607DB6F27CBD87300DBC4E3 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		9607DBA527CBD87400DBC4E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		9607DBA627CBD87400DBC4E3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		9607DBA827CBD87400DBC4E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = EGE5PJ5LCU;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "SpellingBeePlus Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus.Extension;
+				PRODUCT_NAME = "SpellingBeePlus Extension";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9607DBA927CBD87400DBC4E3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = EGE5PJ5LCU;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "SpellingBeePlus Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus.Extension;
+				PRODUCT_NAME = "SpellingBeePlus Extension";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		9607DBAC27CBD87400DBC4E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = EGE5PJ5LCU;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = SpellingBeePlus;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus;
+				PRODUCT_NAME = SpellingBeePlus;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9607DBAD27CBD87400DBC4E3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = EGE5PJ5LCU;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = SpellingBeePlus;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus;
+				PRODUCT_NAME = SpellingBeePlus;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		9607DBAF27CBD87400DBC4E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "macOS (Extension)/SpellingBeePlus.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = EGE5PJ5LCU;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "SpellingBeePlus Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus.Extension;
+				PRODUCT_NAME = "SpellingBeePlus Extension";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		9607DBB027CBD87400DBC4E3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "macOS (Extension)/SpellingBeePlus.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = EGE5PJ5LCU;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "SpellingBeePlus Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus.Extension;
+				PRODUCT_NAME = "SpellingBeePlus Extension";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		9607DBB327CBD87400DBC4E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "macOS (App)/SpellingBeePlus.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = EGE5PJ5LCU;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SpellingBeePlus;
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus;
+				PRODUCT_NAME = SpellingBeePlus;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		9607DBB427CBD87400DBC4E3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "macOS (App)/SpellingBeePlus.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = EGE5PJ5LCU;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SpellingBeePlus;
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus;
+				PRODUCT_NAME = SpellingBeePlus;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9607DB3F27CBD87300DBC4E3 /* Build configuration list for PBXProject "SpellingBeePlus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9607DBA527CBD87400DBC4E3 /* Debug */,
+				9607DBA627CBD87400DBC4E3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9607DBA727CBD87400DBC4E3 /* Build configuration list for PBXNativeTarget "SpellingBeePlus Extension (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9607DBA827CBD87400DBC4E3 /* Debug */,
+				9607DBA927CBD87400DBC4E3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9607DBAB27CBD87400DBC4E3 /* Build configuration list for PBXNativeTarget "SpellingBeePlus (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9607DBAC27CBD87400DBC4E3 /* Debug */,
+				9607DBAD27CBD87400DBC4E3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9607DBAE27CBD87400DBC4E3 /* Build configuration list for PBXNativeTarget "SpellingBeePlus Extension (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9607DBAF27CBD87400DBC4E3 /* Debug */,
+				9607DBB027CBD87400DBC4E3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9607DBB227CBD87400DBC4E3 /* Build configuration list for PBXNativeTarget "SpellingBeePlus (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9607DBB327CBD87400DBC4E3 /* Debug */,
+				9607DBB427CBD87400DBC4E3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 9607DB3C27CBD87300DBC4E3 /* Project object */;
+}
