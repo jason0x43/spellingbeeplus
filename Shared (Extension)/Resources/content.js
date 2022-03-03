@@ -19,7 +19,7 @@
  *   };
  *   words: string[];
  *   wordStats: {
- *     firstLetters: Record<string, number[]>;
+ *     firstLetters: Record<string, number[] | undefined>;
  *     digraphs: Record<string, number>;
  *   }
  * }} GameState
@@ -243,7 +243,7 @@ const updateHints = (state) => {
 
   const counts = [4, 5, 6, 7, 8, 9];
   const wantCounts = counts.map((count) => wantLetters[count] ?? 0);
-  const haveCounts = counts.map((count) => haveLetters[count] ?? 0);
+  const haveCounts = counts.map((count) => haveLetters?.[count] ?? 0);
   const needCounts = counts.map((_, i) => wantCounts[i] - haveCounts[i]);
 
   const countTable = h("table", { id: countTableId, class: tableClass }, [
@@ -326,7 +326,7 @@ const updateHints = (state) => {
     setClass(ltr, activeLetterClass, ltrLetter === letter);
 
     const wantCount = gameStats.firstLetters[ltrLetter];
-    const haveCount = wordStats.firstLetters[ltrLetter];
+    const haveCount = wordStats.firstLetters[ltrLetter] ?? 0;
     setClass(ltr, needLetterClass, wantCount > haveCount);
   });
 
