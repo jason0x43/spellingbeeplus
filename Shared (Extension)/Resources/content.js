@@ -330,6 +330,13 @@ const updateHints = (state) => {
     setClass(ltr, needLetterClass, wantCount > haveCount);
   });
 
+  const summary = def(document.querySelector('.sb-wordlist-summary'));
+  if (/You have found/.test(def(summary.textContent))) {
+    const found = gameState.words.length;
+    const total = gameState.gameData.answers.length;
+    summary.textContent = `You have found ${found} of ${total} words`;
+  }
+
   document.querySelector(".sb-wordlist-drawer")?.classList.add(hintsClass);
 };
 
