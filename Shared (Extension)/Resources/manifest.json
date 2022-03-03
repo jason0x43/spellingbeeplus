@@ -21,7 +21,8 @@
 
     "content_scripts": [{
         "js": [ "content.js" ],
-        "matches": [ "*://example.com/*" ]
+        "css": [ "content.css" ],
+        "matches": [ "https://www.nytimes.com/puzzles/spelling-bee" ]
     }],
 
     "browser_action": {
@@ -36,5 +37,7 @@
         }
     },
 
-    "permissions": [ ]
+    "permissions": [
+        "https://www.nytimes.com/puzzles/spelling-bee"
+    ]
 }

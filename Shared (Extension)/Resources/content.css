@@ -1,0 +1,89 @@
+body,
+.pz-game-screen,
+.sb-modal-wrapper {
+  height: initial;
+}
+
+.pz-ad-box,
+.pz-footer {
+  display: none;
+}
+
+#sbp-hints-button {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+}
+
+#sbp-hints-view {
+  display: none;
+  padding: 1em;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1em;
+}
+
+.sbp-hints .sb-wordlist-window .sb-wordlist-pag,
+.sbp-hints .sb-wordlist-window .sb-kebob {
+  display: none;
+}
+
+.sbp-hints #sbp-hints-view {
+  display: flex;
+}
+
+.sbp-letters {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 150%;
+}
+
+.sbp-letter {
+  --size: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size);
+  height: var(--size);
+  cursor: pointer;
+}
+
+.sbp-table {
+  table-layout: fixed;
+  font-size: 125%;
+}
+
+.sbp-table th {
+  font-weight: 600;
+}
+
+.sbp-table th,
+.sbp-table td {
+  padding: 0.5em;
+  text-align: center;
+  padding-bottom: 4px;
+}
+
+.sbp-table .sbp-count-label,
+.sbp-table .sbp-digraph-label {
+  width: 4em;
+  text-align: left;
+}
+
+.sbp-letter-need {
+  background: rgba(255, 0, 0, 0.1);
+}
+
+.sbp-letter-zero {
+  color: #bbb;
+}
+
+.sbp-digraph {
+  font-family: monospace;
+  font-size: 125%;
+}
+
+.sbp-letter-active {
+  background: rgba(0, 0, 0, 0.1);
+}
