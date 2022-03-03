@@ -38,6 +38,31 @@ const letterClass = "sbp-letter";
 const activeLetterClass = "sbp-letter-active";
 const needLetterClass = "sbp-letter-need";
 const zeroLetterClass = "sbp-letter-zero";
+const sbWordListClass = "sb-wordlist-items-pag";
+const sbWordClass = "sb-anagram";
+const sbWordListDrawerClass = "sb-wordlist-drawer";
+
+/** @type {GameState} */
+let gameState = {
+  letter: "",
+  gameData: {
+    answers: [],
+    centerLetter: "",
+    outerLetter: "",
+    pangrams: [],
+    validLetters: [],
+  },
+  visible: false,
+  gameStats: {
+    firstLetters: {},
+    digraphs: {},
+  },
+  words: [],
+  wordStats: {
+    firstLetters: {},
+    digraphs: {},
+  },
+};
 
 /**
  * @param {(string | Record<string, boolean>)[]} names
@@ -143,28 +168,6 @@ const getGameData = () => {
   return promise;
 };
 
-/** @type {GameState} */
-let gameState = {
-  letter: "",
-  gameData: {
-    answers: [],
-    centerLetter: "",
-    outerLetter: "",
-    pangrams: [],
-    validLetters: [],
-  },
-  visible: false,
-  gameStats: {
-    firstLetters: {},
-    digraphs: {},
-  },
-  words: [],
-  wordStats: {
-    firstLetters: {},
-    digraphs: {},
-  },
-};
-
 /**
  * @param {string[]} words
  */
@@ -191,20 +194,24 @@ const getStats = (words) => {
 const addHintsView = () => {
   document.querySelector(`#${sbpViewId}`)?.remove();
 
+  const { gameData } = gameState;
   const view = h("div", { id: sbpViewId });
 
-  const letters = h("div", { class: lettersClass });
+  const letters = h("div", { class: lettersClass }, [
+    ...gameData.validLetters.map((letter) =>
+      h(
+        "div",
+        { class: "sbp-letter" },
+        letter,
+      )
+    ),
+  ]);
   view.append(letters);
 
   letters.addEventListener("click", ({ target }) => {
     const letter = /** @type HTMLDivElement */ (target);
     updateHints({ letter: letter.textContent ?? undefined });
   });
-
-  const { gameData } = gameState;
-  for (const letter of gameData.validLetters) {
-    letters.append(h("div", { class: "sbp-letter" }, letter));
-  }
 
   const wordList = document.querySelector(".sb-wordlist-window");
   wordList?.append(view);
@@ -228,15 +235,7 @@ const updateHints = (state) => {
     gameState.letter = gameState.gameData.validLetters[0] ?? "";
   }
 
-  console.log("state:", gameState);
   const { visible, gameStats, wordStats, letter } = gameState;
-
-  const view = def(document.querySelector(`#${sbpViewId}`));
-
-  if (!visible) {
-    document.querySelector(`.${hintsClass}`)?.classList.remove(hintsClass);
-    return;
-  }
 
   const wantLetters = gameStats.firstLetters[letter];
   const haveLetters = wordStats.firstLetters[letter];
@@ -279,6 +278,7 @@ const updateHints = (state) => {
     ]),
   ]);
 
+  const view = def(document.querySelector(`#${sbpViewId}`));
   replace(countTableId, view, countTable);
 
   const digraphs = Object.keys(gameStats.digraphs).filter((dg) =>
@@ -330,14 +330,15 @@ const updateHints = (state) => {
     setClass(ltr, needLetterClass, wantCount > haveCount);
   });
 
-  const summary = def(document.querySelector('.sb-wordlist-summary'));
+  const summary = def(document.querySelector(".sb-wordlist-summary"));
   if (/You have found/.test(def(summary.textContent))) {
     const found = gameState.words.length;
     const total = gameState.gameData.answers.length;
     summary.textContent = `You have found ${found} of ${total} words`;
   }
 
-  document.querySelector(".sb-wordlist-drawer")?.classList.add(hintsClass);
+  const drawer = def(document.querySelector(`.${sbWordListDrawerClass}`));
+  setClass(drawer, hintsClass, visible);
 };
 
 const addHintsButton = () => {
@@ -355,21 +356,29 @@ const addHintsButton = () => {
 };
 
 const toggleHints = () => {
-  const newVisible = !gameState.visible;
-  if (newVisible) {
-    const words = Array.from(document.querySelectorAll(
-      ".sb-wordlist-items-pag .sb-anagram",
-    )).map((node) => def(node.textContent).trim());
-    updateHints({ visible: newVisible, words });
-  } else {
-    updateHints({ visible: newVisible });
-  }
+  updateHints({ visible: !gameState.visible });
 };
 
 const main = async () => {
-  updateHints({ gameData: await getGameData() });
+  updateHints({
+    gameData: await getGameData(),
+    words: Array.from(document.querySelectorAll(
+      `.${sbWordListClass} .${sbWordClass}`,
+    )).map((node) => def(node.textContent).trim()),
+  });
   addHintsView();
   addHintsButton();
+
+  const wordList = def(document.querySelector(`.${sbWordListClass}`));
+  const observer = new MutationObserver((mutationsList) => {
+    for (const mutation of mutationsList) {
+      const addedWords = Array.from(mutation.addedNodes).map((node) =>
+        (node.textContent ?? "").trim()
+      );
+      updateHints({ words: [...gameState.words, ...addedWords] });
+    }
+  });
+  observer.observe(wordList, { childList: true });
 };
 
 main().catch((error) => {
