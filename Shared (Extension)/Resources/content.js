@@ -28,11 +28,13 @@
 const hintsClass = "sbp-hints";
 const sbpViewId = "sbp-hints-view";
 const countTableId = "sbp-count-table";
-const countLabelId = "sbp-count-label";
+const countLabelClass = "sbp-count-label";
 const digraphTableId = "sbp-digraph-table";
-const digraphLabelId = "sbp-digraph-label";
+const digraphLabelClass = "sbp-digraph-label";
 const digraphClass = "sbp-digraph";
 const tableClass = "sbp-table";
+const rowClass = "sbp-table-row";
+const cellClass = "sbp-table-cell";
 const lettersClass = "sbp-letters";
 const letterClass = "sbp-letter";
 const activeLetterClass = "sbp-letter-active";
@@ -235,6 +237,13 @@ const updateHints = (state) => {
     gameState.letter = gameState.gameData.validLetters[0] ?? "";
   }
 
+  const summary = def(document.querySelector(".sb-wordlist-summary"));
+  if (/You have found/.test(def(summary.textContent))) {
+    const found = gameState.words.length;
+    const total = gameState.gameData.answers.length;
+    summary.textContent = `You have found ${found} of ${total} words`;
+  }
+
   const view = document.querySelector(`#${sbpViewId}`);
   if (!view) {
     // Don't try to update the UI if we haven't created the hints view
@@ -251,31 +260,31 @@ const updateHints = (state) => {
   const haveCounts = counts.map((count) => haveLetters?.[count] ?? 0);
   const needCounts = counts.map((_, i) => wantCounts[i] - haveCounts[i]);
 
-  const countTable = h("table", { id: countTableId, class: tableClass }, [
-    h("tr", {}, [
-      h("th", { class: countLabelId }, "Length"),
+  const countTable = h("div", { id: countTableId, class: tableClass }, [
+    h("div", { class: rowClass }, [
+      h("div", { class: className(countLabelClass, cellClass) }, "Length"),
       ...counts.map((count, i) => {
-        return h("th", {
-          class: className({ [needLetterClass]: needCounts[i] > 0 }),
+        return h("div", {
+          class: className(cellClass, { [needLetterClass]: needCounts[i] > 0 }),
         }, `${count}`);
       }),
     ]),
-    h("tr", {}, [
-      h("th", { class: countLabelId }, "Want"),
+    h("div", { class: rowClass }, [
+      h("div", { class: className(countLabelClass, cellClass) }, "Want"),
       ...counts.map((_, i) => {
-        return h("td", {
-          class: className({
+        return h("div", {
+          class: className(cellClass, {
             [needLetterClass]: needCounts[i] > 0,
             [zeroLetterClass]: wantCounts[i] === 0,
           }),
         }, `${wantCounts[i]}`);
       }),
     ]),
-    h("tr", {}, [
-      h("th", { class: countLabelId }, "Have"),
+    h("div", { class: rowClass }, [
+      h("div", { class: className(countLabelClass, cellClass) }, "Have"),
       ...counts.map((_, i) => {
-        return h("td", {
-          class: className({
+        return h("div", {
+          class: className(cellClass, {
             [needLetterClass]: needCounts[i] > 0,
             [zeroLetterClass]: wantCounts[i] === 0,
           }),
@@ -295,30 +304,34 @@ const updateHints = (state) => {
     wantDigraphs[i] - haveDigraphs[i]
   );
 
-  const digraphTable = h("table", { id: digraphTableId, class: tableClass }, [
-    h("tr", {}, [
-      h("th", { class: digraphLabelId }, "Digraph"),
+  const digraphTable = h("div", { id: digraphTableId, class: tableClass }, [
+    h("div", { class: rowClass }, [
+      h("div", { class: className(digraphLabelClass, cellClass) }, "Digraph"),
       ...digraphs.map((digraph, i) => {
-        return h("th", {
-          class: className(digraphClass, {
+        return h("div", {
+          class: className(cellClass, digraphClass, {
             [needLetterClass]: needDigraphs[i] > 0,
           }),
         }, digraph);
       }),
     ]),
-    h("tr", {}, [
-      h("th", { class: digraphLabelId }, "Want"),
+    h("div", { class: rowClass }, [
+      h("div", { class: className(digraphLabelClass, cellClass) }, "Want"),
       ...digraphs.map((_, i) => {
-        return h("td", {
-          class: className({ [needLetterClass]: needDigraphs[i] > 0 }),
+        return h("div", {
+          class: className(cellClass, {
+            [needLetterClass]: needDigraphs[i] > 0,
+          }),
         }, `${wantDigraphs[i]}`);
       }),
     ]),
-    h("tr", {}, [
-      h("th", { class: digraphLabelId }, "Have"),
+    h("div", { class: rowClass }, [
+      h("th", { class: className(digraphLabelClass, cellClass) }, "Have"),
       ...digraphs.map((_, i) => {
-        return h("td", {
-          class: className({ [needLetterClass]: needDigraphs[i] > 0 }),
+        return h("div", {
+          class: className(cellClass, {
+            [needLetterClass]: needDigraphs[i] > 0,
+          }),
         }, `${haveDigraphs[i]}`);
       }),
     ]),
@@ -337,13 +350,6 @@ const updateHints = (state) => {
     console.log(`${ltrLetter}: have=${haveCount}, want=${wantCount}`);
     setClass(ltr, needLetterClass, wantCount > haveCount);
   });
-
-  const summary = def(document.querySelector(".sb-wordlist-summary"));
-  if (/You have found/.test(def(summary.textContent))) {
-    const found = gameState.words.length;
-    const total = gameState.gameData.answers.length;
-    summary.textContent = `You have found ${found} of ${total} words`;
-  }
 
   const drawer = def(document.querySelector(`.${sbWordListDrawerClass}`));
   setClass(drawer, hintsClass, visible);
