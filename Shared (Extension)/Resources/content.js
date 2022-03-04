@@ -235,6 +235,12 @@ const updateHints = (state) => {
     gameState.letter = gameState.gameData.validLetters[0] ?? "";
   }
 
+  const view = document.querySelector(`#${sbpViewId}`);
+  if (!view) {
+    // Don't try to update the UI if we haven't created the hints view
+    return;
+  }
+
   const { visible, gameStats, wordStats, letter } = gameState;
 
   const wantLetters = gameStats.firstLetters[letter];
@@ -278,7 +284,6 @@ const updateHints = (state) => {
     ]),
   ]);
 
-  const view = def(document.querySelector(`#${sbpViewId}`));
   replace(countTableId, view, countTable);
 
   const digraphs = Object.keys(gameStats.digraphs).filter((dg) =>
