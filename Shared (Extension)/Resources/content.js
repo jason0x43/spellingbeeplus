@@ -14,13 +14,13 @@
  *   gameData: GameData;
  *   visible: boolean;
  *   gameStats: {
- *     firstLetters: Record<string, number[]>;
- *     digraphs: Record<string, number>;
+ *     firstLetters: Record<string, number[] | undefined>;
+ *     digraphs: Record<string, number | undefined>;
  *   };
  *   words: string[];
  *   wordStats: {
  *     firstLetters: Record<string, number[] | undefined>;
- *     digraphs: Record<string, number>;
+ *     digraphs: Record<string, number | undefined>;
  *   }
  * }} GameState
  */
@@ -247,7 +247,7 @@ const updateHints = (state) => {
   const haveLetters = wordStats.firstLetters[letter];
 
   const counts = [4, 5, 6, 7, 8, 9];
-  const wantCounts = counts.map((count) => wantLetters[count] ?? 0);
+  const wantCounts = counts.map((count) => wantLetters?.[count] ?? 0);
   const haveCounts = counts.map((count) => haveLetters?.[count] ?? 0);
   const needCounts = counts.map((_, i) => wantCounts[i] - haveCounts[i]);
 
@@ -289,7 +289,7 @@ const updateHints = (state) => {
   const digraphs = Object.keys(gameStats.digraphs).filter((dg) =>
     dg[0] === letter
   );
-  const wantDigraphs = digraphs.map((dg) => gameStats.digraphs[dg]);
+  const wantDigraphs = digraphs.map((dg) => gameStats.digraphs[dg] ?? 0);
   const haveDigraphs = digraphs.map((dg) => wordStats.digraphs[dg] ?? 0);
   const needDigraphs = digraphs.map((_, i) =>
     wantDigraphs[i] - haveDigraphs[i]
