@@ -330,8 +330,11 @@ const updateHints = (state) => {
     const ltrLetter = def(ltr.textContent);
     setClass(ltr, activeLetterClass, ltrLetter === letter);
 
-    const wantCount = gameStats.firstLetters[ltrLetter];
-    const haveCount = wordStats.firstLetters[ltrLetter] ?? 0;
+    const wantCount = gameStats.firstLetters[ltrLetter]?.reduce((sum, count) =>
+      sum + count, 0) ?? 0;
+    const haveCount = wordStats.firstLetters[ltrLetter]?.reduce((sum, count) =>
+      sum + count, 0) ?? 0;
+    console.log(`${ltrLetter}: have=${haveCount}, want=${wantCount}`);
     setClass(ltr, needLetterClass, wantCount > haveCount);
   });
 
