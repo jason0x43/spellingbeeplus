@@ -37,20 +37,18 @@ body,
   justify-content: center;
   align-items: center;
   font-size: 150%;
+  gap: 0.25em;
 }
 
 .sbp-letter {
   --size: 40px;
-  --border-color: #777;
+  --border-color: #999;
   display: flex;
   align-items: center;
   justify-content: center;
   width: var(--size);
   height: var(--size);
-  border-top: solid 1px transparent;
-  border-bottom: solid 1px var(--border-color);
-  border-top-right-radius: 4px;
-  border-top-left-radius: 4px;
+  border-bottom: solid 2px transparent;
   cursor: pointer;
 }
 
@@ -90,6 +88,5 @@ body,
 }
 
 .sbp-letter-active {
-  border: solid 1px var(--border-color);
-  border-bottom-color: transparent;
+  border-bottom-color: var(--border-color);
 }
