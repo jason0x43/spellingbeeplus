@@ -1,14 +1,3 @@
-body,
-.pz-game-screen,
-.sb-modal-wrapper {
-  height: initial;
-}
-
-.pz-ad-box,
-.pz-footer {
-  display: none;
-}
-
 #sbp-hints-button {
   position: absolute;
   bottom: 8px;
