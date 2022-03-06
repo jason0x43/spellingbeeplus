@@ -12,10 +12,11 @@
 #sbp-hints-view {
   display: none;
   padding: 0 25px;
+  padding-top: 20px;
   flex-direction: column;
   align-items: flex-start;
   gap: 1em;
-  --cell-gap: 0.4em;
+  --cell-gap: 4px;
 }
 
 .sbp-hints .sb-wordlist-window .sb-wordlist-pag,
@@ -32,11 +33,10 @@
   justify-content: center;
   align-items: center;
   font-size: 150%;
-  gap: var(--cell-gap);
 }
 
 .sbp-letter {
-  --size: 40px;
+  --size: 35px;
   --border-color: #999;
   display: flex;
   align-items: center;
@@ -73,7 +73,7 @@
 .sbp-table .sbp-count-label,
 .sbp-table .sbp-digraph-label {
   font-weight: 600;
-  width: 4em;
+  width: 3.5em;
   justify-content: flex-start;
 }
 
@@ -92,4 +92,10 @@
 
 .sbp-complete {
   color: #bbb;
+}
+
+@media (min-width: 768px) {
+  #sbp-hints-view {
+    padding-top: 0;
+  }
 }
