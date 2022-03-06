@@ -1,3 +1,8 @@
+.sb-kebob {
+  margin-bottom: 12px;
+  right: 44px;
+}
+
 #sbp-hints-button {
   position: absolute;
   bottom: 8px;
@@ -6,7 +11,7 @@
 
 #sbp-hints-view {
   display: none;
-  padding: 1em;
+  padding: 0 25px;
   flex-direction: column;
   align-items: flex-start;
   gap: 1em;
