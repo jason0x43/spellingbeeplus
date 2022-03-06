@@ -81,10 +81,6 @@
   background: rgba(255, 0, 0, 0.1);
 }
 
-.sbp-letter-zero {
-  color: #bbb;
-}
-
 .sbp-digraph {
   font-family: monospace;
   font-size: 125%;
@@ -92,4 +88,8 @@
 
 .sbp-letter-active {
   border-bottom-color: var(--border-color);
+}
+
+.sbp-complete {
+  color: #bbb;
 }
