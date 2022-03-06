@@ -25,6 +25,9 @@
  * }} GameState
  */
 
+// firstLetters maps a letter to an array of word lengths. For example,
+// firstLetters.a[4] is the number of 4 letter 'a' words.
+
 const hintsClass = "sbp-hints";
 const sbpViewId = "sbp-hints-view";
 const countTableId = "sbp-count-table";
@@ -255,7 +258,16 @@ const updateHints = (state) => {
   const wantLetters = gameStats.firstLetters[letter];
   const haveLetters = wordStats.firstLetters[letter];
 
-  const counts = [4, 5, 6, 7, 8, 9];
+  /** @type {number[]} */
+  const counts = [];
+  if (wantLetters) {
+    for (let i = 0; i < wantLetters.length; i++) {
+      if (wantLetters[i]) {
+        counts.push(i);
+      }
+    }
+  }
+
   const wantCounts = counts.map((count) => wantLetters?.[count] ?? 0);
   const haveCounts = counts.map((count) => haveLetters?.[count] ?? 0);
   const needCounts = counts.map((_, i) => wantCounts[i] - haveCounts[i]);
