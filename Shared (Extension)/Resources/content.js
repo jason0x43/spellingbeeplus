@@ -373,7 +373,7 @@ const addHintsButton = () => {
   const button = h("button", {
     id: `${hintsClass}-button`,
     type: "button",
-  }, "Stats");
+  }, "Hints");
 
   button.addEventListener("click", toggleHints);
 
