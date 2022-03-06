@@ -42,7 +42,7 @@ const lettersClass = "sbp-letters";
 const letterClass = "sbp-letter";
 const activeLetterClass = "sbp-letter-active";
 const needLetterClass = "sbp-letter-need";
-const zeroLetterClass = "sbp-letter-zero";
+const completeClass = "sbp-complete";
 const sbWordListClass = "sb-wordlist-items-pag";
 const sbWordClass = "sb-anagram";
 const sbWordListDrawerClass = "sb-wordlist-drawer";
@@ -277,30 +277,20 @@ const updateHints = (state) => {
       h("div", { class: className(countLabelClass, cellClass) }, "Length"),
       ...counts.map((count, i) => {
         return h("div", {
-          class: className(cellClass, { [needLetterClass]: needCounts[i] > 0 }),
+          class: className(cellClass, {
+            [completeClass]: needCounts[i] === 0,
+          }),
         }, `${count}`);
       }),
     ]),
     h("div", { class: rowClass }, [
-      h("div", { class: className(countLabelClass, cellClass) }, "Want"),
+      h("div", { class: className(countLabelClass, cellClass) }, "Need"),
       ...counts.map((_, i) => {
         return h("div", {
           class: className(cellClass, {
-            [needLetterClass]: needCounts[i] > 0,
-            [zeroLetterClass]: wantCounts[i] === 0,
+            [completeClass]: needCounts[i] === 0,
           }),
-        }, `${wantCounts[i]}`);
-      }),
-    ]),
-    h("div", { class: rowClass }, [
-      h("div", { class: className(countLabelClass, cellClass) }, "Have"),
-      ...counts.map((_, i) => {
-        return h("div", {
-          class: className(cellClass, {
-            [needLetterClass]: needCounts[i] > 0,
-            [zeroLetterClass]: wantCounts[i] === 0,
-          }),
-        }, `${haveCounts[i]}`);
+        }, `${needCounts[i]}`);
       }),
     ]),
   ]);
@@ -322,29 +312,19 @@ const updateHints = (state) => {
       ...digraphs.map((digraph, i) => {
         return h("div", {
           class: className(cellClass, digraphClass, {
-            [needLetterClass]: needDigraphs[i] > 0,
+            [completeClass]: needDigraphs[i] === 0,
           }),
         }, digraph);
       }),
     ]),
     h("div", { class: rowClass }, [
-      h("div", { class: className(digraphLabelClass, cellClass) }, "Want"),
+      h("th", { class: className(digraphLabelClass, cellClass) }, "Need"),
       ...digraphs.map((_, i) => {
         return h("div", {
           class: className(cellClass, {
-            [needLetterClass]: needDigraphs[i] > 0,
+            [completeClass]: needDigraphs[i] === 0,
           }),
-        }, `${wantDigraphs[i]}`);
-      }),
-    ]),
-    h("div", { class: rowClass }, [
-      h("th", { class: className(digraphLabelClass, cellClass) }, "Have"),
-      ...digraphs.map((_, i) => {
-        return h("div", {
-          class: className(cellClass, {
-            [needLetterClass]: needDigraphs[i] > 0,
-          }),
-        }, `${haveDigraphs[i]}`);
+        }, `${needDigraphs[i]}`);
       }),
     ]),
   ]);
@@ -360,7 +340,7 @@ const updateHints = (state) => {
     const haveCount = wordStats.firstLetters[ltrLetter]?.reduce((sum, count) =>
       sum + count, 0) ?? 0;
     console.log(`${ltrLetter}: have=${haveCount}, want=${wantCount}`);
-    setClass(ltr, needLetterClass, wantCount > haveCount);
+    setClass(ltr, completeClass, wantCount === haveCount);
   });
 
   const drawer = def(document.querySelector(`.${sbWordListDrawerClass}`));
