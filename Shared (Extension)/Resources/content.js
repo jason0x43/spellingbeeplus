@@ -30,10 +30,10 @@
 
 const hintsClass = "sbp-hints";
 const sbpViewId = "sbp-hints-view";
+const pangramsId = "sbp-pangrams";
 const countTableId = "sbp-count-table";
-const countLabelClass = "sbp-count-label";
+const leftLabelClass = "sbp-left-label";
 const digraphTableId = "sbp-digraph-table";
-const digraphLabelClass = "sbp-digraph-label";
 const digraphClass = "sbp-digraph";
 const tableClass = "sbp-table";
 const rowClass = "sbp-table-row";
@@ -41,7 +41,6 @@ const cellClass = "sbp-table-cell";
 const lettersClass = "sbp-letters";
 const letterClass = "sbp-letter";
 const activeLetterClass = "sbp-letter-active";
-const needLetterClass = "sbp-letter-need";
 const completeClass = "sbp-complete";
 const sbWordListClass = "sb-wordlist-items-pag";
 const sbWordClass = "sb-anagram";
@@ -213,6 +212,16 @@ const addHintsView = () => {
   ]);
   view.append(letters);
 
+  view.append(h("div", { id: countTableId }));
+  view.append(h("div", { id: digraphTableId }));
+
+  view.append(h("div", { id: pangramsId, class: tableClass }, [
+    h("div", { class: rowClass }, [
+      h("div", { class: className(leftLabelClass, cellClass) }, "Pangrams"),
+      h("div", { class: className(cellClass) }, `${gameData.pangrams.length}`),
+    ]),
+  ]));
+
   letters.addEventListener("click", ({ target }) => {
     const letter = /** @type HTMLDivElement */ (target);
     updateHints({ letter: letter.textContent ?? undefined });
@@ -274,7 +283,7 @@ const updateHints = (state) => {
 
   const countTable = h("div", { id: countTableId, class: tableClass }, [
     h("div", { class: rowClass }, [
-      h("div", { class: className(countLabelClass, cellClass) }, "Length"),
+      h("div", { class: className(leftLabelClass, cellClass) }, "Length"),
       ...counts.map((count, i) => {
         return h("div", {
           class: className(cellClass, {
@@ -284,7 +293,7 @@ const updateHints = (state) => {
       }),
     ]),
     h("div", { class: rowClass }, [
-      h("div", { class: className(countLabelClass, cellClass) }, "Need"),
+      h("div", { class: className(leftLabelClass, cellClass) }, "Need"),
       ...counts.map((_, i) => {
         return h("div", {
           class: className(cellClass, {
@@ -308,7 +317,7 @@ const updateHints = (state) => {
 
   const digraphTable = h("div", { id: digraphTableId, class: tableClass }, [
     h("div", { class: rowClass }, [
-      h("div", { class: className(digraphLabelClass, cellClass) }, "Digraph"),
+      h("div", { class: className(leftLabelClass, cellClass) }, "Digraph"),
       ...digraphs.map((digraph, i) => {
         return h("div", {
           class: className(cellClass, digraphClass, {
@@ -318,7 +327,7 @@ const updateHints = (state) => {
       }),
     ]),
     h("div", { class: rowClass }, [
-      h("th", { class: className(digraphLabelClass, cellClass) }, "Need"),
+      h("th", { class: className(leftLabelClass, cellClass) }, "Need"),
       ...digraphs.map((_, i) => {
         return h("div", {
           class: className(cellClass, {
