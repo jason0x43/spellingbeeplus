@@ -28,6 +28,7 @@
 // firstLetters maps a letter to an array of word lengths. For example,
 // firstLetters.a[4] is the number of 4 letter 'a' words.
 
+const baseClass = "sbp";
 const hintsClass = "sbp-hints";
 const sbpViewId = "sbp-hints-view";
 const pangramsId = "sbp-pangrams";
@@ -45,6 +46,7 @@ const completeClass = "sbp-complete";
 const sbWordListClass = "sb-wordlist-items-pag";
 const sbWordClass = "sb-anagram";
 const sbWordListDrawerClass = "sb-wordlist-drawer";
+const sbWordListBox = 'sb-wordlist-box';
 
 /** @type {GameState} */
 let gameState = {
@@ -197,6 +199,7 @@ const getStats = (words) => {
 
 const addHintsView = () => {
   document.querySelector(`#${sbpViewId}`)?.remove();
+  document.querySelector(`.${sbWordListBox}`)?.classList.add(baseClass);
 
   const { gameData } = gameState;
   const view = h("div", { id: sbpViewId });
@@ -214,13 +217,6 @@ const addHintsView = () => {
 
   view.append(h("div", { id: countTableId }));
   view.append(h("div", { id: digraphTableId }));
-
-  view.append(h("div", { id: pangramsId, class: tableClass }, [
-    h("div", { class: rowClass }, [
-      h("div", { class: className(leftLabelClass, cellClass) }, "Pangrams"),
-      h("div", { class: className(cellClass) }, `${gameData.pangrams.length}`),
-    ]),
-  ]));
 
   letters.addEventListener("click", ({ target }) => {
     const letter = /** @type HTMLDivElement */ (target);
@@ -253,7 +249,11 @@ const updateHints = (state) => {
   if (/You have found/.test(def(summary.textContent))) {
     const found = gameState.words.length;
     const total = gameState.gameData.answers.length;
-    summary.textContent = `You have found ${found} of ${total} words`;
+    const totalPgs = gameState.gameData.pangrams.length;
+    const foundPgs = gameState.gameData.pangrams.filter((pg) =>
+      gameState.words.includes(pg)).length;
+    summary.textContent = `You have found ${found} of ${total} words, ` +
+      `${foundPgs} of ${totalPgs} pangrams`;
   }
 
   const view = document.querySelector(`#${sbpViewId}`);

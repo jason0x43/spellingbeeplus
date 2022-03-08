@@ -1,6 +1,11 @@
-.sb-kebob {
+.sbp .sb-kebob {
   margin-bottom: 12px;
   right: 44px;
+}
+
+.sbp .sb-wordlist-summary {
+  line-height: 1.15em;
+  white-space: normal;
 }
 
 #sbp-hints-button {
