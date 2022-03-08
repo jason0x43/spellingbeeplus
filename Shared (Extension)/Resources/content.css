@@ -70,10 +70,9 @@
   height: var(--size);
 }
 
-.sbp-table .sbp-count-label,
-.sbp-table .sbp-digraph-label {
+.sbp-table .sbp-left-label {
   font-weight: 600;
-  width: 3.5em;
+  width: 4em;
   justify-content: flex-start;
 }
 
@@ -92,6 +91,10 @@
 
 .sbp-complete {
   color: #bbb;
+}
+
+#sbp-pangrams .sbp-left-label {
+  width: 4.5em;
 }
 
 @media (min-width: 768px) {
