@@ -22,6 +22,10 @@
  *     firstLetters: Record<string, number[] | undefined>;
  *     digraphs: Record<string, number | undefined>;
  *   },
+ *   thresholds: Record<string, {
+ *    score: number;
+ *    distance: number;
+ *   }>;
  *   rank: string
  * }} GameState
  */
@@ -43,11 +47,15 @@ const lettersClass = "sbp-letters";
 const letterClass = "sbp-letter";
 const activeLetterClass = "sbp-letter-active";
 const completeClass = "sbp-complete";
+const progressMarkerClass = "sbp-progress-marker";
 const sbWordListClass = "sb-wordlist-items-pag";
 const sbWordClass = "sb-anagram";
 const sbWordListDrawerClass = "sb-wordlist-drawer";
-const sbWordListBox = 'sb-wordlist-box';
-const sbProgressRank = 'sb-progress-rank';
+const sbWordListBox = "sb-wordlist-box";
+const sbProgressRank = "sb-progress-rank";
+const sbProgressBar = "sb-progress-bar";
+const sbProgressMarker = "sb-progress-marker";
+const sbProgressValue = "sb-progress-value";
 
 /** @type {GameState} */
 let gameState = {
@@ -69,7 +77,8 @@ let gameState = {
     firstLetters: {},
     digraphs: {},
   },
-  rank: ''
+  thresholds: {},
+  rank: "",
 };
 
 /**
@@ -199,6 +208,56 @@ const getStats = (words) => {
   return { firstLetters, digraphs };
 };
 
+/**
+ * @param {string[]} words
+ * @param {string[]} pangrams
+ */
+const getThresholds = (words, pangrams) => {
+  const maxScore = words.reduce((score, word) => {
+    score += word.length === 4 ? 1 : word.length;
+    if (pangrams.includes(word)) {
+      score += 7;
+    }
+    return score;
+  }, 0);
+  const delta = 100 / 8;
+
+  return {
+    "beginner": {
+      score: Math.ceil(maxScore * 0.02),
+      distance: delta,
+    },
+    "good start": {
+      score: Math.ceil(maxScore * 0.05),
+      distance: delta * 2,
+    },
+    "moving up": {
+      score: Math.ceil(maxScore * 0.08),
+      distance: delta * 3,
+    },
+    "good": {
+      score: Math.ceil(maxScore * 0.15),
+      distance: delta * 4,
+    },
+    "solid": {
+      score: Math.ceil(maxScore * 0.25),
+      distance: delta * 5,
+    },
+    "nice": {
+      score: Math.ceil(maxScore * 0.4),
+      distance: delta * 6,
+    },
+    "great": {
+      score: Math.ceil(maxScore * 0.5),
+      distance: delta * 7,
+    },
+    "amazing": {
+      score: Math.ceil(maxScore * 0.7),
+      distance: delta * 8,
+    },
+  };
+};
+
 const addHintsView = () => {
   document.querySelector(`#${sbpViewId}`)?.remove();
 
@@ -236,6 +295,10 @@ const updateHints = (state) => {
 
   if (state.gameData) {
     gameState.gameStats = getStats(state.gameData.answers);
+    gameState.thresholds = getThresholds(
+      state.gameData.answers,
+      state.gameData.pangrams,
+    );
   }
 
   if (state.words) {
@@ -246,11 +309,27 @@ const updateHints = (state) => {
     gameState.letter = gameState.gameData.validLetters[0] ?? "";
   }
 
-
-  if (gameState.rank === 'genius') {
+  if (gameState.rank === "genius") {
     const wordListBox = document.querySelector(`.${sbWordListBox}`);
     if (wordListBox && !wordListBox.classList.contains(baseClass)) {
       wordListBox.classList.add(baseClass);
+    }
+  } else {
+    const progressBar = def(document.querySelector(`.${sbProgressBar}`));
+    /** @type {HTMLElement} */
+    let progressMarker = def(document.querySelector(`.${progressMarkerClass}`));
+    if (!progressMarker) {
+      progressMarker = h("div", {
+        class: `${sbProgressMarker} ${progressMarkerClass}`,
+      }, h("span", { class: sbProgressValue }));
+      progressBar.append(progressMarker);
+    }
+    const nextRank = gameState.thresholds[gameState.rank];
+    if (nextRank) {
+      progressMarker.style.left = `${nextRank.distance}%`;
+      const marker = def(progressMarker.querySelector(`.${sbProgressValue}`));
+      marker.textContent = `${nextRank.score}`;
+      setClass(progressMarker, 'final', nextRank.distance === 1);
     }
   }
 
@@ -260,9 +339,10 @@ const updateHints = (state) => {
     const total = gameState.gameData.answers.length;
     const totalPgs = gameState.gameData.pangrams.length;
     const foundPgs = gameState.gameData.pangrams.filter((pg) =>
-      gameState.words.includes(pg)).length;
+      gameState.words.includes(pg)
+    ).length;
     let summaryText = `You have found ${found} of ${total} words`;
-    if (gameState.rank === 'genius') {
+    if (gameState.rank === "genius") {
       summaryText += `, ${foundPgs} of ${totalPgs} pangrams`;
     }
     summary.textContent = summaryText;
@@ -360,7 +440,6 @@ const updateHints = (state) => {
       sum + count, 0) ?? 0;
     const haveCount = wordStats.firstLetters[ltrLetter]?.reduce((sum, count) =>
       sum + count, 0) ?? 0;
-    console.log(`${ltrLetter}: have=${haveCount}, want=${wantCount}`);
     setClass(ltr, completeClass, wantCount === haveCount);
   });
 
@@ -402,7 +481,7 @@ const main = async () => {
     words: Array.from(document.querySelectorAll(
       `.${sbWordListClass} .${sbWordClass}`,
     )).map((node) => def(node.textContent).trim()),
-    rank: getNormalizedText(rank)
+    rank: getNormalizedText(rank),
   });
   addHintsView();
   addHintsButton();

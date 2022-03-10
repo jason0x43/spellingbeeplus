@@ -103,6 +103,12 @@
   color: #bbb;
 }
 
+.sb-progress-marker.sbp-progress-marker .sb-progress-value {
+  background-color: #dcdcdc;
+  color: #666;
+  transform: scale(0.75);
+}
+
 #sbp-pangrams .sbp-left-label {
   width: 4.5em;
 }
