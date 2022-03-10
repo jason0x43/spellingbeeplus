@@ -21,7 +21,8 @@
  *   wordStats: {
  *     firstLetters: Record<string, number[] | undefined>;
  *     digraphs: Record<string, number | undefined>;
- *   }
+ *   },
+ *   rank: string
  * }} GameState
  */
 
@@ -31,7 +32,6 @@
 const baseClass = "sbp";
 const hintsClass = "sbp-hints";
 const sbpViewId = "sbp-hints-view";
-const pangramsId = "sbp-pangrams";
 const countTableId = "sbp-count-table";
 const leftLabelClass = "sbp-left-label";
 const digraphTableId = "sbp-digraph-table";
@@ -47,6 +47,7 @@ const sbWordListClass = "sb-wordlist-items-pag";
 const sbWordClass = "sb-anagram";
 const sbWordListDrawerClass = "sb-wordlist-drawer";
 const sbWordListBox = 'sb-wordlist-box';
+const sbProgressRank = 'sb-progress-rank';
 
 /** @type {GameState} */
 let gameState = {
@@ -68,6 +69,7 @@ let gameState = {
     firstLetters: {},
     digraphs: {},
   },
+  rank: ''
 };
 
 /**
@@ -199,7 +201,6 @@ const getStats = (words) => {
 
 const addHintsView = () => {
   document.querySelector(`#${sbpViewId}`)?.remove();
-  document.querySelector(`.${sbWordListBox}`)?.classList.add(baseClass);
 
   const { gameData } = gameState;
   const view = h("div", { id: sbpViewId });
@@ -245,6 +246,14 @@ const updateHints = (state) => {
     gameState.letter = gameState.gameData.validLetters[0] ?? "";
   }
 
+
+  if (gameState.rank === 'genius') {
+    const wordListBox = document.querySelector(`.${sbWordListBox}`);
+    if (wordListBox && !wordListBox.classList.contains(baseClass)) {
+      wordListBox.classList.add(baseClass);
+    }
+  }
+
   const summary = def(document.querySelector(".sb-wordlist-summary"));
   if (/You have found/.test(def(summary.textContent))) {
     const found = gameState.words.length;
@@ -252,8 +261,11 @@ const updateHints = (state) => {
     const totalPgs = gameState.gameData.pangrams.length;
     const foundPgs = gameState.gameData.pangrams.filter((pg) =>
       gameState.words.includes(pg)).length;
-    summary.textContent = `You have found ${found} of ${total} words, ` +
-      `${foundPgs} of ${totalPgs} pangrams`;
+    let summaryText = `You have found ${found} of ${total} words`;
+    if (gameState.rank === 'genius') {
+      summaryText += `, ${foundPgs} of ${totalPgs} pangrams`;
+    }
+    summary.textContent = summaryText;
   }
 
   const view = document.querySelector(`#${sbpViewId}`);
@@ -374,18 +386,29 @@ const toggleHints = () => {
   updateHints({ visible: !gameState.visible });
 };
 
+/**
+ * @param {Element} node
+ * @returns string
+ */
+const getNormalizedText = (node) => {
+  return node.textContent?.trim().toLowerCase();
+};
+
 const main = async () => {
+  const rank = def(document.querySelector(`.${sbProgressRank}`));
+
   updateHints({
     gameData: await getGameData(),
     words: Array.from(document.querySelectorAll(
       `.${sbWordListClass} .${sbWordClass}`,
     )).map((node) => def(node.textContent).trim()),
+    rank: getNormalizedText(rank)
   });
   addHintsView();
   addHintsButton();
 
   const wordList = def(document.querySelector(`.${sbWordListClass}`));
-  const observer = new MutationObserver((mutationsList) => {
+  const wordsObserver = new MutationObserver((mutationsList) => {
     for (const mutation of mutationsList) {
       const addedWords = Array.from(mutation.addedNodes).map((node) =>
         (node.textContent ?? "").trim()
@@ -393,7 +416,12 @@ const main = async () => {
       updateHints({ words: [...gameState.words, ...addedWords] });
     }
   });
-  observer.observe(wordList, { childList: true });
+  wordsObserver.observe(wordList, { childList: true });
+
+  const rankObserver = new MutationObserver(() => {
+    updateHints({ rank: getNormalizedText(rank) });
+  });
+  rankObserver.observe(rank, { characterData: true });
 };
 
 main().catch((error) => {

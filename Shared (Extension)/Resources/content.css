@@ -9,6 +9,11 @@
 }
 
 #sbp-hints-button {
+  display: none;
+}
+
+.sbp #sbp-hints-button {
+  display: block;
   position: absolute;
   bottom: 8px;
   right: 8px;
@@ -16,12 +21,6 @@
 
 #sbp-hints-view {
   display: none;
-  padding: 0 25px;
-  padding-top: 20px;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1em;
-  --cell-gap: 4px;
 }
 
 .sbp-hints .sb-wordlist-window .sb-wordlist-pag,
@@ -31,6 +30,12 @@
 
 .sbp-hints #sbp-hints-view {
   display: flex;
+  padding: 0 25px;
+  padding-top: 20px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1em;
+  --cell-gap: 4px;
 }
 
 .sbp-letters {
