@@ -340,7 +340,7 @@
         mrkr.style.left = `${nextRank.distance}%`;
         const marker = def(mrkr.querySelector(`.${sbProgressValue}`));
         marker.textContent = `${nextRank.score}`;
-        setClass(mrkr, "final", nextRank.distance === 1);
+        setClass(mrkr, "final", nextRank.distance === 100);
       }
     }
 

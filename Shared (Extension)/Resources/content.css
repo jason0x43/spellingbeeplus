@@ -104,8 +104,9 @@
 }
 
 .sb-progress-marker.sbp-progress-marker .sb-progress-value {
-  background-color: #dcdcdc;
-  color: #666;
+  border: solid 1px #dcdcdc;
+  background: white;
+  color: #333;
   transform: scale(0.75);
 }
 
