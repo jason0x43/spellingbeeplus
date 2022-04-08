@@ -227,35 +227,35 @@
 
     return {
       "beginner": {
-        score: Math.round(maxScore * 0.021),
+        score: Math.round(2 / 100 * maxScore),
         distance: delta,
       },
       "good start": {
-        score: Math.round(maxScore * 0.050),
+        score: Math.round(5 / 100 * maxScore),
         distance: delta * 2,
       },
       "moving up": {
-        score: Math.round(maxScore * 0.079),
+        score: Math.round(8 / 100 * maxScore),
         distance: delta * 3,
       },
       "good": {
-        score: Math.round(maxScore * 0.149),
+        score: Math.round(15 / 100 * maxScore),
         distance: delta * 4,
       },
       "solid": {
-        score: Math.round(maxScore * 0.252),
+        score: Math.round(25 / 100 * maxScore),
         distance: delta * 5,
       },
       "nice": {
-        score: Math.round(maxScore * 0.401),
+        score: Math.round(48 / 100 * maxScore),
         distance: delta * 6,
       },
       "great": {
-        score: Math.round(maxScore * 0.500),
+        score: Math.round(50 / 100 * maxScore),
         distance: delta * 7,
       },
       "amazing": {
-        score: Math.round(maxScore * 0.698),
+        score: Math.round(70 / 100 * maxScore),
         distance: delta * 8,
       },
     };
