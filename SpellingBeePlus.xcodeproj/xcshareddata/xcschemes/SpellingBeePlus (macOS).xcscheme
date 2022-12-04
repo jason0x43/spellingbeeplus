@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "9607DB6927CBD87300DBC4E3"
-               BuildableName = "SpellingBeePlus (macOS).app"
+               BuildableName = "SpellingBeePlus.app"
                BlueprintName = "SpellingBeePlus (macOS)"
                ReferencedContainer = "container:SpellingBeePlus.xcodeproj">
             </BuildableReference>
@@ -45,7 +45,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "9607DB6927CBD87300DBC4E3"
-            BuildableName = "SpellingBeePlus (macOS).app"
+            BuildableName = "SpellingBeePlus.app"
             BlueprintName = "SpellingBeePlus (macOS)"
             ReferencedContainer = "container:SpellingBeePlus.xcodeproj">
          </BuildableReference>
@@ -62,7 +62,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "9607DB6927CBD87300DBC4E3"
-            BuildableName = "SpellingBeePlus (macOS).app"
+            BuildableName = "SpellingBeePlus.app"
             BlueprintName = "SpellingBeePlus (macOS)"
             ReferencedContainer = "container:SpellingBeePlus.xcodeproj">
          </BuildableReference>

@@ -52,10 +52,7 @@ function build_app {
     -exportPath "$export_path" \
     -exportOptionsPlist "$export_options"
 
-  if [ "$platform" = "iOS" ]; then
-    mv "$export_path/SpellingBeePlus (iOS).ipa" "$export_path/SpellingBeePlus.ipa"
-  else
-    mv "$export_path/SpellingBeePlus (macOS).app" "$export_path/SpellingBeePlus.app"
+  if [ "$platform" = "macOS" ]; then
     (cd $export_path && zip -r SpellingBeePlus.zip "SpellingBeePlus.app")
   fi
 }
