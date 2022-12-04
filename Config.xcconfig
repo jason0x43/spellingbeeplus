@@ -1,0 +1,16 @@
+//
+//  Config.xcconfig
+//  SpellingBeePlus
+//
+//  Created by Jason on 12/4/22.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+//
+// This file is just a thunk to include an env.xcconfig file with
+// developer-specific settings. This file must contain the following keys:
+//   TEAM_ID (your Apple developer team ID)
+//   APP_ID (the base ID for your app, like com.example.HopCount)
+
+#include "env.xcconfig"

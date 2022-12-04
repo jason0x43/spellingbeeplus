@@ -1,0 +1,45 @@
+#!/bin/sh
+
+set -e
+
+project_file=SpellingBeePlus.xcodeproj/project.pbxproj
+
+if [[ ${BASH_ARGV} == "-" ]]; then
+  project=$(</dev/stdin)
+  # pop the last argument
+  set -- "${@:1:$(($#-1))}"
+else
+  project=$(<$project_file)
+fi
+
+build=$(echo "$project" | grep -m1 CURRENT_PROJECT_VERSION | grep -o -E '\d+')
+version=$(echo "$project" | grep -m1 MARKETING_VERSION |  grep -o -E '\d+(\.\d+)+')
+
+if [[ $1 == "build" ]]; then
+  if [[ -n "$2" ]]; then
+    new_build=$2
+    if [[ -z $new_build ]]; then
+      new_build=$(($build+1))
+    fi
+
+    matcher="[[:space:]]*CURRENT_PROJECT_VERSION[[:space:]]*=[[:space:]]"
+    sed -E -i "" "s/($matcher).*;/\1$new_build;/" "$project_file"
+    echo "Updated build to $new_build"
+  else
+    echo $build
+  fi
+elif [[ $1 == "version" ]]; then
+  if [[ -n "$2" ]]; then
+    version=$2
+    if [[ -z $version ]]; then
+      echo "Must provide a version"
+      exit 1
+    fi
+    matcher="[[:space:]]*MARKETING_VERSION[[:space:]]*=[[:space:]]"
+    sed -E -i "" "s/($matcher).*;/\1$2;/" "$project_file"
+  else
+    echo $version
+  fi
+else
+  echo "$version($build)"
+fi

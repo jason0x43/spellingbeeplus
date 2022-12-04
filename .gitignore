@@ -1,2 +1,3 @@
 xcuserdata/
-local.xcconfig
+env.xcconfig
+/build/

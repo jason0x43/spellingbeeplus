@@ -13,8 +13,8 @@
 		9607DB6427CBD87300DBC4E3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB6227CBD87300DBC4E3 /* Main.storyboard */; };
 		9607DB6D27CBD87300DBC4E3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9607DB6C27CBD87300DBC4E3 /* AppDelegate.swift */; };
 		9607DB7027CBD87300DBC4E3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB6E27CBD87300DBC4E3 /* Main.storyboard */; };
-		9607DB7727CBD87300DBC4E3 /* SpellingBeePlus Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9607DB7627CBD87300DBC4E3 /* SpellingBeePlus Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		9607DB8127CBD87400DBC4E3 /* SpellingBeePlus Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9607DB8027CBD87400DBC4E3 /* SpellingBeePlus Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9607DB7727CBD87300DBC4E3 /* SpellingBeePlus Extension (iOS).appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9607DB7627CBD87300DBC4E3 /* SpellingBeePlus Extension (iOS).appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9607DB8127CBD87400DBC4E3 /* SpellingBeePlus Extension (macOS).appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9607DB8027CBD87400DBC4E3 /* SpellingBeePlus Extension (macOS).appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9607DB8727CBD87400DBC4E3 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4227CBD87300DBC4E3 /* Main.html */; };
 		9607DB8827CBD87400DBC4E3 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4227CBD87300DBC4E3 /* Main.html */; };
 		9607DB8927CBD87400DBC4E3 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB4427CBD87300DBC4E3 /* Icon.png */; };
@@ -47,6 +47,8 @@
 		9607DBA427CBD87400DBC4E3 /* popup.js in Resources */ = {isa = PBXBuildFile; fileRef = 9607DB5327CBD87300DBC4E3 /* popup.js */; };
 		9607DBB627CE6CD200DBC4E3 /* content.css in Resources */ = {isa = PBXBuildFile; fileRef = 9607DBB527CE6CD200DBC4E3 /* content.css */; };
 		9607DBB727CE6CD200DBC4E3 /* content.css in Resources */ = {isa = PBXBuildFile; fileRef = 9607DBB527CE6CD200DBC4E3 /* content.css */; };
+		9614A262293D1EBB00302F11 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9614A261293D1EBB00302F11 /* Constants.swift */; };
+		9614A263293D1EBB00302F11 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9614A261293D1EBB00302F11 /* Constants.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -73,7 +75,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				9607DB7727CBD87300DBC4E3 /* SpellingBeePlus Extension.appex in Embed App Extensions */,
+				9607DB7727CBD87300DBC4E3 /* SpellingBeePlus Extension (iOS).appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -84,7 +86,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				9607DB8127CBD87400DBC4E3 /* SpellingBeePlus Extension.appex in Embed App Extensions */,
+				9607DB8127CBD87400DBC4E3 /* SpellingBeePlus Extension (macOS).appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -107,23 +109,24 @@
 		9607DB5127CBD87300DBC4E3 /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = popup.html; sourceTree = "<group>"; };
 		9607DB5227CBD87300DBC4E3 /* popup.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = popup.css; sourceTree = "<group>"; };
 		9607DB5327CBD87300DBC4E3 /* popup.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = popup.js; sourceTree = "<group>"; };
-		9607DB5827CBD87300DBC4E3 /* SpellingBeePlus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpellingBeePlus.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9607DB5827CBD87300DBC4E3 /* SpellingBeePlus (iOS).app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SpellingBeePlus (iOS).app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9607DB5B27CBD87300DBC4E3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		9607DB5D27CBD87300DBC4E3 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		9607DB6027CBD87300DBC4E3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		9607DB6327CBD87300DBC4E3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		9607DB6527CBD87300DBC4E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		9607DB6A27CBD87300DBC4E3 /* SpellingBeePlus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpellingBeePlus.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9607DB6A27CBD87300DBC4E3 /* SpellingBeePlus (macOS).app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SpellingBeePlus (macOS).app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9607DB6C27CBD87300DBC4E3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		9607DB6F27CBD87300DBC4E3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		9607DB7127CBD87300DBC4E3 /* SpellingBeePlus.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SpellingBeePlus.entitlements; sourceTree = "<group>"; };
-		9607DB7627CBD87300DBC4E3 /* SpellingBeePlus Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "SpellingBeePlus Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9607DB7627CBD87300DBC4E3 /* SpellingBeePlus Extension (iOS).appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "SpellingBeePlus Extension (iOS).appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9607DB7B27CBD87300DBC4E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		9607DB8027CBD87400DBC4E3 /* SpellingBeePlus Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "SpellingBeePlus Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9607DB8027CBD87400DBC4E3 /* SpellingBeePlus Extension (macOS).appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "SpellingBeePlus Extension (macOS).appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9607DB8527CBD87400DBC4E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9607DB8627CBD87400DBC4E3 /* SpellingBeePlus.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SpellingBeePlus.entitlements; sourceTree = "<group>"; };
 		9607DBB527CE6CD200DBC4E3 /* content.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = content.css; sourceTree = "<group>"; };
-		96DB6A5C27D978C500E286E4 /* local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = local.xcconfig; sourceTree = "<group>"; };
+		9614A260293D1A2F00302F11 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		9614A261293D1EBB00302F11 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -161,7 +164,7 @@
 		9607DB3B27CBD87300DBC4E3 = {
 			isa = PBXGroup;
 			children = (
-				96DB6A5C27D978C500E286E4 /* local.xcconfig */,
+				9614A260293D1A2F00302F11 /* Config.xcconfig */,
 				9607DB4027CBD87300DBC4E3 /* Shared (App) */,
 				9607DB4927CBD87300DBC4E3 /* Shared (Extension) */,
 				9607DB5A27CBD87300DBC4E3 /* iOS (App) */,
@@ -175,6 +178,7 @@
 		9607DB4027CBD87300DBC4E3 /* Shared (App) */ = {
 			isa = PBXGroup;
 			children = (
+				9614A261293D1EBB00302F11 /* Constants.swift */,
 				9607DB4727CBD87300DBC4E3 /* ViewController.swift */,
 				9607DB4827CBD87300DBC4E3 /* Assets.xcassets */,
 				9607DB4127CBD87300DBC4E3 /* Resources */,
@@ -221,10 +225,10 @@
 		9607DB5927CBD87300DBC4E3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				9607DB5827CBD87300DBC4E3 /* SpellingBeePlus.app */,
-				9607DB6A27CBD87300DBC4E3 /* SpellingBeePlus.app */,
-				9607DB7627CBD87300DBC4E3 /* SpellingBeePlus Extension.appex */,
-				9607DB8027CBD87400DBC4E3 /* SpellingBeePlus Extension.appex */,
+				9607DB5827CBD87300DBC4E3 /* SpellingBeePlus (iOS).app */,
+				9607DB6A27CBD87300DBC4E3 /* SpellingBeePlus (macOS).app */,
+				9607DB7627CBD87300DBC4E3 /* SpellingBeePlus Extension (iOS).appex */,
+				9607DB8027CBD87400DBC4E3 /* SpellingBeePlus Extension (macOS).appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -287,7 +291,7 @@
 			);
 			name = "SpellingBeePlus (iOS)";
 			productName = "SpellingBeePlus (iOS)";
-			productReference = 9607DB5827CBD87300DBC4E3 /* SpellingBeePlus.app */;
+			productReference = 9607DB5827CBD87300DBC4E3 /* SpellingBeePlus (iOS).app */;
 			productType = "com.apple.product-type.application";
 		};
 		9607DB6927CBD87300DBC4E3 /* SpellingBeePlus (macOS) */ = {
@@ -306,7 +310,7 @@
 			);
 			name = "SpellingBeePlus (macOS)";
 			productName = "SpellingBeePlus (macOS)";
-			productReference = 9607DB6A27CBD87300DBC4E3 /* SpellingBeePlus.app */;
+			productReference = 9607DB6A27CBD87300DBC4E3 /* SpellingBeePlus (macOS).app */;
 			productType = "com.apple.product-type.application";
 		};
 		9607DB7527CBD87300DBC4E3 /* SpellingBeePlus Extension (iOS) */ = {
@@ -323,7 +327,7 @@
 			);
 			name = "SpellingBeePlus Extension (iOS)";
 			productName = "SpellingBeePlus Extension (iOS)";
-			productReference = 9607DB7627CBD87300DBC4E3 /* SpellingBeePlus Extension.appex */;
+			productReference = 9607DB7627CBD87300DBC4E3 /* SpellingBeePlus Extension (iOS).appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 		9607DB7F27CBD87400DBC4E3 /* SpellingBeePlus Extension (macOS) */ = {
@@ -340,7 +344,7 @@
 			);
 			name = "SpellingBeePlus Extension (macOS)";
 			productName = "SpellingBeePlus Extension (macOS)";
-			productReference = 9607DB8027CBD87400DBC4E3 /* SpellingBeePlus Extension.appex */;
+			productReference = 9607DB8027CBD87400DBC4E3 /* SpellingBeePlus Extension (macOS).appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -458,6 +462,7 @@
 				9607DB8F27CBD87400DBC4E3 /* ViewController.swift in Sources */,
 				9607DB5C27CBD87300DBC4E3 /* AppDelegate.swift in Sources */,
 				9607DB5E27CBD87300DBC4E3 /* SceneDelegate.swift in Sources */,
+				9614A262293D1EBB00302F11 /* Constants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -467,6 +472,7 @@
 			files = (
 				9607DB9027CBD87400DBC4E3 /* ViewController.swift in Sources */,
 				9607DB6D27CBD87300DBC4E3 /* AppDelegate.swift in Sources */,
+				9614A263293D1EBB00302F11 /* Constants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -539,7 +545,7 @@
 /* Begin XCBuildConfiguration section */
 		9607DBA527CBD87400DBC4E3 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 96DB6A5C27D978C500E286E4 /* local.xcconfig */;
+			baseConfigurationReference = 9614A260293D1A2F00302F11 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -572,7 +578,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = "$(BUILD_NUMBER)";
+				CURRENT_PROJECT_VERSION = 13;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -601,7 +607,7 @@
 		};
 		9607DBA627CBD87400DBC4E3 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 96DB6A5C27D978C500E286E4 /* local.xcconfig */;
+			baseConfigurationReference = 9614A260293D1A2F00302F11 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -634,7 +640,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = "$(BUILD_NUMBER)";
+				CURRENT_PROJECT_VERSION = 13;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -673,8 +679,8 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus.Extension;
-				PRODUCT_NAME = "SpellingBeePlus Extension";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_ID).Extension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -702,8 +708,8 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus.Extension;
-				PRODUCT_NAME = "SpellingBeePlus Extension";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_ID).Extension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -720,7 +726,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = "$(BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = "$(DEV_TEAM)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "iOS (App)/Info.plist";
@@ -741,8 +746,8 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus;
-				PRODUCT_NAME = SpellingBeePlus;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_ID)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -757,7 +762,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = "$(BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = "$(DEV_TEAM)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "iOS (App)/Info.plist";
@@ -778,8 +782,8 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus;
-				PRODUCT_NAME = SpellingBeePlus;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_ID)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -810,8 +814,8 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus.Extension;
-				PRODUCT_NAME = "SpellingBeePlus Extension";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_ID).Extension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -841,8 +845,8 @@
 					"-framework",
 					SafariServices,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus.Extension;
-				PRODUCT_NAME = "SpellingBeePlus Extension";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_ID).Extension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -859,7 +863,6 @@
 				CODE_SIGN_ENTITLEMENTS = "macOS (App)/SpellingBeePlus.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = "$(BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = "$(DEV_TEAM)";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -878,8 +881,8 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus;
-				PRODUCT_NAME = SpellingBeePlus;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_ID)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -895,7 +898,6 @@
 				CODE_SIGN_ENTITLEMENTS = "macOS (App)/SpellingBeePlus.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = "$(BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = "$(DEV_TEAM)";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -914,8 +916,8 @@
 					"-framework",
 					WebKit,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jasoncheatham.SpellingBeePlus;
-				PRODUCT_NAME = SpellingBeePlus;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_ID)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

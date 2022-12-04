@@ -1,0 +1,71 @@
+#!/bin/sh
+
+set -e
+
+if [[ -z $DEPLOY_DEST ]]; then
+  echo "DEPLOY_DEST must be defined"
+  exit 1
+fi
+
+if [[ -z $TEAM_ID ]]; then
+  echo "TEAM_ID must be defined"
+  exit 1
+fi
+
+version=$(./version version)
+
+grep -q $version CHANGELOG.md || (echo "Version $version not found in CHANGELOG.md" && exit 1)
+git diff-index --quiet HEAD || (echo "Project has uncommitted changes" && exit 1)
+
+echo ">>> Building app..."
+echo ""
+
+xcodebuild \
+  TEAM_ID=$TEAM_ID \
+  -scheme SpellingBeePlus \
+  -destination 'generic/platform=iOS' \
+  -archivePath build/SpellingBeePlus.xcarchive \
+  archive
+
+echo ">>> Archiving app..."
+echo ""
+
+export_options="build/exportOptions.plist"
+
+plist="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+  <dict>
+    <key>method</key>
+    <string>ad-hoc</string>
+
+    <key>teamID</key>
+    <string>$TEAM_ID</string>
+
+    <key>iCloudContainerEnvironment</key>
+    <string>Development</string>
+  </dict>
+</plist>"
+
+echo "$plist" > build/exportOptions.plist
+
+xcodebuild \
+  TEAM_ID=$TEAM_ID \
+  -exportArchive \
+  -archivePath build/SpellingBeePlus.xcarchive \
+  -exportPath build/export \
+  -exportOptionsPlist "$export_options"
+
+echo ">>> Copying app to deploy host..."
+echo ""
+
+scp ./build/export/SpellingBeePlus.ipa $DEPLOY_DEST
+scp CHANGELOG.md $DEPLOY_DEST
+
+echo ">>> Tagging version $version..."
+echo ""
+
+git tag "v$version" HEAD
+
+echo ""
+echo ">>> Done."
