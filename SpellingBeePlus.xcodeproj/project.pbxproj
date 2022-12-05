@@ -127,6 +127,7 @@
 		9607DBB527CE6CD200DBC4E3 /* content.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = content.css; sourceTree = "<group>"; };
 		9614A260293D1A2F00302F11 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		9614A261293D1EBB00302F11 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		966C8D56293D7DC100820342 /* SpellingBeePlus--macOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "SpellingBeePlus--macOS--Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -164,6 +165,7 @@
 		9607DB3B27CBD87300DBC4E3 = {
 			isa = PBXGroup;
 			children = (
+				966C8D56293D7DC100820342 /* SpellingBeePlus--macOS--Info.plist */,
 				9614A260293D1A2F00302F11 /* Config.xcconfig */,
 				9607DB4027CBD87300DBC4E3 /* Shared (App) */,
 				9607DB4927CBD87300DBC4E3 /* Shared (Extension) */,
@@ -871,11 +873,11 @@
 				DEVELOPMENT_TEAM = "$(DEV_TEAM)";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "SpellingBeePlus--macOS--Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = SpellingBeePlus;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.word-games";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
-				INFOPLIST_KEY_APP_ID = "$(APP_ID)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -908,11 +910,11 @@
 				DEVELOPMENT_TEAM = "$(DEV_TEAM)";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "SpellingBeePlus--macOS--Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = SpellingBeePlus;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.word-games";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
-				INFOPLIST_KEY_APP_ID = "$(APP_ID)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
