@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.5
+
+- Fix missing APP_ID in macOS app
+
 ## 1.0.4
 
 - Internal build updates
