@@ -2,6 +2,78 @@
 
 set -e
 
+function export_iOS_app {
+  local archive=$1
+  local export_path=$2
+  local export_options="build/exportOptions_iOS.plist"
+  local export_plist="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+  <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+  <plist version=\"1.0\">
+    <dict>
+      <key>method</key>
+      <string>ad-hoc</string>
+
+      <key>teamID</key>
+      <string>$TEAM_ID</string>
+    </dict>
+  </plist>"
+  echo "$export_plist" > $export_options
+
+  xcodebuild \
+    TEAM_ID=$TEAM_ID \
+    -exportArchive \
+    -archivePath $archive \
+    -exportPath "$export_path" \
+    -exportOptionsPlist "$export_options"
+}
+
+function export_macOS_app {
+  local archive=$1
+  local export_path=$2
+  local export_options="build/exportOptions_macOS.plist"
+  local export_plist="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+  <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+  <plist version=\"1.0\">
+    <dict>
+      <key>destination</key>
+      <string>upload</string>
+
+      <key>method</key>
+      <string>developer-id</string>
+
+      <key>signingStyle</key>
+      <string>automatic</string>
+
+      <key>teamID</key>
+      <string>$TEAM_ID</string>
+    </dict>
+  </plist>"
+  echo "$export_plist" > $export_options
+
+  xcodebuild \
+    TEAM_ID=$TEAM_ID \
+    -exportArchive \
+    -archivePath $archive \
+    -exportPath "$export_path" \
+    -exportOptionsPlist "$export_options"
+
+  set +e
+
+  until xcodebuild \
+    TEAM_ID=$TEAM_ID \
+    -exportNotarizedApp \
+    -archivePath $archive \
+    -exportPath "$export_path"
+  do \
+    echo "Notarization failed, retrying in 10 seconds"
+    sleep 10
+  done
+
+  set -e
+
+  (cd $export_path && zip -r SpellingBeePlus.zip "SpellingBeePlus.app")
+}
+
 function build_app {
   local platform=$1
 
@@ -20,40 +92,10 @@ function build_app {
   echo ">>> Archiving $platform app..."
   echo ""
 
-  local export_options="build/exportOptions_$platform.plist"
-  local export_path="build/export"
-  local export_method=ad-hoc
-
-  if [ "$platform" = "macOS" ]; then
-    export_method=mac-application
-  fi
-
-  plist="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-  <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
-  <plist version=\"1.0\">
-    <dict>
-      <key>method</key>
-      <string>$export_method</string>
-
-      <key>teamID</key>
-      <string>$TEAM_ID</string>
-
-      <key>iCloudContainerEnvironment</key>
-      <string>Development</string>
-    </dict>
-  </plist>"
-
-  echo "$plist" > $export_options
-
-  xcodebuild \
-    TEAM_ID=$TEAM_ID \
-    -exportArchive \
-    -archivePath $archive \
-    -exportPath "$export_path" \
-    -exportOptionsPlist "$export_options"
-
-  if [ "$platform" = "macOS" ]; then
-    (cd $export_path && zip -r SpellingBeePlus.zip "SpellingBeePlus.app")
+  if [ $platform = "iOS" ]; then
+    export_iOS_app $archive "build/export"
+  else
+    export_macOS_app $archive "build/export"
   fi
 }
 
