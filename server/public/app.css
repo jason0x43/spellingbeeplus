@@ -548,14 +548,22 @@ video {
   position: relative;
   display: flex;
   border-width: 1px;
-  border-color: rgb(255 255 255 / 0.25);
+  border-color: rgb(0 0 0 / 0.1);
   padding: 0.5rem;
   padding-top: 0.75rem;
 }
 
+@media (prefers-color-scheme: dark) {
+  .field-box {
+    border-color: rgb(255 255 255 / 0.25);
+  }
+}
+
 .field-label {
   position: absolute;
-  top: -0.75rem;
+  top: -0.7rem;
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity));
   font-size: 0.875rem;
   line-height: 1.25rem;
 }
