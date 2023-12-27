@@ -15,10 +15,11 @@ use std::{
 };
 use tokio::sync::broadcast::Sender;
 use tracing::{debug, info, warn};
+use uuid::Uuid;
 
 use crate::{
     error::AppError,
-    message::{ErrMsg, ErrMsgKind, Msg, MsgContent},
+    message::{Connect, ErrMsg, ErrMsgKind, Joined, Left, Msg, MsgContent},
     state::AppState,
 };
 
@@ -29,6 +30,7 @@ struct Public;
 struct Context {
     state: Arc<AppState>,
     name: Mutex<String>,
+    id: Uuid,
     tx: Sender<Msg>,
 }
 
@@ -59,31 +61,43 @@ async fn handle_connection(
     // Split the socket so we can send and receive at the same time
     let (mut sender, mut receiver) = socket.split();
 
-    // Send the current server version to the client, which may cause the client
-    // to reload
-    if let Err(err) = sender
+    // Create a variable to hold this client's name
+    let mut name = String::new();
+    // Create a new ID for this client
+    let id = Uuid::new_v4();
+
+    // Send the client a unique ID for it to use, along with the current server
+    // version, which may cause the client to reload
+    let result = sender
         .send(
             Msg {
-                to: "".into(),
-                from: "server".into(),
-                content: MsgContent::Version(state.version),
+                to: None,
+                from: None,
+                content: MsgContent::Connect(Connect {
+                    version: state.version,
+                    id,
+                }),
             }
             .into(),
         )
-        .await
-    {
-        warn!("Error sending version: {err}");
+        .await;
+    if let Err(err) = result {
+        warn!("Error sending connect message: {err}");
     }
 
+    // Tell the new client about any existing clients
     let names = state.user_names.lock().unwrap().clone();
     debug!("Names: {names:?}");
-    for name in names {
+    for (id, name) in names {
         if sender
             .send(
                 Msg {
-                    from: "server".into(),
-                    to: "".into(),
-                    content: MsgContent::Joined(name.clone()),
+                    from: None,
+                    to: None,
+                    content: MsgContent::Joined(Joined {
+                        id,
+                        name: name.clone(),
+                    }),
                 }
                 .into(),
             )
@@ -96,24 +110,21 @@ async fn handle_connection(
         debug!("Sent join message for {name}");
     }
 
-    // Create a variable to hold this client's name
-    let mut name = String::new();
-
     // Wait for the client to send a name message, then update the name
+    debug!("Waiting for SetName message from {addr}...");
     while let Some(Ok(message)) = receiver.next().await {
         if let Message::Text(text) = message {
             match serde_json::from_str::<Msg>(&text) {
                 Ok(Msg {
-                    to: _,
-                    from: _,
-                    content: MsgContent::SetName(cmd),
+                    content: MsgContent::SetName(new_name),
+                    ..
                 }) => {
                     let names = state.user_names.lock().unwrap().clone();
-                    if names.contains(&cmd.name) {
+                    if names.values().any(|x| x == &new_name) {
                         let _ = sender.send(
                             Msg {
-                                from: "server".into(),
-                                to: "".into(),
+                                from: None,
+                                to: None,
                                 content: MsgContent::Error(ErrMsg {
                                     kind: ErrMsgKind::NameUnavailable,
                                     message: "Name is unavailable".into(),
@@ -122,7 +133,7 @@ async fn handle_connection(
                             .into(),
                         );
                     } else {
-                        name = cmd.name;
+                        name = new_name.clone();
                         break;
                     }
                 }
@@ -130,8 +141,8 @@ async fn handle_connection(
                     warn!("Ignored command {text:?}");
                     let _ = sender.send(
                         Msg {
-                            from: "server".into(),
-                            to: "".into(),
+                            from: None,
+                            to: None,
                             content: MsgContent::Error(ErrMsg {
                                 kind: ErrMsgKind::MissingName,
                                 message: "User name must be set before using other commands".into()
@@ -143,8 +154,8 @@ async fn handle_connection(
                     warn!("Invalid command {text:?}: {err}");
                     let _ = sender.send(
                         Msg {
-                            from: "server".into(),
-                            to: "".into(),
+                            from: None,
+                            to: None,
                             content: MsgContent::Error(ErrMsg {
                                 kind: ErrMsgKind::InvalidCommand,
                                 message: format!(
@@ -160,7 +171,7 @@ async fn handle_connection(
     }
 
     // Update the state
-    state.user_names.lock().unwrap().insert(name.clone());
+    state.user_names.lock().unwrap().insert(id, name.clone());
 
     // Subscribe to the broadcast channel
     let mut rx = state.tx.subscribe();
@@ -168,9 +179,12 @@ async fn handle_connection(
     // Send a "joined" message to all broadcast subscribers
     let _ = state.tx.send(
         Msg {
-            from: "server".into(),
-            to: "".into(),
-            content: MsgContent::Joined(name.clone()),
+            from: None,
+            to: None,
+            content: MsgContent::Joined(Joined {
+                id,
+                name: name.clone(),
+            }),
         }
         .into(),
     );
@@ -182,16 +196,16 @@ async fn handle_connection(
         state: state.clone(),
         name: name.clone().into(),
         tx,
+        id,
     });
 
     // Forward messages to the client; only forward broadcast messages (those
     // with an empty 'to' field) or messages addressed to the client
-    let local_ctx = context.clone();
     let mut local_task = tokio::spawn(async move {
         while let Ok(msg) = rx.recv().await {
+            debug!("Handling message from queue: {msg:?}");
             let orig_msg = msg.clone();
-            let name = local_ctx.name.lock().unwrap().clone();
-            let result = if msg.to == name || msg.to == "" {
+            let result = if msg.to == Some(id) || msg.to.is_none() {
                 sender.send(Message::Text(orig_msg.into())).await
             } else {
                 Ok(())
@@ -224,16 +238,19 @@ async fn handle_connection(
     let current_name = &context.name.lock().unwrap().clone();
     let _ = state.tx.send(
         Msg {
-            to: "".into(),
-            from: "server".into(),
-            content: MsgContent::Left(current_name.into()),
+            to: None,
+            from: None,
+            content: MsgContent::Left(Left {
+                id,
+                name: current_name.into(),
+            }),
         }
         .into(),
     );
     debug!("Sent left message for {current_name}");
 
     // Remove this client's name from the user name list
-    state.user_names.lock().unwrap().remove(current_name);
+    state.user_names.lock().unwrap().remove(&id);
 }
 
 /// Handle an incoming WebSocket message
@@ -269,16 +286,15 @@ async fn handle_msg(msg: Msg, context: &Arc<Context>) -> ControlFlow<(), ()> {
     let orig_msg = msg.clone();
     match msg {
         Msg {
-            content: MsgContent::SetName(msg),
+            content: MsgContent::SetName(new_name),
             ..
         } => {
-            debug!("Setting name to: {}", msg.name);
             let names = context.state.user_names.lock().unwrap().clone();
-            let current_name = context.name.lock().unwrap().clone();
-            if names.contains(&msg.name) {
+            let id = context.id.clone();
+            if names.values().any(|x| x == &new_name) {
                 let _ = context.tx.send(Msg {
-                    to: current_name,
-                    from: "server".into(),
+                    to: Some(id),
+                    from: None,
                     content: MsgContent::Error(ErrMsg {
                         kind: ErrMsgKind::NameUnavailable,
                         message: "Name is unavailable".into(),
@@ -287,19 +303,35 @@ async fn handle_msg(msg: Msg, context: &Arc<Context>) -> ControlFlow<(), ()> {
             } else {
                 let mut name = context.name.lock().unwrap();
 
-                // Notify that the previous name has left
+                // Notify requestor that the new name was accepted
+                debug!("Sending new name acknowledgement to {name}");
                 let _ = context.tx.send(Msg {
-                    from: "server".into(),
-                    to: "".into(),
-                    content: MsgContent::Left(name.clone()),
+                    from: None,
+                    to: Some(id),
+                    content: MsgContent::SetName(new_name.clone()),
                 });
 
-                // Notify that the new name has joined
-                *name = msg.name.clone();
+                // Notify that the previous name has left
                 let _ = context.tx.send(Msg {
-                    from: "server".into(),
-                    to: "".into(),
-                    content: MsgContent::Joined(msg.name.clone()),
+                    from: None,
+                    to: None,
+                    content: MsgContent::Left(Left {
+                        id,
+                        name: name.clone(),
+                    }),
+                });
+
+                *name = new_name.clone();
+                debug!("Set name to: {}", new_name);
+
+                // Notify that the new name has joined
+                let _ = context.tx.send(Msg {
+                    from: None,
+                    to: None,
+                    content: MsgContent::Joined(Joined {
+                        id,
+                        name: new_name.clone(),
+                    }),
                 });
             }
 
@@ -309,7 +341,7 @@ async fn handle_msg(msg: Msg, context: &Arc<Context>) -> ControlFlow<(), ()> {
             content: MsgContent::Sync(_),
             ..
         } => {
-            debug!("Got sync request from {} to {}", msg.from, msg.to);
+            debug!("Got sync request from {:?} to {:?}", msg.from, msg.to);
             let _ = context.tx.send(orig_msg.into());
             ControlFlow::Continue(())
         }

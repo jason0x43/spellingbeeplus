@@ -1,9 +1,25 @@
 use axum::extract::ws::Message;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct SetName {
+pub(crate) struct Connect {
+    pub(crate) version: u64,
+    pub(crate) id: Uuid,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct Left {
+    pub(crate) id: Uuid,
+    pub(crate) name: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct Joined {
+    pub(crate) id: Uuid,
     pub(crate) name: String,
 }
 
@@ -32,19 +48,19 @@ pub(crate) struct ErrMsg {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) enum MsgContent {
-    SetName(SetName),
+    Connect(Connect),
+    SetName(String),
     Sync(Sync),
-    Joined(String),
-    Left(String),
+    Joined(Joined),
+    Left(Left),
     Error(ErrMsg),
-    Version(u64),
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct Msg {
-    pub(crate) to: String,
-    pub(crate) from: String,
+    pub(crate) to: Option<Uuid>,
+    pub(crate) from: Option<Uuid>,
     pub(crate) content: MsgContent,
 }
 

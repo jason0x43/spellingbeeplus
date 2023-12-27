@@ -1,5 +1,5 @@
 use std::{
-    collections::HashSet,
+    collections::HashMap,
     net::SocketAddr,
     sync::{Arc, Mutex},
     time::{SystemTime, UNIX_EPOCH},
@@ -24,7 +24,7 @@ async fn main() -> Result<(), AppError> {
 
     let api = Router::new().route("/hello", get(handlers::hello));
 
-    let user_names = Mutex::new(HashSet::new());
+    let user_names = Mutex::new(HashMap::new());
     let (tx, _rx) = broadcast::channel(100);
     let version = SystemTime::now()
         .duration_since(UNIX_EPOCH)
