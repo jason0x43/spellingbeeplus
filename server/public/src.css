@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .field-box {
+    @apply flex border border-white/25 p-2 pt-3 relative;
+  }
+  .field-label {
+    @apply dark:bg-black dark:text-gray-400 absolute top-[-0.75rem] text-sm;
+  }
+
+  .other-word {
+    @apply text-red-500;
+  }
+}

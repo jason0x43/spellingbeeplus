@@ -4,3 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+axum = { version = "0.7.2", features = ["ws"] }
+futures = "0.3.29"
+mime_guess = "2.0.4"
+rust-embed = { version = "8.0.0", features = ["axum-ex"] }
+serde = { version = "1.0.193", features = ["derive"] }
+serde_json = "1.0.108"
+thiserror = "1.0.51"
+tokio = { version = "1.35.1", features = ["rt-multi-thread", "macros"] }
+tower-http = { version = "0.5.0", features = ["trace"] }
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"

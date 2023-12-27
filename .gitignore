@@ -1,3 +1,4 @@
-xcuserdata/
-env.xcconfig
-/build/
+extension/xcuserdata/
+extension/env.xcconfig
+extension/build/
+server/target
