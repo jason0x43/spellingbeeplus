@@ -9,7 +9,7 @@
  *	   | { connect: { version: number; id: string; } }
  *	   | { sync: { requestId: string, words: string[] } }
  *	   | { joined: { id: string, name: string } }
- *	   | { left: { id: string, name: string } }
+ *	   | { left: string }
  *	   | { error: { kind: string, message: string } }
  * }} Message
  */
@@ -176,22 +176,26 @@ window.addEventListener("load", () => {
 				otherWords.push(...message.content.sync.words);
 				renderWords();
 				syncRequestId = undefined;
-			} else if (confirm(`Accept sync request from ${message.from}?`)) {
-				send({
-					to: message.from,
-					from: clientId,
-					content: {
-						sync: {
-							words,
-							requestId: message.content.sync.requestId,
+			} else {
+				const otherPlayer = players.get(message.from ?? "");
+				if (confirm(`Accept sync request from ${otherPlayer}?`)) {
+					send({
+						to: message.from,
+						from: clientId,
+						content: {
+							sync: {
+								words,
+								requestId: message.content.sync.requestId,
+							},
 						},
-					},
-				});
-				otherWords.push(...message.content.sync.words);
-				renderWords();
+					});
+					otherWords.push(...message.content.sync.words);
+					renderWords();
+				}
 			}
 		} else if ("error" in message.content) {
 			console.log("Server error:", message);
+			alert(`Error: ${message.content.error.message}`);
 			if (message.content.error.kind === "nameUnavailable") {
 				nameInput.value = name;
 			}
@@ -223,10 +227,10 @@ window.addEventListener("load", () => {
 
 	/**
 	 * Remove a player from the player selector
-	 * @param {{ id: string, name: string }} player
+	 * @param {string} playerId
 	 */
-	function removePlayer(player) {
-		players.delete(player.id);
+	function removePlayer(playerId) {
+		players.delete(playerId);
 		renderPlayers();
 	}
 

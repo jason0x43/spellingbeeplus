@@ -11,13 +11,6 @@ pub(crate) struct Connect {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct Left {
-    pub(crate) id: Uuid,
-    pub(crate) name: String,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub(crate) struct Joined {
     pub(crate) id: Uuid,
     pub(crate) name: String,
@@ -52,7 +45,7 @@ pub(crate) enum MsgContent {
     SetName(String),
     Sync(Sync),
     Joined(Joined),
-    Left(Left),
+    Left(Uuid),
     Error(ErrMsg),
 }
 

@@ -8,18 +8,14 @@ use axum::{
 };
 use futures::{stream::StreamExt, SinkExt};
 use rust_embed::RustEmbed;
-use std::{
-    net::SocketAddr,
-    ops::ControlFlow,
-    sync::{Arc, Mutex},
-};
+use std::{net::SocketAddr, ops::ControlFlow, sync::Arc};
 use tokio::sync::broadcast::Sender;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 use crate::{
     error::AppError,
-    message::{Connect, ErrMsg, ErrMsgKind, Joined, Left, Msg, MsgContent},
+    message::{Connect, ErrMsg, ErrMsgKind, Joined, Msg, MsgContent},
     state::AppState,
 };
 
@@ -29,7 +25,6 @@ struct Public;
 
 struct Context {
     state: Arc<AppState>,
-    name: Mutex<String>,
     id: Uuid,
     tx: Sender<Msg>,
 }
@@ -194,7 +189,6 @@ async fn handle_connection(
     let tx = state.tx.clone();
     let context = Arc::new(Context {
         state: state.clone(),
-        name: name.clone().into(),
         tx,
         id,
     });
@@ -235,19 +229,15 @@ async fn handle_connection(
     }
 
     // Let subscribers know that this client has left
-    let current_name = &context.name.lock().unwrap().clone();
     let _ = state.tx.send(
         Msg {
             to: None,
             from: None,
-            content: MsgContent::Left(Left {
-                id,
-                name: current_name.into(),
-            }),
+            content: MsgContent::Left(id),
         }
         .into(),
     );
-    debug!("Sent left message for {current_name}");
+    debug!("Sent left message for {id}");
 
     // Remove this client's name from the user name list
     state.user_names.lock().unwrap().remove(&id);
@@ -291,7 +281,9 @@ async fn handle_msg(msg: Msg, context: &Arc<Context>) -> ControlFlow<(), ()> {
         } => {
             let names = context.state.user_names.lock().unwrap().clone();
             let id = context.id.clone();
+
             if names.values().any(|x| x == &new_name) {
+                // Requested name was not available
                 let _ = context.tx.send(Msg {
                     to: Some(id),
                     from: None,
@@ -301,27 +293,10 @@ async fn handle_msg(msg: Msg, context: &Arc<Context>) -> ControlFlow<(), ()> {
                     }),
                 });
             } else {
-                let mut name = context.name.lock().unwrap();
-
-                // Notify requestor that the new name was accepted
-                debug!("Sending new name acknowledgement to {name}");
-                let _ = context.tx.send(Msg {
-                    from: None,
-                    to: Some(id),
-                    content: MsgContent::SetName(new_name.clone()),
-                });
-
-                // Notify that the previous name has left
-                let _ = context.tx.send(Msg {
-                    from: None,
-                    to: None,
-                    content: MsgContent::Left(Left {
-                        id,
-                        name: name.clone(),
-                    }),
-                });
-
-                *name = new_name.clone();
+                // Notify everyone that the previous name has left
+                let mut names =
+                    context.state.user_names.lock().unwrap().clone();
+                names.insert(id, new_name.clone());
                 debug!("Set name to: {}", new_name);
 
                 // Notify that the new name has joined
