@@ -4,11 +4,14 @@ use axum::{
         ConnectInfo, State, WebSocketUpgrade,
     },
     http::{header, StatusCode, Uri},
-    response::{IntoResponse, Redirect, Response},
+    response::{Html, IntoResponse, Redirect, Response},
+    Json,
 };
 use futures::{stream::StreamExt, SinkExt};
+use handlebars::Handlebars;
 use rust_embed::RustEmbed;
-use std::{net::SocketAddr, ops::ControlFlow, sync::Arc};
+use serde_json::json;
+use std::{net::SocketAddr, ops::ControlFlow, str::from_utf8, sync::Arc};
 use tokio::sync::broadcast::Sender;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
@@ -16,7 +19,7 @@ use uuid::Uuid;
 use crate::{
     error::AppError,
     message::{Connect, ErrMsg, ErrMsgKind, Joined, Msg, MsgContent},
-    state::AppState,
+    types::{ApiKey, AppState, AuthToken, ExpiryTime, TokenResponse},
 };
 
 #[derive(RustEmbed)]
@@ -37,11 +40,50 @@ pub(crate) async fn root() -> Result<Redirect, AppError> {
     Ok(Redirect::to("/index.html"))
 }
 
+pub(crate) async fn index(
+    state: State<Arc<AppState>>,
+) -> Result<Response, AppError> {
+    let api_key = state.api_key.clone();
+    let index_tmpl = get_file("index.html")?;
+    let renderer = Handlebars::new();
+    let index = renderer
+        .render_template(&index_tmpl, &json!({ "API_KEY": api_key }))?;
+    Ok(Html(index).into_response())
+}
+
+pub(crate) async fn token(
+    state: State<Arc<AppState>>,
+    key: ApiKey,
+) -> impl IntoResponse {
+    if key != state.api_key {
+        return AppError::Unauthorized().into_response();
+    }
+
+    let new_token = AuthToken::new();
+    state
+        .auth_tokens
+        .lock()
+        .unwrap()
+        .insert(new_token.clone(), ExpiryTime::new());
+    Json(TokenResponse { token: new_token }).into_response()
+}
+
 pub(crate) async fn ws(
     ws: WebSocketUpgrade,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     State(state): State<Arc<AppState>>,
+    token: AuthToken,
 ) -> impl IntoResponse {
+    let tokens = state.auth_tokens.lock().unwrap().clone();
+    let expiry = tokens.get(&token);
+    if let Some(expiry) = expiry {
+        if expiry.is_expired() {
+            return (StatusCode::UNAUTHORIZED, "Unauthorized").into_response();
+        }
+    } else {
+        return (StatusCode::UNAUTHORIZED, "Unauthorized").into_response();
+    }
+
     ws.on_upgrade(move |socket| handle_connection(socket, addr, state))
 }
 
@@ -346,4 +388,10 @@ fn add_cache_control(resp: Response) -> Response {
     let headers = resp.headers_mut();
     headers.insert(header::CACHE_CONTROL, "max-age=31536000".parse().unwrap());
     resp
+}
+
+fn get_file(path: &str) -> Result<String, AppError> {
+    let content = Public::get(path)
+        .ok_or(AppError::Error("File not found".to_owned()))?;
+    Ok(from_utf8(content.data.as_ref()).unwrap().to_string())
 }

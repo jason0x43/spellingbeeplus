@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 axum = { version = "0.7.2", features = ["ws"] }
 futures = "0.3.29"
+handlebars = "5.0.0"
 mime_guess = "2.0.4"
 rust-embed = { version = "8.0.0", features = ["axum-ex"] }
 serde = { version = "1.0.193", features = ["derive"] }

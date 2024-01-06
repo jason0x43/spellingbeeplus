@@ -1,3 +1,9 @@
+mod error;
+mod extractors;
+mod handlers;
+mod message;
+mod types;
+
 use std::{
     collections::HashMap,
     net::SocketAddr,
@@ -11,35 +17,35 @@ use tokio::sync::broadcast;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
-use crate::state::AppState;
-
-mod error;
-mod handlers;
-mod message;
-mod state;
+use crate::types::{AppState, ApiKey};
 
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
     tracing_subscriber::fmt::init();
 
-    let api = Router::new().route("/hello", get(handlers::hello));
-
+    let api_key: ApiKey = std::env::var("API_KEY")?.try_into()?;
     let user_names = Mutex::new(HashMap::new());
+    let auth_tokens = Mutex::new(HashMap::new());
     let (tx, _rx) = broadcast::channel(100);
     let version = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs();
     let app_state = Arc::new(AppState {
+        api_key,
+        auth_tokens,
         user_names,
         tx,
         version,
     });
 
+    let api = Router::new().route("/hello", get(handlers::hello));
     let app = Router::new()
+        .route("/token", get(handlers::token))
         .route("/ws", get(handlers::ws))
         .nest("/api", api)
         .route("/", get(handlers::root))
+        .route("/index.html", get(handlers::index))
         .fallback(handlers::public_files)
         .with_state(app_state)
         .layer(TraceLayer::new_for_http());

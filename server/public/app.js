@@ -14,7 +14,7 @@
  * }} Message
  */
 
-window.addEventListener("load", () => {
+async function onLoad() {
 	/** @type {Map<string, string>} */
 	const players = new Map();
 	const playerSelect = /** @type {HTMLSelectElement} */ (
@@ -95,7 +95,7 @@ window.addEventListener("load", () => {
 	});
 
 	renderWords();
-	connect();
+	await connect();
 
 	/**
 	 * Send a message over the active socket
@@ -107,9 +107,21 @@ window.addEventListener("load", () => {
 		socket?.send(JSON.stringify(msg));
 	}
 
+	async function getToken() {
+		let win = /** @type {any} */ (window);
+		const resp = await fetch("/token", {
+			headers: {
+				"x-api-key": win.API_KEY,
+			},
+		});
+		const json = await resp.json();
+		return json.token;
+	}
+
 	// Connect to the server websocket
-	function connect() {
-		const skt = new WebSocket("ws://localhost:3003/ws");
+	async function connect() {
+		const token = await getToken();
+		const skt = new WebSocket(`ws://localhost:3003/ws?token=${token}`);
 
 		skt.addEventListener("open", () => {
 			reconnectWait = 500;
@@ -119,7 +131,11 @@ window.addEventListener("load", () => {
 		skt.addEventListener("close", () => {
 			console.warn("Connection closed");
 			socket = undefined;
-			setTimeout(connect, reconnectWait);
+			setTimeout(() => {
+				connect().catch((error) => {
+					console.warn("connection error:", error);
+				});
+			}, reconnectWait);
 			reconnectWait *= 1.5;
 		});
 
@@ -271,4 +287,10 @@ window.addEventListener("load", () => {
 		localStorage.setItem("words", JSON.stringify(words));
 		renderWords();
 	}
+}
+
+window.addEventListener("load", () => {
+	onLoad().catch((error) => {
+		console.error('Unhandled error in "onLoad":', error);
+	});
 });
