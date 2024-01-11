@@ -26,6 +26,10 @@ use crate::{
 #[folder = "public/"]
 struct Public;
 
+#[derive(RustEmbed)]
+#[folder = "templates/"]
+struct Templates;
+
 struct Context {
     state: Arc<AppState>,
     id: Uuid,
@@ -44,7 +48,7 @@ pub(crate) async fn index(
     state: State<Arc<AppState>>,
 ) -> Result<Response, AppError> {
     let api_key = state.api_key.clone();
-    let index_tmpl = get_file("index.html")?;
+    let index_tmpl = get_template("index.html")?;
     let renderer = Handlebars::new();
     let index = renderer
         .render_template(&index_tmpl, &json!({ "API_KEY": api_key }))?;
@@ -390,8 +394,9 @@ fn add_cache_control(resp: Response) -> Response {
     resp
 }
 
-fn get_file(path: &str) -> Result<String, AppError> {
-    let content = Public::get(path)
+/// Load a template file
+fn get_template(path: &str) -> Result<String, AppError> {
+    let content = Templates::get(path)
         .ok_or(AppError::Error("File not found".to_owned()))?;
     Ok(from_utf8(content.data.as_ref()).unwrap().to_string())
 }

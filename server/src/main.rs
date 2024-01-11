@@ -17,7 +17,7 @@ use tokio::sync::broadcast;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
-use crate::types::{AppState, ApiKey};
+use crate::types::{ApiKey, AppState};
 
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
@@ -40,12 +40,18 @@ async fn main() -> Result<(), AppError> {
     });
 
     let api = Router::new().route("/hello", get(handlers::hello));
-    let app = Router::new()
+    let mut router = Router::new()
         .route("/token", get(handlers::token))
         .route("/ws", get(handlers::ws))
-        .nest("/api", api)
-        .route("/", get(handlers::root))
-        .route("/index.html", get(handlers::index))
+        .nest("/api", api);
+
+    if cfg!(debug_assertions) {
+        router = router
+            .route("/", get(handlers::root))
+            .route("/index.html", get(handlers::index));
+    }
+
+    let app = router
         .fallback(handlers::public_files)
         .with_state(app_state)
         .layer(TraceLayer::new_for_http());
