@@ -1,43 +1,57 @@
 {
-    "manifest_version": 2,
-    "default_locale": "en",
+	"$schema": "https://json.schemastore.org/chrome-manifest.json",
 
-    "name": "__MSG_extension_name__",
-    "description": "__MSG_extension_description__",
-    "version": "1.0",
+	"manifest_version": 3,
 
-    "icons": {
-        "48": "images/icon-48.png",
-        "96": "images/icon-96.png",
-        "128": "images/icon-128.png",
-        "256": "images/icon-256.png",
-        "512": "images/icon-512.png"
-    },
+	"default_locale": "en",
 
-    "background": {
-        "scripts": [ "background.js" ],
-        "persistent": false
-    },
+	"name": "__MSG_extension_name__",
+	"description": "__MSG_extension_description__",
+	"version": "1.0",
 
-    "content_scripts": [{
-        "js": [ "content.js" ],
-        "css": [ "content.css" ],
-        "matches": [ "https://www.nytimes.com/puzzles/spelling-bee" ]
-    }],
+	"icons": {
+		"48": "images/icon-48.png",
+		"96": "images/icon-96.png",
+		"128": "images/icon-128.png",
+		"256": "images/icon-256.png",
+		"512": "images/icon-512.png"
+	},
 
-    "browser_action": {
-        "default_popup": "popup.html",
-        "default_icon": {
-            "16": "images/toolbar-icon-16.png",
-            "19": "images/toolbar-icon-19.png",
-            "32": "images/toolbar-icon-32.png",
-            "38": "images/toolbar-icon-38.png",
-            "48": "images/toolbar-icon-48.png",
-            "72": "images/toolbar-icon-72.png"
-        }
-    },
+	"background": {
+		"service_worker": "background.js",
+		"type": "module"
+	},
 
-    "permissions": [
-        "https://www.nytimes.com/puzzles/spelling-bee"
-    ]
+	"content_scripts": [
+		{
+			"js": ["content.js"],
+			"css": ["content.css"],
+			"matches": ["https://www.nytimes.com/puzzles/spelling-bee"]
+		}
+	],
+
+	"web_accessible_resources": [
+		{
+			"matches": ["<all_urls>"],
+			"resources": ["sb.js", "sbp.js", "sync.js", "util.js"]
+		}
+	],
+
+	"action": {
+		"default_popup": "popup.html",
+		"default_icon": {
+			"16": "images/toolbar-icon-16.png",
+			"19": "images/toolbar-icon-19.png",
+			"32": "images/toolbar-icon-32.png",
+			"38": "images/toolbar-icon-38.png",
+			"48": "images/toolbar-icon-48.png",
+			"72": "images/toolbar-icon-72.png"
+		}
+	},
+
+	"host_permissions": [
+		"https://www.nytimes.com/puzzles/spelling-bee",
+		"https://localhost:9001",
+		"wss://localhost:9001"
+	]
 }

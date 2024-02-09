@@ -11,10 +11,17 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use axum::{routing::get, Router};
+use axum::{
+    http::{header, request, HeaderName, HeaderValue},
+    routing::get,
+    Router,
+};
 use error::AppError;
 use tokio::sync::broadcast;
-use tower_http::trace::TraceLayer;
+use tower_http::{
+    cors::{AllowOrigin, CorsLayer},
+    trace::TraceLayer,
+};
 use tracing::info;
 
 use crate::types::{ApiKey, AppState};
@@ -54,6 +61,19 @@ async fn main() -> Result<(), AppError> {
     let app = router
         .fallback(handlers::public_files)
         .with_state(app_state)
+        .layer(
+            CorsLayer::new()
+                .allow_origin(AllowOrigin::predicate(
+                    |_origin: &HeaderValue, _request_parts: &request::Parts| {
+                        true
+                    },
+                ))
+                .allow_credentials(true)
+                .allow_headers(vec![
+                    header::CONTENT_TYPE,
+                    HeaderName::from_static("x-api-key"),
+                ]),
+        )
         .layer(TraceLayer::new_for_http());
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3003")

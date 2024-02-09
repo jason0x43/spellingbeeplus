@@ -1,0 +1,11 @@
+{
+  "name": "spellingbeeplus",
+  "version": "1.0.0",
+  "description": "An extension for the NYT Spelling Bee game",
+  "author": "Jason Cheatham <jason@jasoncheatham.com>",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@types/chrome": "^0.0.256"
+  }
+}
