@@ -35,7 +35,7 @@ export function className(...names) {
  * @returns {T extends undefined | null ? never : T}
  */
 export function def(value) {
-	if (value === undefined) {
+	if (value == null) {
 		throw new Error("Expected value to be defined");
 	}
 	return /** @type {*} */ (value);
@@ -140,4 +140,44 @@ export function replace(id, container, element) {
  */
 export function setClass(elem, className, condition) {
 	elem.classList[condition ? "add" : "remove"](className);
+}
+
+/**
+ * @param {string} selector
+ * @returns {HTMLInputElement | null}
+ */
+export function selInput(selector) {
+	return /** @type {HTMLInputElement | null} */ (document.querySelector(selector));
+}
+
+/**
+ * @param {string} selector
+ * @returns {HTMLSelectElement | null}
+ */
+export function selSelect(selector) {
+	return /** @type {HTMLSelectElement | null} */ (document.querySelector(selector));
+}
+
+/**
+ * @param {string} selector
+ * @returns {HTMLDivElement | null}
+ */
+export function selDiv(selector) {
+	return /** @type {HTMLDivElement | null} */ (document.querySelector(selector));
+}
+
+/**
+ * @param {string} selector
+ * @returns {HTMLButtonElement | null}
+ */
+export function selButton(selector) {
+	return /** @type {HTMLButtonElement | null} */ (document.querySelector(selector));
+}
+
+/**
+ * @param {string} selector
+ * @returns {HTMLElement | null}
+ */
+export function selElement(selector) {
+	return /** @type {HTMLElement | null} */ (document.querySelector(selector));
 }

@@ -14,13 +14,18 @@ import {
 	sbProgressRank,
 	sbProgressValue,
 } from "./sb.js";
-import { connect } from "./sync.js";
+import { connect, setName } from "./sync.js";
 import {
 	className,
 	def,
 	getNormalizedText,
 	h,
 	replace,
+	selButton,
+	selDiv,
+	selElement,
+	selInput,
+	selSelect,
 	setClass,
 } from "./util.js";
 
@@ -66,6 +71,10 @@ let gameState = {
 	thresholds: {},
 	rank: "",
 	activeView: null,
+	player: { id: "", name: "" },
+	friends: [],
+	friendId: "",
+	newName: "",
 };
 
 /**
@@ -82,15 +91,15 @@ async function getGameData() {
 		/** @type {(event: MessageEvent) => void} */
 		const listener = (event) => {
 			if (event.data?.gameData) {
-				console.log("got message with game data");
+				console.debug("got message with game data");
 				window.removeEventListener("message", listener);
 				resolve(event.data.gameData);
 			}
-		}
+		};
 
 		window.addEventListener("message", listener);
 
-		console.log("injecting script");
+		console.debug("injecting script");
 		document.body.append(script);
 	});
 }
@@ -116,7 +125,7 @@ function installKeyHandler(onKeydown) {
 		}
 	});
 
-	console.log("injecting script");
+	console.debug("injecting script");
 	document.body.append(script);
 }
 
@@ -166,7 +175,7 @@ function getThresholds(words, pangrams) {
 	}, 0);
 	const delta = 100 / 8;
 
-	console.log("max score:", maxScore);
+	console.debug("max score:", maxScore);
 
 	return {
 		beginner: {
@@ -236,85 +245,88 @@ function addHintsView() {
  */
 function addSyncView() {
 	document.querySelector(`#${sbpSyncViewId}`)?.remove();
-	const view = h("div", { id: sbpSyncViewId });
-	view.append(h("h2", "Sync me!"));
-	getViewBox().append(view);
-}
-
-/** @param {Partial<GameState>} state */
-function updateState(state) {
-	gameState = { ...gameState, ...state };
-
-	if (state.gameData) {
-		gameState.gameStats = getStats(state.gameData.answers);
-		gameState.thresholds = getThresholds(
-			state.gameData.answers,
-			state.gameData.pangrams,
-		);
-	}
-
-	if (state.words) {
-		gameState.wordStats = getStats(state.words);
-	}
-
-	if (!gameState.letter) {
-		gameState.letter = gameState.gameData.validLetters[0] ?? "";
-	}
-
-	const progressBar = getProgressBar();
-	const nextMarker = document.querySelector(`.${progressMarkerClass}`);
-
-	if (gameState.rank === "genius") {
-		const wordListBox = getWordListOuter();
-		if (wordListBox && !wordListBox.classList.contains(baseClass)) {
-			wordListBox.classList.add(baseClass);
-		}
-
-		// If we hit genius, hide the next rank marker
-		if (nextMarker) {
-			nextMarker.remove();
-		}
-	} else {
-		let mrkr;
-		if (nextMarker) {
-			mrkr = /** @type {HTMLElement} */ (nextMarker);
-		} else {
-			mrkr = h(
+	const view = h(
+		"div",
+		{
+			id: sbpSyncViewId,
+			style: [
+				"display: grid",
+				"grid-template-columns: min-content 8rem",
+				"align-items: center",
+				"gap: 1rem",
+			].join(";"),
+		},
+		[
+			h("label", { for: "sbp-name-input" }, "Name"),
+			h(
 				"div",
 				{
-					class: `${sbProgressMarker} ${progressMarkerClass}`,
+					id: "sbp-name-input-box",
+					style:
+						"display:flex;flex-direction:row;align-items:center;position:relative;overflow:hidden",
 				},
-				h("span", { class: sbProgressValue }),
-			);
-			progressBar.append(mrkr);
-		}
-		const nextRank = gameState.thresholds[gameState.rank];
-		if (nextRank) {
-			mrkr.style.left = `${nextRank.distance}%`;
-			const marker = def(mrkr.querySelector(`.${sbProgressValue}`));
-			marker.textContent = `${nextRank.score}`;
-			setClass(mrkr, "final", nextRank.distance === 100);
-		}
-	}
+				[
+					h("input", {
+						id: "sbp-name-input",
+						placeholder: "Name",
+						style: "width:100%;padding:2px;padding-right:1.5rem",
+					}),
+					h(
+						"button",
+						{
+							id: "sbp-name-button",
+							style:
+								"position:absolute;right:4px;font-size:10px;border:none;padding:0;",
+						},
+						"💾",
+					),
+				],
+			),
+			h("label", { for: "sbp-friend-select" }, "Friend"),
+			h("select", { id: "sbp-friend-select" }),
+			h(
+				"button",
+				{ id: "sbp-sync-button", style: "grid-column:1 / span 2" },
+				"Sync Words",
+			),
+		],
+	);
+	getViewBox().append(view);
 
-	const summary = def(document.querySelector(".sb-wordlist-summary"));
-	if (/You have found/.test(def(summary.textContent))) {
-		const found = gameState.words.length;
-		const total = gameState.gameData.answers.length;
-		const totalPgs = gameState.gameData.pangrams.length;
-		const foundPgs = gameState.gameData.pangrams.filter((pg) =>
-			gameState.words.includes(pg),
-		).length;
-		let summaryText = `You have found ${found} of ${total} words`;
-		if (gameState.rank === "genius") {
-			summaryText += `, ${foundPgs} of ${totalPgs} pangrams`;
-		}
-		summary.textContent = summaryText;
-	}
+	const button = selButton("#sbp-sync-button");
+	button?.addEventListener("click", () => {
+		console.debug("syncing!");
+	});
 
+	const nameInput = selInput("#sbp-name-input");
+	nameInput?.addEventListener("keydown", (event) => {
+		event.stopPropagation();
+	});
+	nameInput?.addEventListener("input", () => {
+		updateState({ newName: nameInput.value });
+		console.debug(`updated name to ${nameInput.value}`);
+	});
+
+	const nameButton = selButton("#sbp-name-button");
+	nameButton?.addEventListener("click", () => {
+		setName(gameState.newName);
+		console.debug("updating name");
+		updateState({ newName: "" });
+	});
+
+	const friendSelect = selSelect("#sbp-friend-select");
+	friendSelect?.addEventListener("change", () => {
+		console.debug(`selected friend ${friendSelect.value}`);
+		updateState({ friendId: friendSelect.value });
+	});
+}
+
+/**
+ * Update the rendered view(s) based on the gameState
+ */
+function render() {
 	const view = document.querySelector(`#${sbpViewId}`);
 	if (!view) {
-		// Don't try to update the UI if we haven't created the hints view
 		return;
 	}
 
@@ -430,6 +442,109 @@ function updateState(state) {
 	});
 
 	getDrawer().setAttribute("data-sbp-pane", visiblePane ?? "");
+
+	const nameInput = def(selInput("#sbp-name-input"));
+	nameInput.value = gameState.newName || gameState.player.name;
+
+	const friendSelect = def(selSelect("#sbp-friend-select"));
+	friendSelect.innerHTML = "";
+	for (const friend of gameState.friends) {
+		friendSelect.append(h("option", { value: friend.id }, friend.name));
+	}
+	friendSelect.value = gameState.friendId;
+
+	const nameBox = def(selDiv("#sbp-name-input-box"));
+	console.debug(`comparing ${gameState.newName} to ${gameState.player.name}`);
+	if (gameState.newName && gameState.newName !== gameState.player.name) {
+		nameBox.classList.add("sbp-modified");
+	} else {
+		nameBox.classList.remove("sbp-modified");
+	}
+}
+
+/**
+ * @param {Partial<GameState>} state
+ * @returns {GameState}
+ */
+function updateState(state) {
+	gameState = { ...gameState, ...state };
+
+	if (state.gameData) {
+		gameState.gameStats = getStats(state.gameData.answers);
+		gameState.thresholds = getThresholds(
+			state.gameData.answers,
+			state.gameData.pangrams,
+		);
+	}
+
+	if (state.words) {
+		gameState.wordStats = getStats(state.words);
+	}
+
+	if (!gameState.letter) {
+		gameState.letter = gameState.gameData.validLetters[0] ?? "";
+	}
+
+	const progressBar = getProgressBar();
+	const nextMarker = selElement(`.${progressMarkerClass}`);
+
+	if (gameState.rank === "genius") {
+		const wordListBox = getWordListOuter();
+		if (wordListBox && !wordListBox.classList.contains(baseClass)) {
+			wordListBox.classList.add(baseClass);
+		}
+
+		// If we hit genius, hide the next rank marker
+		if (nextMarker) {
+			nextMarker.remove();
+		}
+	} else {
+		/** @type {HTMLElement | null} */
+		let mrkr;
+
+		if (nextMarker) {
+			mrkr = nextMarker;
+		} else {
+			mrkr = h(
+				"div",
+				{
+					class: `${sbProgressMarker} ${progressMarkerClass}`,
+				},
+				h("span", { class: sbProgressValue }),
+			);
+			progressBar.append(mrkr);
+		}
+		const nextRank = gameState.thresholds[gameState.rank];
+		if (nextRank) {
+			mrkr.style.left = `${nextRank.distance}%`;
+			const marker = def(mrkr.querySelector(`.${sbProgressValue}`));
+			marker.textContent = `${nextRank.score}`;
+			setClass(mrkr, "final", nextRank.distance === 100);
+		}
+	}
+
+	const summary = def(document.querySelector(".sb-wordlist-summary"));
+	if (/You have found/.test(def(summary.textContent))) {
+		const found = gameState.words.length;
+		const total = gameState.gameData.answers.length;
+		const totalPgs = gameState.gameData.pangrams.length;
+		const foundPgs = gameState.gameData.pangrams.filter((pg) =>
+			gameState.words.includes(pg),
+		).length;
+		let summaryText = `You have found ${found} of ${total} words`;
+		if (gameState.rank === "genius") {
+			summaryText += `, ${foundPgs} of ${totalPgs} pangrams`;
+		}
+		summary.textContent = summaryText;
+	}
+
+	if (gameState.player.name) {
+		localStorage.setItem("player-name", gameState.player.name);
+	}
+
+	render();
+
+	return gameState;
 }
 
 function addViewBox() {
@@ -459,7 +574,7 @@ function addHintsButton() {
 
 function addSyncButton() {
 	document.querySelector(`#${syncClass}-button`)?.remove();
-	console.log("adding sync button");
+	console.debug("adding sync button");
 
 	const button = h(
 		"button",
@@ -496,7 +611,7 @@ function selectLetterRight() {
 }
 
 async function main() {
-	console.log("Starting SBP...");
+	console.debug("Starting SBP...");
 
 	const rank = def(document.querySelector(`.${sbProgressRank}`));
 
@@ -533,21 +648,64 @@ async function main() {
 	});
 
 	installKeyHandler((event) => {
-		if (event.key === 'ArrowLeft' && event.shiftKey) {
+		if (event.key === "ArrowLeft" && event.shiftKey) {
 			selectLetterLeft();
-		} else if (event.key === 'ArrowRight' && event.shiftKey) {
+		} else if (event.key === "ArrowRight" && event.shiftKey) {
 			selectLetterRight();
 		}
 	});
-	console.log("Installed key handler");
+	console.debug("Installed key handler");
 
-	try {
-		await connect();
-	} catch (error) {
-		console.error(`Error connecting: ${error}`);
-	}
+	let playerName = localStorage.getItem("player-name") || "Player";
+	updateState({ newName: playerName });
 
-	console.log("Started SBP");
+	await connect({
+		onName: ({ id, name }) => {
+			console.debug("got name event");
+			updateState({ player: { id, name } });
+		},
+		onJoin: ({ id, name }) => {
+			console.debug("got join event");
+			const friends = gameState.friends;
+			let index = friends.findIndex((f) => f.id === id);
+			if (index !== -1) {
+				updateState({
+					friends: [
+						...gameState.friends.slice(0, index),
+						{ id, name },
+						...gameState.friends.slice(index + 1),
+					],
+				});
+			} else {
+				updateState({ friends: [...gameState.friends, { id, name }] });
+			}
+		},
+		onLeave: (id) => {
+			console.debug("got leave event");
+			const index = gameState.friends.findIndex((f) => f.id === id);
+			if (index !== -1) {
+				updateState({
+					friends: [
+						...gameState.friends.slice(0, index),
+						...gameState.friends.slice(index + 1),
+					],
+				});
+			}
+		},
+		onSync: () => {
+			console.debug("sync request");
+		},
+		onSyncRequest: (from) => {
+			return confirm(`Accept sync request from ${from}?`);
+		},
+		onError: () => {
+			console.debug("error");
+		},
+		getState: () => gameState,
+		updateState: (newState) => updateState(newState),
+	});
+
+	console.debug("Started SBP");
 }
 
 try {

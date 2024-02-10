@@ -19,6 +19,16 @@
 	display: none;
 }
 
+#sbp-sync-view {
+	#sbp-name-button {
+		display: none;
+	}
+
+	#sbp-name-input-box.sbp-modified #sbp-name-button {
+		display: block;
+	}
+}
+
 [data-sbp-pane]:not([data-sbp-pane=""]) {
 	.sb-wordlist-window .sb-wordlist-pag,
 	.sb-wordlist-window .sb-kebob {

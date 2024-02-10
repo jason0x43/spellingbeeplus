@@ -31,17 +31,17 @@ async fn main() -> Result<(), AppError> {
     tracing_subscriber::fmt::init();
 
     let api_key: ApiKey = std::env::var("API_KEY")?.try_into()?;
-    let user_names = Mutex::new(HashMap::new());
+    let clients = Mutex::new(HashMap::new());
     let auth_tokens = Mutex::new(HashMap::new());
     let (tx, _rx) = broadcast::channel(100);
     let version = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
-        .as_secs();
+        .as_secs() as u32;
     let app_state = Arc::new(AppState {
         api_key,
         auth_tokens,
-        user_names,
+        clients,
         tx,
         version,
     });

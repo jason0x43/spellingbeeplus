@@ -52,3 +52,9 @@ impl From<RenderError> for AppError {
         AppError::Error(format!("{}", err))
     }
 }
+
+impl From<serde_json::Error> for AppError {
+    fn from(err: serde_json::Error) -> Self {
+        AppError::Error(format!("{}", err))
+    }
+}

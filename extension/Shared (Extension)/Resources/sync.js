@@ -1,3 +1,6 @@
+/** @typedef {import("../../../server/bindings/MessageFrom.ts").MessageFrom} MessageFrom */
+/** @typedef {import("../../../server/bindings/MessageTo.ts").MessageTo} MessageTo */
+
 /** @type {WebSocket | undefined} */
 let socket;
 
@@ -5,22 +8,12 @@ let socket;
 let version;
 
 /** @type {string | undefined} */
-let clientId;
-
-/** @type {string | undefined} */
 let syncRequestId;
 
-/** @type {string[]} */
-const otherWords = [];
-
-/** @type {Map<string, string>} */
-const players = new Map();
-
-/** @type {string[]} */
-const words = JSON.parse(localStorage.getItem("words") || "[]");
-
 let reconnectWait = 500;
-let playerName = localStorage.getItem("your-name") || "Player";
+
+/** @type {string | null} */
+let clientId = localStorage.getItem("sbp-client-id");
 
 /**
  * Get a token
@@ -35,7 +28,7 @@ async function getToken() {
 		},
 	});
 	const text = await resp.text();
-	console.log(`Got token response: ${text}`);
+	console.debug(`Got token response: ${text}`);
 	const json = JSON.parse(text);
 	return json.token;
 }
@@ -43,23 +36,22 @@ async function getToken() {
 /**
  * Send a message over the active socket
  *
- * @param {Message} msg
+ * @param {MessageTo} msg
  */
 function send(msg) {
-	console.log("Sending message:", msg);
-	socket?.send(JSON.stringify(msg));
-}
-
-function renderWords() {
-	console.log("rendering words");
+	console.debug("Sending message:", msg);
+	const socket = assertConnected();
+	socket.send(JSON.stringify(msg));
 }
 
 /**
  * Handle an incoming websocket message
- * @param {Message} message
+ *
+ * @param {SyncDelegate} delegate
+ * @param {MessageFrom} message
  */
-function handleMessage(message) {
-	console.log("Handling message:", message);
+function handleMessage(delegate, message) {
+	console.debug("Handling message:", message);
 
 	if ("connect" in message.content) {
 		// Reload the page if the server version has changed
@@ -69,69 +61,91 @@ function handleMessage(message) {
 			window.location.reload();
 		}
 
-		clientId = message.content.connect.id;
+		if (clientId) {
+			console.debug("Received connect message with existing client ID!");
+			send({
+				to: null,
+				content: { setClientId: clientId },
+			});
+			console.debug(`Sent request to set client ID to ${clientId}`);
+		} else {
+			clientId = message.content.connect.id;
+			console.debug(`Connected as ${clientId}`);
+			localStorage.setItem("sbp-client-id", clientId);
+		}
 
-		if (playerName) {
-			send({ content: { setName: playerName } });
+		const name = delegate.getState().newName;
+		if (name) {
+			send({
+				to: null,
+				content: { setName: name },
+			});
 		}
 	} else if ("joined" in message.content) {
 		if (message.content.joined.id === clientId) {
-			playerName = message.content.joined.name;
-			localStorage.setItem("your-name", playerName);
+			delegate.onName(message.content.joined);
 		} else {
-			// addPlayer(message.content.joined);
+			delegate.onJoin(message.content.joined);
 		}
 	} else if ("left" in message.content) {
-		// removePlayer(message.content.left);
+		delegate.onLeave(message.content.left);
 	} else if ("sync" in message.content) {
 		if (
 			message.content.sync.requestId &&
 			message.content.sync.requestId === syncRequestId
 		) {
-			otherWords.push(...message.content.sync.words);
-			renderWords();
+			// This is an incoming sync response that matches the current
+			// syncRequestId -- perform the sync
+			delegate.onSync(message.content.sync.words);
 			syncRequestId = undefined;
 		} else {
-			const otherPlayer = players.get(message.from ?? "");
-			if (confirm(`Accept sync request from ${otherPlayer}?`)) {
+			// This is a new incoming sync request; if we agree to it, sync the
+			// provided words and send a confirmation response
+			if (delegate.onSyncRequest(message.from)) {
 				send({
 					to: message.from,
-					from: clientId,
 					content: {
 						sync: {
-							words,
+							words: message.content.sync.words,
 							requestId: message.content.sync.requestId,
 						},
 					},
 				});
-				otherWords.push(...message.content.sync.words);
-				renderWords();
+				delegate.onSync(message.content.sync.words);
 			}
 		}
 	} else if ("error" in message.content) {
-		console.log("Server error:", message);
+		console.debug("Server error:", message);
 		alert(`Error: ${message.content.error.message}`);
 		if (message.content.error.kind === "nameUnavailable") {
 			// nameInput.value = name;
 		}
 	}
 }
-// Connect to the server websocket
-export async function connect() {
+
+/**
+ * Connect to the server websocket
+ *
+ * @param {SyncDelegate} delegate
+ */
+export async function connect(delegate) {
+	socket?.close();
+	socket = undefined;
+
 	const token = await getToken();
-	console.log(`Connecting to socket with token: ${token}`);
+	console.debug(`Connecting to socket with token: ${token}`);
 	const skt = new WebSocket(`wss://localhost:9001/ws?token=${token}`);
 
 	skt.addEventListener("open", () => {
 		reconnectWait = 500;
-		console.log("Connected to server");
+		console.debug("Connected to server");
 	});
 
 	skt.addEventListener("close", () => {
 		console.warn("Connection closed");
 		socket = undefined;
 		setTimeout(() => {
-			connect().catch((error) => {
+			connect(delegate).catch((error) => {
 				console.warn("connection error:", error);
 			});
 		}, reconnectWait);
@@ -143,13 +157,34 @@ export async function connect() {
 	});
 
 	skt.addEventListener("message", (event) => {
-		console.log("Received message:", event.data);
+		console.debug("Received message:", event.data);
 		try {
-			handleMessage(JSON.parse(event.data));
+			handleMessage(delegate, JSON.parse(event.data));
 		} catch (error) {
 			console.warn(`${error}`);
 		}
 	});
 
 	socket = skt;
+}
+
+/**
+ * Update the player's name
+ *
+ * @param {string} name
+ */
+export async function setName(name) {
+	send({ to: null, content: { setName: name } });
+}
+
+/**
+ * Check that there's an active connection
+ *
+ * @returns {WebSocket}
+ */
+function assertConnected() {
+	if (!socket) {
+		throw new Error("Not connected");
+	}
+	return socket;
 }

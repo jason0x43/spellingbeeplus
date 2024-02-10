@@ -1,5 +1,5 @@
 use axum::http::HeaderValue;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     sync::Mutex,
@@ -8,7 +8,7 @@ use std::{
 use tokio::sync::broadcast;
 use uuid::Uuid;
 
-use crate::{error::AppError, message::Msg};
+use crate::{error::AppError, message::InternalMessage};
 
 #[derive(Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
 pub(crate) struct AuthToken(Uuid);
@@ -44,10 +44,11 @@ impl ExpiryTime {
 
 pub(crate) struct AppState {
     pub(crate) api_key: ApiKey,
-    pub(crate) version: u64,
+    pub(crate) version: u32,
     pub(crate) auth_tokens: Mutex<HashMap<AuthToken, ExpiryTime>>,
-    pub(crate) user_names: Mutex<HashMap<Uuid, String>>,
-    pub(crate) tx: broadcast::Sender<Msg>,
+    pub(crate) clients: Mutex<HashMap<Uuid, String>>,
+    /// For transferring messages from senders to receivers
+    pub(crate) tx: broadcast::Sender<InternalMessage>,
 }
 
 #[derive(Clone, Serialize, PartialEq)]

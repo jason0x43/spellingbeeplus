@@ -1,15 +1,3 @@
-type Message = {
-	to?: string;
-	from?: string;
-	content:
-		| { setName: string }
-		| { connect: { version: number; id: string } }
-		| { sync: { requestId: string; words: string[] } }
-		| { joined: { id: string; name: string } }
-		| { left: string }
-		| { error: { kind: string; message: string } };
-};
-
 type GameData = {
 	answers: string[];
 	centerLetter: string;
@@ -38,5 +26,24 @@ type GameState = {
 		}
 	>;
 	rank: string;
-	activeView: 'hints' | 'sync' | null;
+	activeView: "hints" | "sync" | null;
+	player: { id: string; name: string };
+	friends: { id: string; name: string }[];
+	friendId: string;
+	newName: string;
+};
+
+type SyncDelegate = {
+	onName: (data: { id: string; name: string }) => void;
+	onJoin: (data: { id: string; name: string }) => void;
+	onLeave: (id: string) => void;
+	onSync: (words: string[]) => void;
+	onSyncRequest: (id: string) => boolean;
+	onError: (kind: string, message: string) => void;
+	getState: () => GameState;
+	updateState: (newState: GameState) => GameState;
+};
+
+type SyncHandle = {
+	updateName: (name: string) => Promise<void>;
 };
