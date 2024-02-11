@@ -178,6 +178,20 @@ export async function setName(name) {
 }
 
 /**
+ * Update the player's name
+ *
+ * @param {string} friendId
+ * @param {string[]} words
+ */
+export async function syncWords(friendId, words) {
+	syncRequestId = Math.random().toString(36).slice(2);
+	send({
+		to: friendId,
+		content: { sync: { requestId: syncRequestId, words } },
+	});
+}
+
+/**
  * Check that there's an active connection
  *
  * @returns {WebSocket}

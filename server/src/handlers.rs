@@ -194,9 +194,10 @@ async fn handle_connection(
                                 }
                                 .into(),
                             );
-                            debug!("Name was already in use, asked for another name from {client_id}");
+                            debug!("Name '{new_name}' was already in use, asked for another name from {client_id}");
                         } else {
-                            debug!("Name is already assigned to {client_id} ");
+                            debug!("Name '{new_name}' is already assigned to {client_id} ");
+                            break;
                         }
                     } else {
                         name = new_name.clone();
@@ -272,13 +273,12 @@ async fn handle_connection(
     let mut local_task = tokio::spawn(async move {
         while let Ok(msg) = rx.recv().await {
             debug!("Handling message from queue: {msg:?}");
-            let orig_msg = msg.clone();
             let result = if msg.to == Some(client_id) || msg.to.is_none() {
                 sender
                     .send(
                         MessageFrom {
-                            from: SERVER_ID,
-                            content: orig_msg.content,
+                            from: msg.from,
+                            content: msg.content,
                         }
                         .into(),
                     )

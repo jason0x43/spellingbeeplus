@@ -1,5 +1,9 @@
 #sbp-view-box {
 	padding: 1rem;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
 }
 
 #sbp-button-box {

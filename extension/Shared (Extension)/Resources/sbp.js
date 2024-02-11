@@ -14,7 +14,7 @@ import {
 	sbProgressRank,
 	sbProgressValue,
 } from "./sb.js";
-import { connect, setName } from "./sync.js";
+import { connect, setName, syncWords } from "./sync.js";
 import {
 	className,
 	def,
@@ -29,25 +29,27 @@ import {
 	setClass,
 } from "./util.js";
 
-const baseClass = "sbp";
-const viewBoxId = "sbp-view-box";
-const buttonBoxId = "sbp-button-box";
-const hintsClass = "sbp-hints";
-const syncClass = "sbp-sync";
-const sbpViewId = "sbp-hints-view";
-const sbpSyncViewId = "sbp-sync-view";
-const countTableId = "sbp-count-table";
-const leftLabelClass = "sbp-left-label";
-const digraphTableId = "sbp-digraph-table";
-const digraphClass = "sbp-digraph";
-const tableClass = "sbp-table";
-const rowClass = "sbp-table-row";
-const cellClass = "sbp-table-cell";
-const lettersClass = "sbp-letters";
-const letterClass = "sbp-letter";
 const activeLetterClass = "sbp-letter-active";
+const baseClass = "sbp";
+const cellClass = "sbp-table-cell";
 const completeClass = "sbp-complete";
+const digraphClass = "sbp-digraph";
+const hintsClass = "sbp-hints";
+const leftLabelClass = "sbp-left-label";
+const letterClass = "sbp-letter";
+const lettersClass = "sbp-letters";
 const progressMarkerClass = "sbp-progress-marker";
+const rowClass = "sbp-table-row";
+const tableClass = "sbp-table";
+
+const buttonBoxId = "sbp-button-box";
+const countTableId = "sbp-count-table";
+const digraphTableId = "sbp-digraph-table";
+const sbpSyncViewId = "sbp-sync-view";
+const sbpViewId = "sbp-hints-view";
+const viewBoxId = "sbp-view-box";
+const syncViewButtonId = "sbp-sync-view-button";
+const syncButtonId = "sbp-sync-button";
 
 /** @type {GameState} */
 let gameState = {
@@ -253,6 +255,7 @@ function addSyncView() {
 				"display: grid",
 				"grid-template-columns: min-content 8rem",
 				"align-items: center",
+				"align-self: center",
 				"gap: 1rem",
 			].join(";"),
 		},
@@ -286,16 +289,20 @@ function addSyncView() {
 			h("select", { id: "sbp-friend-select" }),
 			h(
 				"button",
-				{ id: "sbp-sync-button", style: "grid-column:1 / span 2" },
+				{
+					id: syncButtonId,
+					style: "grid-column:1 / span 2",
+					disabled: 'disabled',
+				},
 				"Sync Words",
 			),
 		],
 	);
 	getViewBox().append(view);
 
-	const button = selButton("#sbp-sync-button");
-	button?.addEventListener("click", () => {
-		console.debug("syncing!");
+	const syncButton = selButton(`#${syncButtonId}`);
+	syncButton?.addEventListener("click", () => {
+		syncWords(gameState.friendId, gameState.words);
 	});
 
 	const nameInput = selInput("#sbp-name-input");
@@ -310,7 +317,6 @@ function addSyncView() {
 	const nameButton = selButton("#sbp-name-button");
 	nameButton?.addEventListener("click", () => {
 		setName(gameState.newName);
-		console.debug("updating name");
 		updateState({ newName: "" });
 	});
 
@@ -443,22 +449,31 @@ function render() {
 
 	getDrawer().setAttribute("data-sbp-pane", visiblePane ?? "");
 
-	const nameInput = def(selInput("#sbp-name-input"));
-	nameInput.value = gameState.newName || gameState.player.name;
-
-	const friendSelect = def(selSelect("#sbp-friend-select"));
-	friendSelect.innerHTML = "";
-	for (const friend of gameState.friends) {
-		friendSelect.append(h("option", { value: friend.id }, friend.name));
+	const nameInput = selInput("#sbp-name-input");
+	if (nameInput) {
+		nameInput.value = gameState.newName || gameState.player.name;
 	}
-	friendSelect.value = gameState.friendId;
 
-	const nameBox = def(selDiv("#sbp-name-input-box"));
+	const friendSelect = selSelect("#sbp-friend-select");
+	if (friendSelect) {
+		friendSelect.innerHTML = "";
+		for (const friend of gameState.friends) {
+			friendSelect.append(h("option", { value: friend.id }, friend.name));
+		}
+		friendSelect.value = gameState.friendId;
+	}
+
+	const nameBox = selDiv("#sbp-name-input-box");
 	console.debug(`comparing ${gameState.newName} to ${gameState.player.name}`);
 	if (gameState.newName && gameState.newName !== gameState.player.name) {
-		nameBox.classList.add("sbp-modified");
+		nameBox?.classList.add("sbp-modified");
 	} else {
-		nameBox.classList.remove("sbp-modified");
+		nameBox?.classList.remove("sbp-modified");
+	}
+
+	const syncButton = selButton(`#${syncButtonId}`);
+	if (syncButton) {
+		syncButton.disabled = !gameState.friendId;
 	}
 }
 
@@ -573,12 +588,12 @@ function addHintsButton() {
 }
 
 function addSyncButton() {
-	document.querySelector(`#${syncClass}-button`)?.remove();
+	document.querySelector(`#${syncViewButtonId}`)?.remove();
 	console.debug("adding sync button");
 
 	const button = h(
 		"button",
-		{ id: `${syncClass}-button`, type: "button" },
+		{ id: syncViewButtonId, type: "button" },
 		"Sync",
 	);
 
@@ -696,7 +711,11 @@ async function main() {
 			console.debug("sync request");
 		},
 		onSyncRequest: (from) => {
-			return confirm(`Accept sync request from ${from}?`);
+			const friend = gameState.friends.find((f) => f.id === from);
+			if (friend) {
+				return confirm(`Accept sync request from ${friend.name}?`);
+			}
+			return false;
 		},
 		onError: () => {
 			console.debug("error");
