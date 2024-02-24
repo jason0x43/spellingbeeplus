@@ -17,7 +17,7 @@ use axum::{
     Router,
 };
 use error::AppError;
-use tokio::sync::broadcast;
+use tokio::{signal, sync::broadcast};
 use tower_http::{
     cors::{AllowOrigin, CorsLayer},
     trace::TraceLayer,
@@ -88,8 +88,29 @@ async fn main() -> Result<(), AppError> {
     info!("Listening on {}...", addr);
 
     server
+        .with_graceful_shutdown(shutdown_signal())
         .await
         .map_err(|err| AppError::Error(err.to_string()))?;
 
     Ok(())
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
 }

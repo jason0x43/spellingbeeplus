@@ -12,7 +12,7 @@ rust-embed = { version = "8.0.0", features = ["axum-ex"] }
 serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
 thiserror = "1.0.51"
-tokio = { version = "1.35.1", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.35.1", features = ["rt-multi-thread", "macros", "signal"] }
 tower-http = { version = "0.5.0", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
