@@ -76,7 +76,7 @@ async fn main() -> Result<(), AppError> {
         )
         .layer(TraceLayer::new_for_http());
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3003")
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3003")
         .await
         .unwrap();
     let addr = listener.local_addr().unwrap();
