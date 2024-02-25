@@ -1,0 +1,90 @@
+name: Build Docker image
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  SERVICE_NAME: spellingbeeplus
+
+jobs:
+  build-and-deploy-image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Persistent Rust build cache
+        uses: actions/cache@v3
+        with:
+          path: rust-build-cache
+          key: ${{ runner.os }}-rust-build-cache-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Inject Rust build cache
+        uses: reproducible-containers/buildkit-cache-dance@v2
+        with:
+          cache-source: rust-build-cache
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: server
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Setup SSH
+        env:
+          SSH_USER: ${{ secrets.DEPLOY_USER }}
+          SSH_KEY: ${{ secrets.DEPLOY_KEY }}
+          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+          SSH_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          echo "$SSH_HOST_KEY" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host deploy_host
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+
+      - name: Deploy app
+        env:
+          DOCKER_DIR: ${{ secrets.DOCKER_DIR }}
+          TOKEN: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+          USER: ${{ secrets.DOCKER_REGISTRY_USER }}
+        run: |
+          ssh deploy_host "cd $DOCKER_DIR && \
+            docker logout ghcr.io && \
+            echo $TOKEN | docker login ghcr.io -u $USER --password-stdin && \
+            docker pull ghcr.io/$IMAGE_NAME:latest && \
+            docker compose up -d $SERVICE_NAME"
