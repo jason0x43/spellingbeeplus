@@ -51,7 +51,13 @@
 
 	"host_permissions": [
 		"https://www.nytimes.com/puzzles/spelling-bee",
+		"https://sbp.jason0x43.dev",
+		"wss://sbp.jason0x43.dev",
 		"https://localhost:9001",
 		"wss://localhost:9001"
+	],
+
+	"permissions": [
+		"nativeMessaging"
 	]
 }

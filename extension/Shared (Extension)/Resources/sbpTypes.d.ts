@@ -47,3 +47,9 @@ type SyncDelegate = {
 type SyncHandle = {
 	updateName: (name: string) => Promise<void>;
 };
+
+type SyncConfig = {
+	apiKey: str;
+	apiHost: str
+};
+

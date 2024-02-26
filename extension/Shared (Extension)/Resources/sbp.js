@@ -292,7 +292,7 @@ function addSyncView() {
 				{
 					id: syncButtonId,
 					style: "grid-column:1 / span 2",
-					disabled: 'disabled',
+					disabled: "disabled",
 				},
 				"Sync Words",
 			),
@@ -591,11 +591,7 @@ function addSyncButton() {
 	document.querySelector(`#${syncViewButtonId}`)?.remove();
 	console.debug("adding sync button");
 
-	const button = h(
-		"button",
-		{ id: syncViewButtonId, type: "button" },
-		"Sync",
-	);
+	const button = h("button", { id: syncViewButtonId, type: "button" }, "Sync");
 
 	button.addEventListener("click", toggleSync);
 	document.querySelector(`#${buttonBoxId}`)?.append(button);
@@ -627,6 +623,11 @@ function selectLetterRight() {
 
 async function main() {
 	console.debug("Starting SBP...");
+
+	console.log("Requesting config...");
+	const config = await browser.runtime.sendMessage({
+		type: "getConfig",
+	});
 
 	const rank = def(document.querySelector(`.${sbProgressRank}`));
 
@@ -674,55 +675,61 @@ async function main() {
 	let playerName = localStorage.getItem("player-name") || "Player";
 	updateState({ newName: playerName });
 
-	await connect({
-		onName: ({ id, name }) => {
-			console.debug("got name event");
-			updateState({ player: { id, name } });
+	await connect(
+		{
+			apiKey: config.apiKey,
+			apiHost: config.apiHost ?? "sbp.jason0x43.dev",
 		},
-		onJoin: ({ id, name }) => {
-			console.debug("got join event");
-			const friends = gameState.friends;
-			let index = friends.findIndex((f) => f.id === id);
-			if (index !== -1) {
-				updateState({
-					friends: [
-						...gameState.friends.slice(0, index),
-						{ id, name },
-						...gameState.friends.slice(index + 1),
-					],
-				});
-			} else {
-				updateState({ friends: [...gameState.friends, { id, name }] });
-			}
+		{
+			onName: ({ id, name }) => {
+				console.debug("got name event");
+				updateState({ player: { id, name } });
+			},
+			onJoin: ({ id, name }) => {
+				console.debug("got join event");
+				const friends = gameState.friends;
+				let index = friends.findIndex((f) => f.id === id);
+				if (index !== -1) {
+					updateState({
+						friends: [
+							...gameState.friends.slice(0, index),
+							{ id, name },
+							...gameState.friends.slice(index + 1),
+						],
+					});
+				} else {
+					updateState({ friends: [...gameState.friends, { id, name }] });
+				}
+			},
+			onLeave: (id) => {
+				console.debug("got leave event");
+				const index = gameState.friends.findIndex((f) => f.id === id);
+				if (index !== -1) {
+					updateState({
+						friends: [
+							...gameState.friends.slice(0, index),
+							...gameState.friends.slice(index + 1),
+						],
+					});
+				}
+			},
+			onSync: () => {
+				console.debug("sync request");
+			},
+			onSyncRequest: (from) => {
+				const friend = gameState.friends.find((f) => f.id === from);
+				if (friend) {
+					return confirm(`Accept sync request from ${friend.name}?`);
+				}
+				return false;
+			},
+			onError: () => {
+				console.debug("error");
+			},
+			getState: () => gameState,
+			updateState: (newState) => updateState(newState),
 		},
-		onLeave: (id) => {
-			console.debug("got leave event");
-			const index = gameState.friends.findIndex((f) => f.id === id);
-			if (index !== -1) {
-				updateState({
-					friends: [
-						...gameState.friends.slice(0, index),
-						...gameState.friends.slice(index + 1),
-					],
-				});
-			}
-		},
-		onSync: () => {
-			console.debug("sync request");
-		},
-		onSyncRequest: (from) => {
-			const friend = gameState.friends.find((f) => f.id === from);
-			if (friend) {
-				return confirm(`Accept sync request from ${friend.name}?`);
-			}
-			return false;
-		},
-		onError: () => {
-			console.debug("error");
-		},
-		getState: () => gameState,
-		updateState: (newState) => updateState(newState),
-	});
+	);
 
 	console.debug("Started SBP");
 }

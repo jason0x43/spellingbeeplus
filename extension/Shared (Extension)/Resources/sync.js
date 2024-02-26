@@ -18,13 +18,14 @@ let clientId = localStorage.getItem("sbp-client-id");
 /**
  * Get a token
  *
+ * @param {SyncConfig} config
  * @returns {Promise<string>}
  */
-async function getToken() {
-	const resp = await fetch("https://localhost:9001/token", {
+async function getToken(config) {
+	const resp = await fetch(`https://${config.apiHost}/token`, {
 		method: "GET",
 		headers: {
-			"x-api-key": "789C231E-08EA-4846-9A4D-43422F3993E0",
+			"x-api-key": config.apiKey,
 		},
 	});
 	const text = await resp.text();
@@ -126,15 +127,17 @@ function handleMessage(delegate, message) {
 /**
  * Connect to the server websocket
  *
+ * @param {SyncConfig} config
  * @param {SyncDelegate} delegate
  */
-export async function connect(delegate) {
+export async function connect(config, delegate) {
 	socket?.close();
 	socket = undefined;
 
-	const token = await getToken();
+	const token = await getToken(config);
 	console.debug(`Connecting to socket with token: ${token}`);
-	const skt = new WebSocket(`wss://localhost:9001/ws?token=${token}`);
+
+	const skt = new WebSocket(`wss://${config.apiHost}/ws?token=${token}`);
 
 	skt.addEventListener("open", () => {
 		reconnectWait = 500;
@@ -145,7 +148,7 @@ export async function connect(delegate) {
 		console.warn("Connection closed");
 		socket = undefined;
 		setTimeout(() => {
-			connect(delegate).catch((error) => {
+			connect(config, delegate).catch((error) => {
 				console.warn("connection error:", error);
 			});
 		}, reconnectWait);
