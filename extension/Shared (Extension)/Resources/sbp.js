@@ -4,7 +4,6 @@
 // firstLetters.a[4] is the number of 4 letter 'a' words.
 
 import {
-	getDrawer,
 	getProgressBar,
 	getWordList,
 	getWordListInner,
@@ -247,57 +246,16 @@ function addHintsView() {
  */
 function addSyncView() {
 	document.querySelector(`#${sbpSyncViewId}`)?.remove();
-	const view = h(
-		"div",
-		{
-			id: sbpSyncViewId,
-			style: [
-				"display: grid",
-				"grid-template-columns: min-content 8rem",
-				"align-items: center",
-				"align-self: center",
-				"gap: 1rem",
-			].join(";"),
-		},
-		[
-			h("label", { for: "sbp-name-input" }, "Name"),
-			h(
-				"div",
-				{
-					id: "sbp-name-input-box",
-					style:
-						"display:flex;flex-direction:row;align-items:center;position:relative;overflow:hidden",
-				},
-				[
-					h("input", {
-						id: "sbp-name-input",
-						placeholder: "Name",
-						style: "width:100%;padding:2px;padding-right:1.5rem",
-					}),
-					h(
-						"button",
-						{
-							id: "sbp-name-button",
-							style:
-								"position:absolute;right:4px;font-size:10px;border:none;padding:0;",
-						},
-						"💾",
-					),
-				],
-			),
-			h("label", { for: "sbp-friend-select" }, "Friend"),
-			h("select", { id: "sbp-friend-select" }),
-			h(
-				"button",
-				{
-					id: syncButtonId,
-					style: "grid-column:1 / span 2",
-					disabled: "disabled",
-				},
-				"Sync Words",
-			),
-		],
-	);
+	const view = h("div", { id: sbpSyncViewId }, [
+		h("label", { for: "sbp-name-input" }, "Name"),
+		h("div", { id: "sbp-name-input-box" }, [
+			h("input", { id: "sbp-name-input", placeholder: "Name" }),
+			h("button", { id: "sbp-name-button" }, "💾"),
+		]),
+		h("label", { for: "sbp-friend-select" }, "Friend"),
+		h("select", { id: "sbp-friend-select" }),
+		h("button", { id: syncButtonId, disabled: "disabled" }, "Sync Words"),
+	]);
 	getViewBox().append(view);
 
 	const syncButton = selButton(`#${syncButtonId}`);
@@ -447,7 +405,7 @@ function render() {
 		setClass(ltr, completeClass, wantCount === haveCount);
 	});
 
-	getDrawer().setAttribute("data-sbp-pane", visiblePane ?? "");
+	getWordListInner().setAttribute("data-sbp-pane", visiblePane ?? "");
 
 	const nameInput = selInput("#sbp-name-input");
 	if (nameInput) {
@@ -583,7 +541,11 @@ function addHintsButton() {
 		"Hints",
 	);
 
-	button.addEventListener("click", toggleHints);
+	button.addEventListener("click", () => {
+		updateState({
+			activeView: gameState.activeView === "hints" ? null : "hints",
+		});
+	});
 	document.querySelector(`#${buttonBoxId}`)?.append(button);
 }
 
@@ -593,18 +555,12 @@ function addSyncButton() {
 
 	const button = h("button", { id: syncViewButtonId, type: "button" }, "Sync");
 
-	button.addEventListener("click", toggleSync);
+	button.addEventListener("click", () => {
+		updateState({
+			activeView: gameState.activeView === "sync" ? null : "sync",
+		});
+	});
 	document.querySelector(`#${buttonBoxId}`)?.append(button);
-}
-
-function toggleHints() {
-	const newState = gameState.activeView === "hints" ? null : "hints";
-	updateState({ activeView: newState });
-}
-
-function toggleSync() {
-	const newState = gameState.activeView === "sync" ? null : "sync";
-	updateState({ activeView: newState });
 }
 
 function selectLetterLeft() {
