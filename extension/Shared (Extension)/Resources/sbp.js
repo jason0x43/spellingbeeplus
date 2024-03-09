@@ -4,7 +4,6 @@
 // firstLetters.a[4] is the number of 4 letter 'a' words.
 
 import {
-	addWord,
 	addWords,
 	getProgressBar,
 	getWordList,
@@ -255,7 +254,13 @@ function addSyncView() {
 	const view = h("div", { id: sbpSyncViewId }, [
 		h("label", { for: "sbp-name-input" }, "Name"),
 		h("div", { id: "sbp-name-input-box" }, [
-			h("input", { id: "sbp-name-input", placeholder: "Name" }),
+			h("input", {
+				id: "sbp-name-input",
+				placeholder: "Name",
+				autocorrect: "off",
+				autocapitalize: "off",
+				autocomplete: "off",
+			}),
 			h("button", { id: "sbp-name-button" }, "💾"),
 		]),
 		h("label", { for: "sbp-friend-select" }, "Friend"),
@@ -280,13 +285,14 @@ function addSyncView() {
 
 	const nameButton = selButton("#sbp-name-button");
 	nameButton?.addEventListener("click", () => {
-		setName(gameState.newName);
-		updateState({ newName: "" });
+		if (gameState.newName !== undefined) {
+			setName(gameState.newName);
+			updateState({ newName: undefined });
+		}
 	});
 
 	const friendSelect = selSelect("#sbp-friend-select");
 	friendSelect?.addEventListener("change", () => {
-		console.debug(`selected friend ${friendSelect.value}`);
 		updateState({ friendId: friendSelect.value });
 	});
 }
@@ -415,7 +421,11 @@ function render() {
 
 	const nameInput = selInput("#sbp-name-input");
 	if (nameInput) {
-		nameInput.value = gameState.newName || gameState.player.name;
+		if (gameState.newName !== undefined) {
+			nameInput.value = gameState.newName;
+		} else {
+			nameInput.value = gameState.player.name;
+		}
 	}
 
 	const friendSelect = selSelect("#sbp-friend-select");
@@ -525,7 +535,6 @@ function updateState(state) {
 	// Save the updated game state
 	localStorage.setItem(gameStateKey, JSON.stringify(gameState));
 	const { gameData, ...localState } = gameState;
-	console.log(`Updated game state: ${JSON.stringify(localState)}`);
 
 	render();
 
@@ -592,7 +601,6 @@ function selectLetterRight() {
 async function main() {
 	console.debug("Starting SBP...");
 
-	console.log("Requesting config...");
 	const config = await browser.runtime.sendMessage({
 		type: "getConfig",
 	});
@@ -621,7 +629,6 @@ async function main() {
 				player: savedGameState.player,
 				newName: savedGameState.newName,
 			});
-			console.log("Applied saved game data");
 		}
 	}
 
