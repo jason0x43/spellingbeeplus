@@ -147,7 +147,9 @@ export function setClass(elem, className, condition) {
  * @returns {HTMLInputElement | null}
  */
 export function selInput(selector) {
-	return /** @type {HTMLInputElement | null} */ (document.querySelector(selector));
+	return /** @type {HTMLInputElement | null} */ (
+		document.querySelector(selector)
+	);
 }
 
 /**
@@ -155,7 +157,9 @@ export function selInput(selector) {
  * @returns {HTMLSelectElement | null}
  */
 export function selSelect(selector) {
-	return /** @type {HTMLSelectElement | null} */ (document.querySelector(selector));
+	return /** @type {HTMLSelectElement | null} */ (
+		document.querySelector(selector)
+	);
 }
 
 /**
@@ -163,7 +167,9 @@ export function selSelect(selector) {
  * @returns {HTMLDivElement | null}
  */
 export function selDiv(selector) {
-	return /** @type {HTMLDivElement | null} */ (document.querySelector(selector));
+	return /** @type {HTMLDivElement | null} */ (
+		document.querySelector(selector)
+	);
 }
 
 /**
@@ -171,7 +177,9 @@ export function selDiv(selector) {
  * @returns {HTMLButtonElement | null}
  */
 export function selButton(selector) {
-	return /** @type {HTMLButtonElement | null} */ (document.querySelector(selector));
+	return /** @type {HTMLButtonElement | null} */ (
+		document.querySelector(selector)
+	);
 }
 
 /**
@@ -180,4 +188,31 @@ export function selButton(selector) {
  */
 export function selElement(selector) {
 	return /** @type {HTMLElement | null} */ (document.querySelector(selector));
+}
+
+/**
+ * @param {HTMLElement} elem
+ */
+export async function click(elem) {
+	elem.dispatchEvent(new MouseEvent("mousedown"));
+	await wait(20);
+	elem.dispatchEvent(new MouseEvent("mouseup"));
+}
+
+/**
+ * @param {number} ms
+ */
+export async function wait(ms) {
+	await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * @param {unknown} a
+ * @param {unknown} b
+ */
+export function deepEquals(a, b) {
+	if (typeof a === "object" || Array.isArray(a)) {
+		return JSON.stringify(a) === JSON.stringify(b);
+	}
+	return a === b;
 }

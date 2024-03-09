@@ -1,4 +1,4 @@
-import { def } from "./util.js";
+import { click, def, selDiv, wait } from "./util.js";
 
 /** The element containing the player's current progress rank. */
 export const sbProgressRank = "sb-progress-rank";
@@ -61,4 +61,40 @@ export function getWords() {
  */
 export function getProgressBar() {
 	return def(document.querySelector(".sb-progress-bar"));
+}
+
+/**
+ * @param {string[]} words
+ */
+export async function addWords(words) {
+	for (const word of words) {
+		await addWord(word);
+		await wait(100);
+	}
+}
+
+/**
+ * @param {string} word
+ */
+export async function addWord(word) {
+	const hive = def(selDiv(".sb-controls .hive"));
+
+	/** @type {{ [letter: string]: HTMLElement }} */
+	const letters = {};
+	for (const cell of hive.querySelectorAll(".hive-cell")) {
+		letters[def(cell.textContent)] = /** @type {HTMLElement} */ (
+			cell.firstChild
+		);
+	}
+
+	const enter = def(
+		selDiv(".sb-controls .hive-actions > .hive-action__submit"),
+	);
+
+	for (const letter of word) {
+		click(letters[letter]);
+		await wait(20);
+	}
+
+	click(enter);
 }

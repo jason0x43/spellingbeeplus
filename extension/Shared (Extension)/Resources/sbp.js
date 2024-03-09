@@ -4,6 +4,8 @@
 // firstLetters.a[4] is the number of 4 letter 'a' words.
 
 import {
+	addWord,
+	addWords,
 	getProgressBar,
 	getWordList,
 	getWordListInner,
@@ -16,6 +18,7 @@ import {
 import { connect, setName, syncWords } from "./sync.js";
 import {
 	className,
+	deepEquals,
 	def,
 	getNormalizedText,
 	h,
@@ -40,6 +43,7 @@ const lettersClass = "sbp-letters";
 const progressMarkerClass = "sbp-progress-marker";
 const rowClass = "sbp-table-row";
 const tableClass = "sbp-table";
+const gameStateKey = "sbp-game-state";
 
 const buttonBoxId = "sbp-button-box";
 const countTableId = "sbp-count-table";
@@ -64,6 +68,7 @@ let gameState = {
 		firstLetters: {},
 		digraphs: {},
 	},
+	borrowedWords: [],
 	words: [],
 	wordStats: {
 		firstLetters: {},
@@ -75,7 +80,7 @@ let gameState = {
 	player: { id: "", name: "" },
 	friends: [],
 	friendId: "",
-	newName: "",
+	newName: "Player",
 };
 
 /**
@@ -254,7 +259,7 @@ function addSyncView() {
 		]),
 		h("label", { for: "sbp-friend-select" }, "Friend"),
 		h("select", { id: "sbp-friend-select" }),
-		h("button", { id: syncButtonId, disabled: "disabled" }, "Sync Words"),
+		h("button", { id: syncButtonId }, "Sync Words"),
 	]);
 	getViewBox().append(view);
 
@@ -429,10 +434,10 @@ function render() {
 		nameBox?.classList.remove("sbp-modified");
 	}
 
-	const syncButton = selButton(`#${syncButtonId}`);
-	if (syncButton) {
-		syncButton.disabled = !gameState.friendId;
-	}
+	// const syncButton = selButton(`#${syncButtonId}`);
+	// if (syncButton) {
+	// 	syncButton.disabled = !gameState.friendId;
+	// }
 }
 
 /**
@@ -511,9 +516,10 @@ function updateState(state) {
 		summary.textContent = summaryText;
 	}
 
-	if (gameState.player.name) {
-		localStorage.setItem("player-name", gameState.player.name);
-	}
+	// Save the updated game state
+	localStorage.setItem(gameStateKey, JSON.stringify(gameState));
+	const { gameData, ...localState } = gameState;
+	console.log(`Updated game state: ${JSON.stringify(localState)}`);
 
 	render();
 
@@ -585,6 +591,11 @@ async function main() {
 		type: "getConfig",
 	});
 
+	if (!config) {
+		console.warn("No config found, aborting startup");
+		return;
+	}
+
 	const rank = def(document.querySelector(`.${sbProgressRank}`));
 
 	updateState({
@@ -592,6 +603,21 @@ async function main() {
 		words: getWords(),
 		rank: getNormalizedText(rank),
 	});
+
+	const savedGameStateStr = localStorage.getItem("game-state");
+	if (savedGameStateStr) {
+		const savedGameState = JSON.parse(savedGameStateStr);
+		if (deepEquals(savedGameState.gameData, gameState.gameData)) {
+			// Even if we loaded a saved state, still use the words from NYT,
+			// because more words may have been added on another device.
+			updateState({
+				borrowedWords: savedGameState.borrowedWords,
+				player: savedGameState.player,
+				newName: savedGameState.newName,
+			});
+			console.log('Applied saved game data');
+		}
+	}
 
 	addViewBox();
 	addButtonBox();
@@ -628,9 +654,6 @@ async function main() {
 	});
 	console.debug("Installed key handler");
 
-	let playerName = localStorage.getItem("player-name") || "Player";
-	updateState({ newName: playerName });
-
 	await connect(
 		{
 			apiKey: config.apiKey,
@@ -638,7 +661,7 @@ async function main() {
 		},
 		{
 			onName: ({ id, name }) => {
-				console.debug("got name event");
+				console.debug("got name event:", { id, name });
 				updateState({ player: { id, name } });
 			},
 			onJoin: ({ id, name }) => {
@@ -669,8 +692,14 @@ async function main() {
 					});
 				}
 			},
-			onSync: () => {
-				console.debug("sync request");
+			onSync: (words) => {
+				// TODO: figure out which are 'borrowed' words, add those, and
+				// highlight them
+				const borrowedWords = words.filter(
+					(word) => !gameState.words.includes(word),
+				);
+				updateState({ borrowedWords });
+				addWords(gameState.borrowedWords);
 			},
 			onSyncRequest: (from) => {
 				const friend = gameState.friends.find((f) => f.id === from);

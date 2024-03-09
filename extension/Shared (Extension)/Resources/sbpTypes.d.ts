@@ -13,6 +13,7 @@ type GameState = {
 		firstLetters: Record<string, number[] | undefined>;
 		digraphs: Record<string, number | undefined>;
 	};
+	borrowedWords: string[],
 	words: string[];
 	wordStats: {
 		firstLetters: Record<string, number[] | undefined>;
