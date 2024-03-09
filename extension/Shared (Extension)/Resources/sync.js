@@ -102,12 +102,13 @@ function handleMessage(delegate, message) {
 		} else {
 			// This is a new incoming sync request; if we agree to it, sync the
 			// provided words and send a confirmation response
-			if (delegate.onSyncRequest(message.from)) {
+			const gameWords = delegate.onSyncRequest(message.from);
+			if (gameWords) {
 				send({
 					to: message.from,
 					content: {
 						sync: {
-							words: message.content.sync.words,
+							words: gameWords,
 							requestId: message.content.sync.requestId,
 						},
 					},

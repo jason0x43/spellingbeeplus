@@ -55,6 +55,29 @@ export function getWords() {
 }
 
 /**
+ * Highlight a word.
+ *
+ * @param {string} word
+ */
+export function hightlightWord(word) {
+	for (const wordElem of getWordList().querySelectorAll(".sb-anagram")) {
+		const text = def(wordElem.textContent).trim();
+		if (text === word) {
+			wordElem.classList.add("sbp-highlight");
+		}
+	}
+}
+
+/**
+ * Unhighlight all words.
+ */
+export function clearHighlights() {
+	for (const wordElem of getWordList().querySelectorAll(".sb-anagram")) {
+		wordElem.classList.remove("sbp-highlight");
+	}
+}
+
+/**
  * Get the player's progress rank element.
  *
  * @returns {Element}

@@ -11,6 +11,7 @@ import {
 	getWordListInner,
 	getWordListOuter,
 	getWords,
+	hightlightWord,
 	sbProgressMarker,
 	sbProgressRank,
 	sbProgressValue,
@@ -434,10 +435,15 @@ function render() {
 		nameBox?.classList.remove("sbp-modified");
 	}
 
-	// const syncButton = selButton(`#${syncButtonId}`);
-	// if (syncButton) {
-	// 	syncButton.disabled = !gameState.friendId;
-	// }
+	const syncButton = selButton(`#${syncButtonId}`);
+	if (syncButton) {
+		syncButton.disabled = !gameState.friendId;
+	}
+
+	// highlight borrowed words
+	for (const word of gameState.borrowedWords) {
+		hightlightWord(word);
+	}
 }
 
 /**
@@ -615,7 +621,7 @@ async function main() {
 				player: savedGameState.player,
 				newName: savedGameState.newName,
 			});
-			console.log('Applied saved game data');
+			console.log("Applied saved game data");
 		}
 	}
 
@@ -693,8 +699,6 @@ async function main() {
 				}
 			},
 			onSync: (words) => {
-				// TODO: figure out which are 'borrowed' words, add those, and
-				// highlight them
 				const borrowedWords = words.filter(
 					(word) => !gameState.words.includes(word),
 				);
@@ -703,8 +707,8 @@ async function main() {
 			},
 			onSyncRequest: (from) => {
 				const friend = gameState.friends.find((f) => f.id === from);
-				if (friend) {
-					return confirm(`Accept sync request from ${friend.name}?`);
+				if (friend && confirm(`Accept sync request from ${friend.name}?`)) {
+					return gameState.words;
 				}
 				return false;
 			},
