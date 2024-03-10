@@ -31,7 +31,7 @@ type GameState = {
 	player: { id: string; name: string };
 	friends: { id: string; name: string }[];
 	friendId: string;
-	newName: string | undefined;
+	newName: string | null;
 };
 
 type SyncDelegate = {

@@ -256,10 +256,7 @@ function addSyncView() {
 		h("div", { id: "sbp-name-input-box" }, [
 			h("input", {
 				id: "sbp-name-input",
-				placeholder: "Name",
-				autocorrect: "off",
-				autocapitalize: "off",
-				autocomplete: "off",
+				"data-1p-ignore": "true",
 			}),
 			h("button", { id: "sbp-name-button" }, "💾"),
 		]),
@@ -285,9 +282,9 @@ function addSyncView() {
 
 	const nameButton = selButton("#sbp-name-button");
 	nameButton?.addEventListener("click", () => {
-		if (gameState.newName !== undefined) {
+		if (gameState.newName != null) {
 			setName(gameState.newName);
-			updateState({ newName: undefined });
+			updateState({ newName: null });
 		}
 	});
 
@@ -421,7 +418,7 @@ function render() {
 
 	const nameInput = selInput("#sbp-name-input");
 	if (nameInput) {
-		if (gameState.newName !== undefined) {
+		if (gameState.newName != null) {
 			nameInput.value = gameState.newName;
 		} else {
 			nameInput.value = gameState.player.name;
@@ -534,7 +531,6 @@ function updateState(state) {
 
 	// Save the updated game state
 	localStorage.setItem(gameStateKey, JSON.stringify(gameState));
-	const { gameData, ...localState } = gameState;
 
 	render();
 
@@ -612,25 +608,27 @@ async function main() {
 
 	const rank = def(document.querySelector(`.${sbProgressRank}`));
 
-	updateState({
-		gameData: await getGameData(),
-		words: getWords(),
-		rank: getNormalizedText(rank),
-	});
-
-	const savedGameStateStr = localStorage.getItem("game-state");
+	const savedGameStateStr = localStorage.getItem(gameStateKey);
 	if (savedGameStateStr) {
 		const savedGameState = JSON.parse(savedGameStateStr);
+		updateState({
+			player: savedGameState.player,
+			newName: savedGameState.newName,
+		});
 		if (deepEquals(savedGameState.gameData, gameState.gameData)) {
 			// Even if we loaded a saved state, still use the words from NYT,
 			// because more words may have been added on another device.
 			updateState({
 				borrowedWords: savedGameState.borrowedWords,
-				player: savedGameState.player,
-				newName: savedGameState.newName,
 			});
 		}
 	}
+
+	updateState({
+		gameData: await getGameData(),
+		words: getWords(),
+		rank: getNormalizedText(rank),
+	});
 
 	addViewBox();
 	addButtonBox();
