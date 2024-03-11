@@ -75,7 +75,7 @@ function handleMessage(delegate, message) {
 			localStorage.setItem("sbp-client-id", clientId);
 		}
 
-		const name = delegate.getState().newName;
+		const name = delegate.getState().player.name;
 		if (name) {
 			send({
 				to: null,
