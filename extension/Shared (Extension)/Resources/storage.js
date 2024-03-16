@@ -6,8 +6,6 @@ const clientIdKey = "sbp-client-id";
  */
 export async function saveGameState(state) {
 	await browser.storage.sync.set({ [gameStateKey]: state });
-	// console.log(`Saved game state: ${JSON.stringify(state)}`);
-	console.log(`Saved player state: ${JSON.stringify(state.player)}`);
 }
 
 /**
@@ -15,10 +13,7 @@ export async function saveGameState(state) {
  */
 export async function loadGameState() {
 	const result = await browser.storage.sync.get(gameStateKey);
-	const state = result[gameStateKey];
-	// console.log(`Loaded game state: ${JSON.stringify(state)}`);
-	console.log(`Loaded player state: ${JSON.stringify(state.player)}`);
-	return state;
+	return result[gameStateKey];
 }
 
 /**
