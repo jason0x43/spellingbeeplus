@@ -455,7 +455,7 @@ function render() {
 
 	const syncButton = selButton(`#${syncButtonId}`);
 	if (syncButton) {
-		syncButton.disabled = !gameState.friendId;
+		syncButton.disabled = !gameState.friendId || gameState.syncing;
 	}
 
 	// highlight borrowed words
@@ -646,6 +646,8 @@ async function main() {
 		words: getWords(),
 		rank: getNormalizedText(rank),
 	});
+
+	console.log("Initial gameState:", gameState);
 
 	addViewBox();
 	addButtonBox();
