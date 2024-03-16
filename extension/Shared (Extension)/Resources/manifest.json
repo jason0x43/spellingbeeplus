@@ -33,7 +33,7 @@
 	"web_accessible_resources": [
 		{
 			"matches": ["<all_urls>"],
-			"resources": ["sb.js", "sbp.js", "sync.js", "util.js"]
+			"resources": ["sb.js", "sbp.js", "storage.js", "sync.js", "util.js"]
 		}
 	],
 
@@ -57,7 +57,5 @@
 		"wss://localhost:9001"
 	],
 
-	"permissions": [
-		"nativeMessaging"
-	]
+	"permissions": ["nativeMessaging", "storage"]
 }

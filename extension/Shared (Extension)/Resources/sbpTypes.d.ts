@@ -13,7 +13,7 @@ type GameState = {
 		firstLetters: Record<string, number[] | undefined>;
 		digraphs: Record<string, number | undefined>;
 	};
-	borrowedWords: string[],
+	borrowedWords: string[];
 	words: string[];
 	wordStats: {
 		firstLetters: Record<string, number[] | undefined>;
@@ -51,6 +51,5 @@ type SyncHandle = {
 
 type SyncConfig = {
 	apiKey: str;
-	apiHost: str
+	apiHost: str;
 };
-

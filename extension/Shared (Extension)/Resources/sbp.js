@@ -15,6 +15,7 @@ import {
 	sbProgressRank,
 	sbProgressValue,
 } from "./sb.js";
+import { loadGameState, saveGameState } from "./storage.js";
 import { connect, setName, syncWords } from "./sync.js";
 import {
 	className,
@@ -43,7 +44,6 @@ const lettersClass = "sbp-letters";
 const progressMarkerClass = "sbp-progress-marker";
 const rowClass = "sbp-table-row";
 const tableClass = "sbp-table";
-const gameStateKey = "sbp-game-state";
 
 const buttonBoxId = "sbp-button-box";
 const countTableId = "sbp-count-table";
@@ -530,7 +530,7 @@ function updateState(state) {
 	}
 
 	// Save the updated game state
-	localStorage.setItem(gameStateKey, JSON.stringify(gameState));
+	saveGameState(gameState);
 
 	render();
 
@@ -608,9 +608,8 @@ async function main() {
 
 	const rank = def(document.querySelector(`.${sbProgressRank}`));
 
-	const savedGameStateStr = localStorage.getItem(gameStateKey);
-	if (savedGameStateStr) {
-		const savedGameState = JSON.parse(savedGameStateStr);
+	const savedGameState= await loadGameState();
+	if (savedGameState) {
 		updateState({
 			player: savedGameState.player,
 			newName: savedGameState.newName,

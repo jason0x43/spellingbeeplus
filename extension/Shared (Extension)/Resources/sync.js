@@ -1,6 +1,8 @@
 /** @typedef {import("../../../server/bindings/MessageFrom.ts").MessageFrom} MessageFrom */
 /** @typedef {import("../../../server/bindings/MessageTo.ts").MessageTo} MessageTo */
 
+import { loadClientId, saveClientId } from "./storage.js";
+
 /** @type {WebSocket | undefined} */
 let socket;
 
@@ -12,8 +14,8 @@ let syncRequestId;
 
 let reconnectWait = 500;
 
-/** @type {string | null} */
-let clientId = localStorage.getItem("sbp-client-id");
+/** @type {string | undefined} */
+let clientId;
 
 /**
  * Get a token
@@ -51,7 +53,7 @@ function send(msg) {
  * @param {SyncDelegate} delegate
  * @param {MessageFrom} message
  */
-function handleMessage(delegate, message) {
+async function handleMessage(delegate, message) {
 	console.debug("Handling message:", message);
 
 	if ("connect" in message.content) {
@@ -72,7 +74,7 @@ function handleMessage(delegate, message) {
 		} else {
 			clientId = message.content.connect.id;
 			console.debug(`Connected as ${clientId}`);
-			localStorage.setItem("sbp-client-id", clientId);
+			await saveClientId(clientId);
 		}
 
 		const name = delegate.getState().player.name;
@@ -132,6 +134,10 @@ function handleMessage(delegate, message) {
  * @param {SyncDelegate} delegate
  */
 export async function connect(config, delegate) {
+	if (!clientId) {
+		clientId = await loadClientId();
+	}
+
 	socket?.close();
 	socket = undefined;
 
@@ -160,10 +166,10 @@ export async function connect(config, delegate) {
 		console.warn("Connection error");
 	});
 
-	skt.addEventListener("message", (event) => {
+	skt.addEventListener("message", async (event) => {
 		console.debug("Received message:", event.data);
 		try {
-			handleMessage(delegate, JSON.parse(event.data));
+			await handleMessage(delegate, JSON.parse(event.data));
 		} catch (error) {
 			console.warn(`${error}`);
 		}

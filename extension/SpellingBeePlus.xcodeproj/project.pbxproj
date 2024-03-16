@@ -49,6 +49,8 @@
 		9607DBB727CE6CD200DBC4E3 /* content.css in Resources */ = {isa = PBXBuildFile; fileRef = 9607DBB527CE6CD200DBC4E3 /* content.css */; };
 		9614A262293D1EBB00302F11 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9614A261293D1EBB00302F11 /* Constants.swift */; };
 		9614A263293D1EBB00302F11 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9614A261293D1EBB00302F11 /* Constants.swift */; };
+		963DF2CE2BA54A8700353B38 /* storage.js in Resources */ = {isa = PBXBuildFile; fileRef = 963DF2CD2BA54A8700353B38 /* storage.js */; };
+		963DF2CF2BA54A8700353B38 /* storage.js in Resources */ = {isa = PBXBuildFile; fileRef = 963DF2CD2BA54A8700353B38 /* storage.js */; };
 		96520EB92B51060500ED40CC /* sbp.js in Resources */ = {isa = PBXBuildFile; fileRef = 96520EB82B51060500ED40CC /* sbp.js */; };
 		96520EBA2B51060500ED40CC /* sbp.js in Resources */ = {isa = PBXBuildFile; fileRef = 96520EB82B51060500ED40CC /* sbp.js */; };
 		96520EBC2B510B2700ED40CC /* sync.js in Resources */ = {isa = PBXBuildFile; fileRef = 96520EBB2B510B2700ED40CC /* sync.js */; };
@@ -135,6 +137,7 @@
 		9607DBB527CE6CD200DBC4E3 /* content.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = content.css; sourceTree = "<group>"; };
 		9614A260293D1A2F00302F11 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		9614A261293D1EBB00302F11 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		963DF2CD2BA54A8700353B38 /* storage.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = storage.js; sourceTree = "<group>"; };
 		96520EB82B51060500ED40CC /* sbp.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = sbp.js; sourceTree = "<group>"; };
 		96520EBB2B510B2700ED40CC /* sync.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = sync.js; sourceTree = "<group>"; };
 		96520EBE2B510B9C00ED40CC /* util.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = util.js; sourceTree = "<group>"; };
@@ -232,6 +235,7 @@
 				9607DB5127CBD87300DBC4E3 /* popup.html */,
 				9607DB5227CBD87300DBC4E3 /* popup.css */,
 				9607DB5327CBD87300DBC4E3 /* popup.js */,
+				963DF2CD2BA54A8700353B38 /* storage.js */,
 				96520EC12B5208DA00ED40CC /* sb.js */,
 				96520EB82B51060500ED40CC /* sbp.js */,
 				96520EBB2B510B2700ED40CC /* sync.js */,
@@ -446,6 +450,7 @@
 				96520EC22B5208DA00ED40CC /* sb.js in Resources */,
 				96520EBC2B510B2700ED40CC /* sync.js in Resources */,
 				9607DBB627CE6CD200DBC4E3 /* content.css in Resources */,
+				963DF2CE2BA54A8700353B38 /* storage.js in Resources */,
 				9607DB9B27CBD87400DBC4E3 /* background.js in Resources */,
 				9607DBA127CBD87400DBC4E3 /* popup.css in Resources */,
 				9607DB9F27CBD87400DBC4E3 /* popup.html in Resources */,
@@ -466,6 +471,7 @@
 				96520EC32B5208DA00ED40CC /* sb.js in Resources */,
 				96520EBD2B510B2700ED40CC /* sync.js in Resources */,
 				9607DBB727CE6CD200DBC4E3 /* content.css in Resources */,
+				963DF2CF2BA54A8700353B38 /* storage.js in Resources */,
 				9607DB9C27CBD87400DBC4E3 /* background.js in Resources */,
 				9607DBA227CBD87400DBC4E3 /* popup.css in Resources */,
 				9607DBA027CBD87400DBC4E3 /* popup.html in Resources */,
