@@ -84,6 +84,9 @@ let gameState = {
 	syncing: false,
 };
 
+/** @type {number | undefined} */
+let syncTimeout;
+
 /**
  * Get the game data.
  */
@@ -273,6 +276,9 @@ function addSyncView() {
 		// Initiate the sync process -- syncing will be true until we receive
 		// confirmation that the other end acceped the sync request.
 		updateState({ syncing: true });
+		syncTimeout = setTimeout(() => {
+			updateState({ syncing: false });
+		}, 5000);
 		syncWords(gameState.friendId, gameState.words);
 	});
 
@@ -717,6 +723,7 @@ async function main() {
 			onSync: (words) => {
 				// The other end accepted the sync request -- add its words and
 				// end the syncing state
+				clearTimeout(syncTimeout);
 				const borrowedWords = words.filter(
 					(word) => !gameState.words.includes(word),
 				);
@@ -738,6 +745,7 @@ async function main() {
 				return false;
 			},
 			onSyncRefused: () => {
+				clearTimeout(syncTimeout);
 				updateState({ syncing: false });
 			},
 			onError: () => {
