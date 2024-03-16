@@ -92,13 +92,16 @@ async function handleMessage(delegate, message) {
 		}
 	} else if ("left" in message.content) {
 		delegate.onLeave(message.content.left);
+	} else if ("noSync" in message.content) {
+		// Sync was refused
+		delegate.onSyncRefused(message.content.noSync);
 	} else if ("sync" in message.content) {
 		if (
 			message.content.sync.requestId &&
 			message.content.sync.requestId === syncRequestId
 		) {
-			// This is an incoming sync response that matches the current
-			// syncRequestId -- perform the sync
+			// This is a confirmation response from a player we requested to
+			// sync with -- perform the sync
 			delegate.onSync(message.content.sync.words);
 			syncRequestId = undefined;
 		} else {
@@ -116,6 +119,13 @@ async function handleMessage(delegate, message) {
 					},
 				});
 				delegate.onSync(message.content.sync.words);
+			} else {
+				send({
+					to: message.from,
+					content: {
+						noSync: message.content.sync.requestId,
+					},
+				});
 			}
 		}
 	} else if ("error" in message.content) {

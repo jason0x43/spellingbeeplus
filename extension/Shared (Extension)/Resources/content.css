@@ -8,6 +8,7 @@
 	flex-direction: row;
 	justify-content: center;
 	align-items: center;
+	position: relative;
 }
 
 #sbp-button-box {
@@ -32,6 +33,8 @@
 	align-items: center;
 	align-self: center;
 	gap: 1rem;
+	/* padding for spinner */
+	padding-bottom: 80px;
 
 	#sbp-name-button {
 		display: none;
@@ -65,6 +68,20 @@
 
 	#sbp-sync-button {
 		grid-column: 1 / span 2;
+	}
+
+	#sbp-sync-spinner {
+		display: none;
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		bottom: 0;
+	}
+
+	&.sbp-syncing {
+		#sbp-sync-spinner {
+			display: block;
+		}
 	}
 }
 
@@ -189,5 +206,21 @@
 @media (min-width: 768px) {
 	#sbp-hints-view {
 		padding-top: 0;
+	}
+}
+
+.sbp-spinner {
+	display: inline-block;
+	width: 50px;
+	height: 50px;
+	border: 4px solid rgba(128, 128, 128, 0.1);
+	border-radius: 50%;
+	border-top-color: #fd0;
+	animation: sbp-spin 1s ease-in-out infinite;
+}
+
+@keyframes sbp-spin {
+	to {
+		-webkit-transform: rotate(360deg);
 	}
 }

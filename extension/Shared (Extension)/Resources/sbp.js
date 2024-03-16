@@ -81,6 +81,7 @@ let gameState = {
 	friends: [],
 	friendId: "",
 	newName: "Player",
+	syncing: false,
 };
 
 /**
@@ -263,11 +264,15 @@ function addSyncView() {
 		h("label", { for: "sbp-friend-select" }, "Friend"),
 		h("select", { id: "sbp-friend-select" }),
 		h("button", { id: syncButtonId }, "Sync Words"),
+		h("div", { id: "sbp-sync-spinner" }, [h("div", { class: "sbp-spinner" })]),
 	]);
 	getViewBox().append(view);
 
 	const syncButton = selButton(`#${syncButtonId}`);
 	syncButton?.addEventListener("click", () => {
+		// Initiate the sync process -- syncing will be true until we receive
+		// confirmation that the other end acceped the sync request.
+		updateState({ syncing: true });
 		syncWords(gameState.friendId, gameState.words);
 	});
 
@@ -451,6 +456,13 @@ function render() {
 	for (const word of gameState.borrowedWords) {
 		hightlightWord(word);
 	}
+
+	const syncView = def(selDiv("#sbp-sync-view"));
+	if (gameState.syncing) {
+		syncView.classList.add("sbp-syncing");
+	} else {
+		syncView.classList.remove("sbp-syncing");
+	}
 }
 
 /**
@@ -608,7 +620,7 @@ async function main() {
 
 	const rank = def(document.querySelector(`.${sbProgressRank}`));
 
-	const savedGameState= await loadGameState();
+	const savedGameState = await loadGameState();
 	if (savedGameState) {
 		updateState({
 			player: savedGameState.player,
@@ -703,18 +715,30 @@ async function main() {
 				}
 			},
 			onSync: (words) => {
+				// The other end accepted the sync request -- add its words and
+				// end the syncing state
 				const borrowedWords = words.filter(
 					(word) => !gameState.words.includes(word),
 				);
 				updateState({ borrowedWords });
-				addWords(gameState.borrowedWords);
+				addWords(gameState.borrowedWords).finally(() => {
+					// All the received words have been added -- syncing is done
+					updateState({ syncing: false });
+				});
 			},
 			onSyncRequest: (from) => {
+				// We received a sync request from another player. If it's
+				// accepted, enable the syncing state.
 				const friend = gameState.friends.find((f) => f.id === from);
 				if (friend && confirm(`Accept sync request from ${friend.name}?`)) {
+					// The request was accepted -- start syncing
+					updateState({ syncing: true });
 					return gameState.words;
 				}
 				return false;
+			},
+			onSyncRefused: () => {
+				updateState({ syncing: false });
 			},
 			onError: () => {
 				console.debug("error");
