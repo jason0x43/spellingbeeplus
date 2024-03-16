@@ -4,4 +4,4 @@ import type { ErrMsg } from "./ErrMsg";
 import type { Joined } from "./Joined";
 import type { Sync } from "./Sync";
 
-export type MessageContent = { "connect": Connect } | { "setName": string } | { "setClientId": string } | { "sync": Sync } | { "joined": Joined } | { "left": string } | { "error": ErrMsg };
+export type MessageContent = { "connect": Connect } | { "setName": string } | { "setClientId": string } | { "sync": Sync } | { "noSync": string } | { "joined": Joined } | { "left": string } | { "error": ErrMsg };

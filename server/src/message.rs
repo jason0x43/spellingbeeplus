@@ -57,6 +57,8 @@ pub(crate) enum MessageContent {
     #[ts(rename = "setClientId")]
     SetClientId(Uuid),
     Sync(Sync),
+    #[ts(rename = "noSync")]
+    NoSync(String),
     Joined(Joined),
     Left(Uuid),
     Error(ErrMsg),
