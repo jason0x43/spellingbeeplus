@@ -1,4 +1,4 @@
-import { click, def, selDiv, wait } from "./util.js";
+import { click, def, h, selDiv, wait } from "./util.js";
 
 /** The element containing the player's current progress rank. */
 export const sbProgressRank = "sb-progress-rank";
@@ -121,3 +121,106 @@ export async function addWord(word) {
 
 	click(enter);
 }
+
+/**
+ * Get the game data from the host page.
+ */
+export async function getGameData() {
+	/** @type {Promise<GameData>} */
+	return new Promise((resolve) => {
+		const script = h(
+			"script",
+			"postMessage({ gameData: window.gameData.today })",
+		);
+
+		/** @type {(event: MessageEvent) => void} */
+		const listener = (event) => {
+			if (event.data?.gameData) {
+				console.debug("got message with game data");
+				window.removeEventListener("message", listener);
+				resolve(event.data.gameData);
+			}
+		};
+
+		window.addEventListener("message", listener);
+
+		console.debug("injecting script");
+		document.body.append(script);
+	});
+}
+
+/**
+ * @param {string[]} words
+ */
+export function getStats(words) {
+	/** @type {Record<string, number[]>} */
+	const firstLetters = {};
+	/** @type {Record<string, number>} */
+	const digraphs = {};
+
+	for (const word of words) {
+		const firstLetter = word[0];
+		firstLetters[firstLetter] ??= [];
+		firstLetters[firstLetter][word.length] ??= 0;
+		firstLetters[firstLetter][word.length]++;
+
+		const digraph = word.slice(0, 2);
+		digraphs[digraph] ??= 0;
+		digraphs[digraph]++;
+	}
+
+	return { firstLetters, digraphs };
+}
+
+/**
+ * @param {string[]} words
+ * @param {string[]} pangrams
+ */
+export function getThresholds(words, pangrams) {
+	const maxScore = words.reduce((score, word) => {
+		score += word.length === 4 ? 1 : word.length;
+		if (pangrams.includes(word)) {
+			score += 7;
+		}
+		return score;
+	}, 0);
+	const delta = 100 / 8;
+
+	console.debug("max score:", maxScore);
+
+	return {
+		beginner: {
+			score: Math.round((2 / 100) * maxScore),
+			distance: delta,
+		},
+		"good start": {
+			score: Math.round((5 / 100) * maxScore),
+			distance: delta * 2,
+		},
+		"moving up": {
+			score: Math.round((8 / 100) * maxScore),
+			distance: delta * 3,
+		},
+		good: {
+			score: Math.round((15 / 100) * maxScore),
+			distance: delta * 4,
+		},
+		solid: {
+			score: Math.round((25 / 100) * maxScore),
+			distance: delta * 5,
+		},
+		nice: {
+			score: Math.round((48 / 100) * maxScore),
+			distance: delta * 6,
+		},
+		great: {
+			score: Math.round((50 / 100) * maxScore),
+			distance: delta * 7,
+		},
+		amazing: {
+			score: Math.round((70 / 100) * maxScore),
+			distance: delta * 8,
+		},
+	};
+}
+

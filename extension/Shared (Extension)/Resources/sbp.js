@@ -5,7 +5,10 @@
 
 import {
 	addWords,
+	getGameData,
 	getProgressBar,
+	getStats,
+	getThresholds,
 	getWordList,
 	getWordListInner,
 	getWordListOuter,
@@ -88,33 +91,6 @@ let gameState = {
 let syncTimeout;
 
 /**
- * Get the game data.
- */
-async function getGameData() {
-	/** @type {Promise<GameData>} */
-	return new Promise((resolve) => {
-		const script = h(
-			"script",
-			"postMessage({ gameData: window.gameData.today })",
-		);
-
-		/** @type {(event: MessageEvent) => void} */
-		const listener = (event) => {
-			if (event.data?.gameData) {
-				console.debug("got message with game data");
-				window.removeEventListener("message", listener);
-				resolve(event.data.gameData);
-			}
-		};
-
-		window.addEventListener("message", listener);
-
-		console.debug("injecting script");
-		document.body.append(script);
-	});
-}
-
-/**
  * Install a listener for keyboard shortcuts
  *
  * @param {(data: { key: string, shiftKey: boolean }) => void} onKeydown
@@ -146,81 +122,6 @@ function installKeyHandler(onKeydown) {
  */
 function getViewBox() {
 	return def(document.querySelector(`#${viewBoxId}`));
-}
-
-/**
- * @param {string[]} words
- */
-function getStats(words) {
-	/** @type {Record<string, number[]>} */
-	const firstLetters = {};
-	/** @type {Record<string, number>} */
-	const digraphs = {};
-
-	for (const word of words) {
-		const firstLetter = word[0];
-		firstLetters[firstLetter] ??= [];
-		firstLetters[firstLetter][word.length] ??= 0;
-		firstLetters[firstLetter][word.length]++;
-
-		const digraph = word.slice(0, 2);
-		digraphs[digraph] ??= 0;
-		digraphs[digraph]++;
-	}
-
-	return { firstLetters, digraphs };
-}
-
-/**
- * @param {string[]} words
- * @param {string[]} pangrams
- */
-function getThresholds(words, pangrams) {
-	const maxScore = words.reduce((score, word) => {
-		score += word.length === 4 ? 1 : word.length;
-		if (pangrams.includes(word)) {
-			score += 7;
-		}
-		return score;
-	}, 0);
-	const delta = 100 / 8;
-
-	console.debug("max score:", maxScore);
-
-	return {
-		beginner: {
-			score: Math.round((2 / 100) * maxScore),
-			distance: delta,
-		},
-		"good start": {
-			score: Math.round((5 / 100) * maxScore),
-			distance: delta * 2,
-		},
-		"moving up": {
-			score: Math.round((8 / 100) * maxScore),
-			distance: delta * 3,
-		},
-		good: {
-			score: Math.round((15 / 100) * maxScore),
-			distance: delta * 4,
-		},
-		solid: {
-			score: Math.round((25 / 100) * maxScore),
-			distance: delta * 5,
-		},
-		nice: {
-			score: Math.round((48 / 100) * maxScore),
-			distance: delta * 6,
-		},
-		great: {
-			score: Math.round((50 / 100) * maxScore),
-			distance: delta * 7,
-		},
-		amazing: {
-			score: Math.round((70 / 100) * maxScore),
-			distance: delta * 8,
-		},
-	};
 }
 
 /**
@@ -555,18 +456,27 @@ function updateState(state) {
 	return gameState;
 }
 
+/**
+ * Add the container for the SBP views.
+ */
 function addViewBox() {
 	document.querySelector(`#${viewBoxId}`)?.remove();
 	const box = h("div", { id: viewBoxId });
 	getWordListInner().append(box);
 }
 
+/**
+ * Add a container for the sync and hints buttons.
+ */
 function addButtonBox() {
 	document.querySelector(`#${buttonBoxId}`)?.remove();
 	const box = h("div", { id: buttonBoxId });
 	getWordListInner().append(box);
 }
 
+/**
+ * Add the button that opens the hints pane.
+ */
 function addHintsButton() {
 	document.querySelector(`#${hintsClass}-button`)?.remove();
 
@@ -584,6 +494,9 @@ function addHintsButton() {
 	document.querySelector(`#${buttonBoxId}`)?.append(button);
 }
 
+/**
+ * Add the button that opens the sync pane.
+ */
 function addSyncButton() {
 	document.querySelector(`#${syncViewButtonId}`)?.remove();
 	console.debug("adding sync button");
@@ -598,6 +511,9 @@ function addSyncButton() {
 	document.querySelector(`#${buttonBoxId}`)?.append(button);
 }
 
+/**
+ * Select the next letter to the left in the hints pane.
+ */
 function selectLetterLeft() {
 	const index = gameState.gameData.validLetters.indexOf(gameState.letter);
 	if (index > 0) {
@@ -605,6 +521,9 @@ function selectLetterLeft() {
 	}
 }
 
+/**
+ * Select the next letter to the right in the hints pane.
+ */
 function selectLetterRight() {
 	const index = gameState.gameData.validLetters.indexOf(gameState.letter);
 	if (index < gameState.gameData.validLetters.length - 1) {
@@ -766,5 +685,3 @@ try {
 } catch (error) {
 	console.error("Error running main:", error);
 }
-
-export {};
