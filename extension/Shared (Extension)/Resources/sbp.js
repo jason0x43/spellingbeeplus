@@ -4,7 +4,8 @@
 // firstLetters.a[4] is the number of 4 letter 'a' words.
 
 import {
-	addWords,
+	addWord,
+	closeCongratsPane,
 	getGameData,
 	getProgressBar,
 	getStats,
@@ -14,6 +15,7 @@ import {
 	getWordListOuter,
 	getWords,
 	hightlightWord,
+	isCongratsPaneOpen,
 	sbProgressMarker,
 	sbProgressRank,
 	sbProgressValue,
@@ -33,6 +35,7 @@ import {
 	selInput,
 	selSelect,
 	setClass,
+	wait,
 } from "./util.js";
 
 const activeLetterClass = "sbp-letter-active";
@@ -528,6 +531,22 @@ function selectLetterRight() {
 	const index = gameState.gameData.validLetters.indexOf(gameState.letter);
 	if (index < gameState.gameData.validLetters.length - 1) {
 		updateState({ letter: gameState.gameData.validLetters[index + 1] });
+	}
+}
+
+/**
+ * @param {string[]} words
+ */
+export async function addWords(words) {
+	for (const word of words) {
+		if (isCongratsPaneOpen()) {
+			await wait(500);
+			closeCongratsPane();
+			await wait(500);
+		}
+
+		await addWord(word);
+		await wait(100);
 	}
 }
 

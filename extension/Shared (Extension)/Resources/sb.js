@@ -87,16 +87,6 @@ export function getProgressBar() {
 }
 
 /**
- * @param {string[]} words
- */
-export async function addWords(words) {
-	for (const word of words) {
-		await addWord(word);
-		await wait(100);
-	}
-}
-
-/**
  * @param {string} word
  */
 export async function addWord(word) {
@@ -224,3 +214,25 @@ export function getThresholds(words, pangrams) {
 	};
 }
 
+/**
+ * @returns {boolean}
+ */
+export function isCongratsPaneOpen() {
+	return document.querySelector(".pz-moment__congrats.on-stage") != null;
+}
+
+/**
+ * @returns {void}
+ */
+export function closeCongratsPane() {
+	/** @type {HTMLButtonElement | null} */
+	const button =
+		document.querySelector(".on-stage .pz-moment__close") ||
+		document.querySelector(".on-stage .pz-moment__close-text");
+
+	if (button) {
+		click(button);
+	} else {
+		console.warn("Could not find close button");
+	}
+}
