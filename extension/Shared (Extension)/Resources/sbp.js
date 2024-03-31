@@ -20,11 +20,10 @@ import {
 	sbProgressRank,
 	sbProgressValue,
 } from "./sb.js";
-import { loadGameState, saveGameState } from "./storage.js";
+import { createStore } from "./storage.js";
 import { connect, setName, syncWords } from "./sync.js";
 import {
 	className,
-	deepEquals,
 	def,
 	getNormalizedText,
 	h,
@@ -60,8 +59,8 @@ const viewBoxId = "sbp-view-box";
 const syncViewButtonId = "sbp-sync-view-button";
 const syncButtonId = "sbp-sync-button";
 
-/** @type {GameState} */
-let gameState = {
+/** @type {Store<SbpState>} */
+const sbpState = createStore("sbp-state", {
 	letter: "",
 	gameData: {
 		answers: [],
@@ -86,9 +85,9 @@ let gameState = {
 	player: { id: "", name: "" },
 	friends: [],
 	friendId: "",
-	newName: "Player",
+	newName: "",
 	syncing: false,
-};
+});
 
 /** @type {number | undefined} */
 let syncTimeout;
@@ -133,7 +132,7 @@ function getViewBox() {
 function addHintsView() {
 	document.querySelector(`#${sbpViewId}`)?.remove();
 
-	const { gameData } = gameState;
+	const { gameData } = sbpState.value;
 	const view = h("div", { id: sbpViewId });
 
 	const letters = h("div", { class: lettersClass }, [
@@ -183,7 +182,7 @@ function addSyncView() {
 		syncTimeout = setTimeout(() => {
 			updateState({ syncing: false });
 		}, 5000);
-		syncWords(gameState.friendId, gameState.words);
+		syncWords(sbpState.value.friendId, sbpState.value.words);
 	});
 
 	const nameInput = selInput("#sbp-name-input");
@@ -197,8 +196,8 @@ function addSyncView() {
 
 	const nameButton = selButton("#sbp-name-button");
 	nameButton?.addEventListener("click", () => {
-		if (gameState.newName != null) {
-			setName(gameState.newName);
+		if (sbpState.value.newName != null) {
+			setName(sbpState.value.newName);
 			updateState({ newName: null });
 		}
 	});
@@ -211,14 +210,27 @@ function addSyncView() {
 
 /**
  * Update the rendered view(s) based on the gameState
+ *
+ * @param {SbpState} state
+ * @returns {void}
  */
-function render() {
+function render(state) {
 	const view = document.querySelector(`#${sbpViewId}`);
 	if (!view) {
 		return;
 	}
 
-	const { activeView: visiblePane, gameStats, wordStats, letter } = gameState;
+	const {
+		activeView,
+		gameStats,
+		wordStats,
+		letter,
+		newName,
+		friendId,
+		friends,
+		syncing,
+		borrowedWords,
+	} = state;
 
 	const wantLetters = gameStats.firstLetters[letter];
 	const haveLetters = wordStats.firstLetters[letter];
@@ -329,79 +341,10 @@ function render() {
 		setClass(ltr, completeClass, wantCount === haveCount);
 	});
 
-	getWordListInner().setAttribute("data-sbp-pane", visiblePane ?? "");
-
-	const nameInput = selInput("#sbp-name-input");
-	if (nameInput) {
-		if (gameState.newName != null) {
-			nameInput.value = gameState.newName;
-		} else {
-			nameInput.value = gameState.player.name;
-		}
-	}
-
-	const friendSelect = selSelect("#sbp-friend-select");
-	if (friendSelect) {
-		friendSelect.innerHTML = "";
-		for (const friend of gameState.friends) {
-			friendSelect.append(h("option", { value: friend.id }, friend.name));
-		}
-		friendSelect.value = gameState.friendId;
-	}
-
-	const nameBox = selDiv("#sbp-name-input-box");
-	console.debug(`comparing ${gameState.newName} to ${gameState.player.name}`);
-	if (gameState.newName && gameState.newName !== gameState.player.name) {
-		nameBox?.classList.add("sbp-modified");
-	} else {
-		nameBox?.classList.remove("sbp-modified");
-	}
-
-	const syncButton = selButton(`#${syncButtonId}`);
-	if (syncButton) {
-		syncButton.disabled = !gameState.friendId || gameState.syncing;
-	}
-
-	// highlight borrowed words
-	for (const word of gameState.borrowedWords) {
-		hightlightWord(word);
-	}
-
-	const syncView = def(selDiv("#sbp-sync-view"));
-	if (gameState.syncing) {
-		syncView.classList.add("sbp-syncing");
-	} else {
-		syncView.classList.remove("sbp-syncing");
-	}
-}
-
-/**
- * @param {Partial<GameState>} state
- * @returns {GameState}
- */
-function updateState(state) {
-	gameState = { ...gameState, ...state };
-
-	if (state.gameData) {
-		gameState.gameStats = getStats(state.gameData.answers);
-		gameState.thresholds = getThresholds(
-			state.gameData.answers,
-			state.gameData.pangrams,
-		);
-	}
-
-	if (state.words) {
-		gameState.wordStats = getStats(state.words);
-	}
-
-	if (!gameState.letter) {
-		gameState.letter = gameState.gameData.validLetters[0] ?? "";
-	}
-
 	const progressBar = getProgressBar();
 	const nextMarker = selElement(`.${progressMarkerClass}`);
 
-	if (gameState.rank === "genius") {
+	if (state.rank === "genius") {
 		const wordListBox = getWordListOuter();
 		if (wordListBox && !wordListBox.classList.contains(baseClass)) {
 			wordListBox.classList.add(baseClass);
@@ -427,7 +370,7 @@ function updateState(state) {
 			);
 			progressBar.append(mrkr);
 		}
-		const nextRank = gameState.thresholds[gameState.rank];
+		const nextRank = state.thresholds[state.rank];
 		if (nextRank) {
 			mrkr.style.left = `${nextRank.distance}%`;
 			const marker = def(mrkr.querySelector(`.${sbProgressValue}`));
@@ -438,25 +381,96 @@ function updateState(state) {
 
 	const summary = def(document.querySelector(".sb-wordlist-summary"));
 	if (/You have found/.test(def(summary.textContent))) {
-		const found = gameState.words.length;
-		const total = gameState.gameData.answers.length;
-		const totalPgs = gameState.gameData.pangrams.length;
-		const foundPgs = gameState.gameData.pangrams.filter((pg) =>
-			gameState.words.includes(pg),
+		const found = state.words.length;
+		const total = state.gameData.answers.length;
+		const totalPgs = state.gameData.pangrams.length;
+		const foundPgs = state.gameData.pangrams.filter((pg) =>
+			state.words.includes(pg),
 		).length;
 		let summaryText = `You have found ${found} of ${total} words`;
-		if (gameState.rank === "genius") {
+		if (state.rank === "genius") {
 			summaryText += `, ${foundPgs} of ${totalPgs} pangrams`;
 		}
 		summary.textContent = summaryText;
 	}
 
-	// Save the updated game state
-	saveGameState(gameState);
+	getWordListInner().setAttribute("data-sbp-pane", activeView ?? "");
 
-	render();
+	const nameInput = selInput("#sbp-name-input");
+	if (nameInput) {
+		if (newName != null) {
+			nameInput.value = newName;
+		} else {
+			nameInput.value = sbpState.value.player.name;
+		}
+	}
 
-	return gameState;
+	const friendSelect = selSelect("#sbp-friend-select");
+	if (friendSelect) {
+		friendSelect.innerHTML = "";
+		for (const friend of friends) {
+			friendSelect.append(h("option", { value: friend.id }, friend.name));
+		}
+		friendSelect.value = friendId;
+	}
+
+	const nameBox = selDiv("#sbp-name-input-box");
+	console.debug(
+		`comparing new name "${newName}" to player name "${sbpState.value.player.name}"`,
+	);
+	if (newName && newName !== sbpState.value.player.name) {
+		nameBox?.classList.add("sbp-modified");
+	} else {
+		nameBox?.classList.remove("sbp-modified");
+	}
+
+	const syncButton = selButton(`#${syncButtonId}`);
+	if (syncButton) {
+		syncButton.disabled = !friendId || syncing;
+	}
+
+	// highlight borrowed words
+	for (const word of borrowedWords) {
+		hightlightWord(word);
+	}
+
+	const syncView = def(selDiv("#sbp-sync-view"));
+	if (syncing) {
+		syncView.classList.add("sbp-syncing");
+	} else {
+		syncView.classList.remove("sbp-syncing");
+	}
+}
+
+/**
+ * @param {Partial<SbpState>} state
+ * @returns {Promise<void>}
+ */
+async function updateState(state) {
+	try {
+		const newState = { ...sbpState.value, ...state };
+
+		if (state.gameData) {
+			newState.gameStats = getStats(state.gameData.answers);
+			newState.thresholds = getThresholds(
+				state.gameData.answers,
+				state.gameData.pangrams,
+			);
+		}
+
+		if (state.words) {
+			newState.wordStats = getStats(state.words);
+		}
+
+		if (!newState.letter) {
+			newState.letter = newState.gameData.validLetters[0] ?? "";
+		}
+
+		// Save the updated game state
+		await sbpState.update(newState);
+	} catch (error) {
+		console.error("Error updating state:", error);
+	}
 }
 
 /**
@@ -491,7 +505,7 @@ function addHintsButton() {
 
 	button.addEventListener("click", () => {
 		updateState({
-			activeView: gameState.activeView === "hints" ? null : "hints",
+			activeView: sbpState.value.activeView === "hints" ? null : "hints",
 		});
 	});
 	document.querySelector(`#${buttonBoxId}`)?.append(button);
@@ -508,7 +522,7 @@ function addSyncButton() {
 
 	button.addEventListener("click", () => {
 		updateState({
-			activeView: gameState.activeView === "sync" ? null : "sync",
+			activeView: sbpState.value.activeView === "sync" ? null : "sync",
 		});
 	});
 	document.querySelector(`#${buttonBoxId}`)?.append(button);
@@ -518,9 +532,10 @@ function addSyncButton() {
  * Select the next letter to the left in the hints pane.
  */
 function selectLetterLeft() {
-	const index = gameState.gameData.validLetters.indexOf(gameState.letter);
+	const { gameData, letter } = sbpState.value;
+	const index = gameData.validLetters.indexOf(letter);
 	if (index > 0) {
-		updateState({ letter: gameState.gameData.validLetters[index - 1] });
+		updateState({ letter: gameData.validLetters[index - 1] });
 	}
 }
 
@@ -528,9 +543,10 @@ function selectLetterLeft() {
  * Select the next letter to the right in the hints pane.
  */
 function selectLetterRight() {
-	const index = gameState.gameData.validLetters.indexOf(gameState.letter);
-	if (index < gameState.gameData.validLetters.length - 1) {
-		updateState({ letter: gameState.gameData.validLetters[index + 1] });
+	const { gameData, letter } = sbpState.value;
+	const index = gameData.validLetters.indexOf(letter);
+	if (index < gameData.validLetters.length - 1) {
+		updateState({ letter: gameData.validLetters[index + 1] });
 	}
 }
 
@@ -562,30 +578,16 @@ async function main() {
 		return;
 	}
 
-	const rank = def(document.querySelector(`.${sbProgressRank}`));
+	await sbpState.load();
+	sbpState.subscribe(render);
 
-	const savedGameState = await loadGameState();
-	if (savedGameState) {
-		updateState({
-			player: savedGameState.player,
-			newName: savedGameState.newName,
-		});
-		if (deepEquals(savedGameState.gameData, gameState.gameData)) {
-			// Even if we loaded a saved state, still use the words from NYT,
-			// because more words may have been added on another device.
-			updateState({
-				borrowedWords: savedGameState.borrowedWords,
-			});
-		}
-	}
+	const rank = def(document.querySelector(`.${sbProgressRank}`));
 
 	updateState({
 		gameData: await getGameData(),
 		words: getWords(),
-		rank: getNormalizedText(rank),
+		rank: getNormalizedText(rank) ?? "beginner",
 	});
-
-	console.log("Initial gameState:", gameState);
 
 	addViewBox();
 	addButtonBox();
@@ -600,7 +602,7 @@ async function main() {
 			const addedWords = Array.from(mutation.addedNodes).map((node) =>
 				(node.textContent ?? "").trim(),
 			);
-			updateState({ words: [...gameState.words, ...addedWords] });
+			updateState({ words: [...sbpState.value.words, ...addedWords] });
 		}
 	});
 	wordsObserver.observe(wordList, { childList: true });
@@ -628,35 +630,29 @@ async function main() {
 			apiHost: config.apiHost ?? "sbp.jason0x43.dev",
 		},
 		{
-			onName: ({ id, name }) => {
-				console.debug("got name event:", { id, name });
-				updateState({ player: { id, name } });
-			},
 			onJoin: ({ id, name }) => {
 				console.debug("got join event");
-				const friends = gameState.friends;
+				const friends = sbpState.value.friends;
 				let index = friends.findIndex((f) => f.id === id);
 				if (index !== -1) {
 					updateState({
 						friends: [
-							...gameState.friends.slice(0, index),
+							...friends.slice(0, index),
 							{ id, name },
-							...gameState.friends.slice(index + 1),
+							...friends.slice(index + 1),
 						],
 					});
 				} else {
-					updateState({ friends: [...gameState.friends, { id, name }] });
+					updateState({ friends: [...friends, { id, name }] });
 				}
 			},
 			onLeave: (id) => {
 				console.debug("got leave event");
-				const index = gameState.friends.findIndex((f) => f.id === id);
+				const friends = sbpState.value.friends;
+				const index = friends.findIndex((f) => f.id === id);
 				if (index !== -1) {
 					updateState({
-						friends: [
-							...gameState.friends.slice(0, index),
-							...gameState.friends.slice(index + 1),
-						],
+						friends: [...friends.slice(0, index), ...friends.slice(index + 1)],
 					});
 				}
 			},
@@ -665,10 +661,10 @@ async function main() {
 				// end the syncing state
 				clearTimeout(syncTimeout);
 				const borrowedWords = words.filter(
-					(word) => !gameState.words.includes(word),
+					(word) => !sbpState.value.words.includes(word),
 				);
 				updateState({ borrowedWords });
-				addWords(gameState.borrowedWords).finally(() => {
+				addWords(sbpState.value.borrowedWords).finally(() => {
 					// All the received words have been added -- syncing is done
 					updateState({ syncing: false });
 				});
@@ -676,11 +672,11 @@ async function main() {
 			onSyncRequest: (from) => {
 				// We received a sync request from another player. If it's
 				// accepted, enable the syncing state.
-				const friend = gameState.friends.find((f) => f.id === from);
+				const friend = sbpState.value.friends.find((f) => f.id === from);
 				if (friend && confirm(`Accept sync request from ${friend.name}?`)) {
 					// The request was accepted -- start syncing
 					updateState({ syncing: true });
-					return gameState.words;
+					return sbpState.value.words;
 				}
 				return false;
 			},
@@ -691,7 +687,7 @@ async function main() {
 			onError: () => {
 				console.debug("error");
 			},
-			getState: () => gameState,
+			getState: () => sbpState.value,
 			updateState: (newState) => updateState(newState),
 		},
 	);

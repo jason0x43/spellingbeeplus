@@ -1,3 +1,12 @@
+type Listener<T> = (newVal: T, oldVal: T) => void;
+
+type Store<T> = {
+	subscribe(listener: Listener<T>): void;
+	value: T;
+	async update(newVal: T): Promise<void>;
+	async load(): Promise<void>;
+};
+
 type GameData = {
 	answers: string[];
 	centerLetter: string;
@@ -6,7 +15,12 @@ type GameData = {
 	validLetters: string[];
 };
 
-type GameState = {
+type Player = { 
+	id: string;
+	name: string;
+}
+
+type SbpState = {
 	letter: string;
 	gameData: GameData;
 	gameStats: {
@@ -28,15 +42,14 @@ type GameState = {
 	>;
 	rank: string;
 	activeView: "hints" | "sync" | null;
-	player: { id: string; name: string };
-	friends: { id: string; name: string }[];
+	player: Player;
+	friends: Player[];
 	friendId: string;
 	newName: string | null;
 	syncing: boolean;
 };
 
 type SyncDelegate = {
-	onName: (data: { id: string; name: string }) => void;
 	onJoin: (data: { id: string; name: string }) => void;
 	onLeave: (id: string) => void;
 	// Called when a device that made a sync request receives confirmation
@@ -47,8 +60,8 @@ type SyncDelegate = {
 	// Called when the other player refused a sync request
 	onSyncRefused: (id: string) => void;
 	onError: (kind: string, message: string) => void;
-	getState: () => GameState;
-	updateState: (newState: GameState) => GameState;
+	getState: () => SbpState;
+	updateState: (update: Partial<SbpState>) => Promise<void>;
 };
 
 type SyncHandle = {

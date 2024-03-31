@@ -1,8 +1,6 @@
 /** @typedef {import("../../../server/bindings/MessageFrom.ts").MessageFrom} MessageFrom */
 /** @typedef {import("../../../server/bindings/MessageTo.ts").MessageTo} MessageTo */
 
-import { loadClientId, saveClientId } from "./storage.js";
-
 /** @type {WebSocket | undefined} */
 let socket;
 
@@ -13,9 +11,6 @@ let version;
 let syncRequestId;
 
 let reconnectWait = 500;
-
-/** @type {string | undefined} */
-let clientId;
 
 /**
  * Get a token
@@ -64,6 +59,7 @@ async function handleMessage(delegate, message) {
 			window.location.reload();
 		}
 
+		const clientId = delegate.getState().player.id;
 		if (clientId) {
 			console.debug("Received connect message with existing client ID!");
 			send({
@@ -72,9 +68,14 @@ async function handleMessage(delegate, message) {
 			});
 			console.debug(`Sent request to set client ID to ${clientId}`);
 		} else {
-			clientId = message.content.connect.id;
-			console.debug(`Connected as ${clientId}`);
-			await saveClientId(clientId);
+			const player = delegate.getState().player;
+			await delegate.updateState({
+				player: {
+					...player,
+					id: message.content.connect.id,
+				},
+			});
+			console.debug(`Connected as ${delegate.getState().player.id}`);
 		}
 
 		const name = delegate.getState().player.name;
@@ -85,8 +86,10 @@ async function handleMessage(delegate, message) {
 			});
 		}
 	} else if ("joined" in message.content) {
-		if (message.content.joined.id === clientId) {
-			delegate.onName(message.content.joined);
+		if (message.content.joined.id === delegate.getState().player.id) {
+			await delegate.updateState({
+				player: message.content.joined,
+			});
 		} else {
 			delegate.onJoin(message.content.joined);
 		}
@@ -144,10 +147,6 @@ async function handleMessage(delegate, message) {
  * @param {SyncDelegate} delegate
  */
 export async function connect(config, delegate) {
-	if (!clientId) {
-		clientId = await loadClientId();
-	}
-
 	socket?.close();
 	socket = undefined;
 
