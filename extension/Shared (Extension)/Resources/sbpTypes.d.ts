@@ -3,7 +3,7 @@ type Listener<T> = (newVal: T, oldVal: T) => void;
 type Store<T> = {
 	subscribe(listener: Listener<T>): void;
 	value: T;
-	async update(newVal: T): Promise<void>;
+	async update(newVal: Partial<T>): Promise<void>;
 	async load(): Promise<void>;
 };
 
@@ -45,8 +45,11 @@ type SbpState = {
 	player: Player;
 	friends: Player[];
 	friendId: string;
-	newName: string | null;
+	newName: string;
 	syncing: boolean;
+	initialized?: boolean;
+	connected?: boolean;
+	error?: string | undefined
 };
 
 type SyncDelegate = {
@@ -72,3 +75,7 @@ type SyncConfig = {
 	apiKey: str;
 	apiHost: str;
 };
+
+type StoreOptions<T> = {
+	noPersist?: (keyof T)[]
+}

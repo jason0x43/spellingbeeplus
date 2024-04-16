@@ -1,4 +1,4 @@
-import { click, def, h, selDiv, wait } from "./util.js";
+import { click, def, getNormalizedText, h, selDiv, wait } from "./util.js";
 
 /** The element containing the player's current progress rank. */
 export const sbProgressRank = "sb-progress-rank";
@@ -52,6 +52,15 @@ export function getWords() {
 	return Array.from(getWordList().querySelectorAll(".sb-anagram")).map((node) =>
 		def(node.textContent).trim(),
 	);
+}
+
+/**
+ * Get the rank element.
+ *
+ * @returns {HTMLElement}
+ */
+export function getRank() {
+	return def(document.querySelector(`.${sbProgressRank}`));
 }
 
 /**
@@ -116,33 +125,47 @@ export async function addWord(word) {
  * Get the game data from the host page.
  */
 export async function getGameData() {
-	/** @type {Promise<GameData>} */
-	return new Promise((resolve) => {
-		const script = h(
-			"script",
-			"postMessage({ gameData: window.gameData.today })",
-		);
+	async function getData() {
+		/** @type {Promise<GameData>} */
+		return new Promise((resolve) => {
+			const script = h(
+				"script",
+				"postMessage({ gameData: window.gameData.today })",
+			);
 
-		/** @type {(event: MessageEvent) => void} */
-		const listener = (event) => {
-			if (event.data?.gameData) {
-				console.debug("got message with game data");
-				window.removeEventListener("message", listener);
-				resolve(event.data.gameData);
-			}
-		};
+			/** @type {(event: MessageEvent) => void} */
+			const listener = (event) => {
+				if (event.data?.gameData) {
+					console.debug("got message with game data");
+					window.removeEventListener("message", listener);
+					resolve(event.data.gameData);
+				}
+			};
 
-		window.addEventListener("message", listener);
+			window.addEventListener("message", listener);
 
-		console.debug("injecting script");
-		document.body.append(script);
-	});
+			console.debug("injecting script");
+			document.body.append(script);
+		});
+	}
+
+	let tries = 3;
+	while (tries > 0) {
+		tries--;
+
+		const data = await getData();
+		if (data) {
+			return data;
+		}
+
+		await new Promise((resolve) => setTimeout(resolve, 500));
+	}
 }
 
 /**
  * @param {string[]} words
  */
-export function getStats(words) {
+export function getWordStats(words) {
 	/** @type {Record<string, number[]>} */
 	const firstLetters = {};
 	/** @type {Record<string, number>} */
