@@ -1,0 +1,16 @@
+#!/bin/bash
+
+id=$(git rev-parse --short=7 HEAD)
+host=$1
+dir=$2
+
+echo ">>> Building..."
+docker buildx build -t spellingbeeplus:latest -t spellingbeeplus:$id --platform linux/amd64 .
+
+echo ">>> Uploading..."
+docker save spellingbeeplus:latest spellingbeeplus:$id | ssh $host 'docker load'
+
+echo ">>> Restarting service..."
+ssh $host "cd $dir && docker compose up -d spellingbeeplus"
+
+echo ">>> Done"
