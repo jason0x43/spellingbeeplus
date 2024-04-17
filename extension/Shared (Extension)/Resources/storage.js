@@ -70,7 +70,7 @@ export class SbpStore {
 	// Base properties
 
 	get letter() {
-		return this.#value.letter ?? this.#value.gameData.validLetters[0] ?? "";
+		return this.#value.letter || this.gameData.validLetters[0] || "";
 	}
 
 	get gameData() {

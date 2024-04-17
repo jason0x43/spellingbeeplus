@@ -225,9 +225,6 @@ function render() {
 	const wantLetters = state.gameStats.firstLetters[state.letter];
 	const haveLetters = state.wordStats.firstLetters[state.letter];
 
-	console.log('wantLetters:', wantLetters);
-	console.log('haveLetters:', haveLetters);
-
 	/** @type {number[]} */
 	const counts = [];
 	if (wantLetters) {
