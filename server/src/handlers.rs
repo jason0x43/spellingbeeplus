@@ -155,8 +155,20 @@ async fn handle_connection(
     }
 
     // Wait for the client to send a name message, then update the name
-    debug!("Waiting for SetName message from {client_id}...");
-    while let Some(Ok(message)) = receiver.next().await {
+    while name.is_empty() {
+        debug!("Waiting for SetName message from {client_id}...");
+        let message = match receiver.next().await {
+            Some(Ok(msg)) => msg,
+            Some(Err(msg)) => {
+                warn!("Error receiving message: {msg}");
+                break;
+            }
+            None => {
+                warn!("Channel is closed");
+                break;
+            }
+        };
+
         if let WsMessage::Text(text) = message {
             match serde_json::from_str::<MessageTo>(&text) {
                 Ok(MessageTo {
@@ -170,7 +182,7 @@ async fn handle_connection(
                     content: MessageContent::SetName(new_name),
                     to: None,
                 }) => {
-                    debug!("Got SetName message from {client_id}");
+                    debug!("Got SetName message for {client_id}: {new_name}");
 
                     let clients = state.clients.lock().unwrap().clone();
                     if clients.values().any(|x| x == &new_name) {
@@ -184,30 +196,41 @@ async fn handle_connection(
                         }
 
                         if needs_update {
-                            let _ = sender.send(
-                                MessageFrom {
-                                    from: SERVER_ID,
-                                    content: MessageContent::Error(ErrMsg {
-                                        kind: ErrMsgKind::NameUnavailable,
-                                        message: "Name is unavailable".into(),
-                                    }),
-                                }
-                                .into(),
-                            );
+                            let result = sender
+                                .send(
+                                    MessageFrom {
+                                        from: SERVER_ID,
+                                        content: MessageContent::Error(
+                                            ErrMsg {
+                                                kind:
+                                                    ErrMsgKind::NameUnavailable,
+                                                message: "Name is unavailable"
+                                                    .into(),
+                                            },
+                                        ),
+                                    }
+                                    .into(),
+                                )
+                                .await;
+                            if let Err(result) = result {
+                                warn!(
+                                    "Error sending message to client: {}",
+                                    result
+                                );
+                            }
                             debug!("Name '{new_name}' was already in use, asked for another name from {client_id}");
                         } else {
                             debug!("Name '{new_name}' is already assigned to {client_id} ");
-                            break;
+                            name = new_name.clone();
                         }
                     } else {
                         name = new_name.clone();
                         debug!("Set {client_id}'s name to {name}");
-                        break;
                     }
                 }
                 Ok(_) => {
                     warn!("Ignored command {text:?}");
-                    let _ = sender.send(
+                    let result = sender.send(
                         MessageFrom {
                             from: SERVER_ID,
                             content: MessageContent::Error(ErrMsg {
@@ -215,28 +238,41 @@ async fn handle_connection(
                                 message: "User name must be set before using other commands".into()
                             })
                         }.into(),
-                    );
+                    ).await;
+                    if let Err(result) = result {
+                        warn!("Error sending message to client: {result}");
+                    }
                 }
                 Err(err) => {
                     warn!("Invalid command {text:?}: {err}");
-                    let _ = sender.send(
-                        MessageFrom {
-                            from: SERVER_ID,
-                            content: MessageContent::Error(ErrMsg {
-                                kind: ErrMsgKind::InvalidCommand,
-                                message: format!(
-                                    "Invalid command {text:?}: {err}"
-                                ),
-                            }),
-                        }
-                        .into(),
-                    );
+                    let result = sender
+                        .send(
+                            MessageFrom {
+                                from: SERVER_ID,
+                                content: MessageContent::Error(ErrMsg {
+                                    kind: ErrMsgKind::InvalidCommand,
+                                    message: format!(
+                                        "Invalid command {text:?}: {err}"
+                                    ),
+                                }),
+                            }
+                            .into(),
+                        )
+                        .await;
+                    if let Err(result) = result {
+                        warn!("Error sending message to client: {result}");
+                    }
                 }
             }
         }
     }
 
-    debug!("Name has been set for {client_id}");
+    if name.is_empty() {
+        warn!("Channel errored without setting name for {client_id}");
+        return;
+    }
+
+    debug!("Name has been set for {client_id}: {name}");
 
     // Update the state
     state
