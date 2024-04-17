@@ -3,8 +3,8 @@ type Listener<T> = (newVal: T, oldVal: T) => void;
 type Store<T> = {
 	subscribe(listener: Listener<T>): void;
 	value: T;
-	async update(newVal: Partial<T>): Promise<void>;
-	async load(): Promise<void>;
+	update(newVal: Partial<T>): Promise<void>;
+	load(): Promise<void>;
 };
 
 type GameData = {
@@ -15,32 +15,28 @@ type GameData = {
 	validLetters: string[];
 };
 
-type Player = { 
+type Player = {
 	id: string;
 	name: string;
-}
+};
+
+type Rank =
+	| "beginner"
+	| "good start"
+	| "moving up"
+	| "good"
+	| "solid"
+	| "nice"
+	| "great"
+	| "amazing"
+	| "genius";
 
 type SbpState = {
 	letter: string;
 	gameData: GameData;
-	gameStats: {
-		firstLetters: Record<string, number[] | undefined>;
-		digraphs: Record<string, number | undefined>;
-	};
 	borrowedWords: string[];
 	words: string[];
-	wordStats: {
-		firstLetters: Record<string, number[] | undefined>;
-		digraphs: Record<string, number | undefined>;
-	};
-	thresholds: Record<
-		string,
-		{
-			score: number;
-			distance: number;
-		}
-	>;
-	rank: string;
+	rank: Rank;
 	activeView: "hints" | "sync" | null;
 	player: Player;
 	friends: Player[];
@@ -49,7 +45,7 @@ type SbpState = {
 	syncing: boolean;
 	initialized?: boolean;
 	connected?: boolean;
-	error?: string | undefined
+	error?: string | undefined;
 };
 
 type SyncDelegate = {
@@ -77,5 +73,5 @@ type SyncConfig = {
 };
 
 type StoreOptions<T> = {
-	noPersist?: (keyof T)[]
-}
+	noPersist?: (keyof T)[];
+};

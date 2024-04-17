@@ -8,8 +8,6 @@ import {
 	closeCongratsPane,
 	getGameData,
 	getProgressBar,
-	getWordStats,
-	getThresholds,
 	getWordList,
 	getWordListInner,
 	getWordListOuter,
@@ -17,7 +15,6 @@ import {
 	hightlightWord,
 	isCongratsPaneOpen,
 	sbProgressMarker,
-	sbProgressRank,
 	sbProgressValue,
 	getRank,
 } from "./sb.js";
@@ -81,7 +78,7 @@ const sbpState = new SbpStore({
 		digraphs: {},
 	},
 	thresholds: {},
-	rank: "",
+	rank: "beginner",
 	activeView: null,
 	player: { id: "", name: "" },
 	friends: [],
@@ -215,17 +212,21 @@ function addSyncView() {
 /**
  * Update the rendered view(s) based on the gameState
  *
- * @param {SbpState} state
  * @returns {void}
  */
-function render(state) {
+function render() {
 	const view = document.querySelector(`#${sbpViewId}`);
 	if (!view) {
 		return;
 	}
 
+	const state = sbpState;
+
 	const wantLetters = state.gameStats.firstLetters[state.letter];
 	const haveLetters = state.wordStats.firstLetters[state.letter];
+
+	console.log('wantLetters:', wantLetters);
+	console.log('haveLetters:', haveLetters);
 
 	/** @type {number[]} */
 	const counts = [];
@@ -567,7 +568,7 @@ async function main() {
 	await sbpState.update({
 		gameData,
 		words: getWords(),
-		rank: getNormalizedText(getRank()),
+		rank: /** @type {Rank} */ (getNormalizedText(getRank())),
 	});
 
 	addViewBox();
@@ -595,7 +596,9 @@ async function main() {
 	// rank changes.
 	const rank = getRank();
 	const rankObserver = new MutationObserver(() => {
-		sbpState.update({ rank: getNormalizedText(getRank()) });
+		sbpState.update({
+			rank: /** @type {Rank} */ (getNormalizedText(getRank())),
+		});
 	});
 	rankObserver.observe(rank, {
 		subtree: true,

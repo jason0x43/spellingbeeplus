@@ -50,6 +50,7 @@ export class SbpStore {
 	async load() {
 		/** @type {{ [key: string]: Partial<SbpState> }} */
 		const result = await browser.storage.sync.get(this.#key);
+		console.log(`Loaded state: ${JSON.stringify(result[this.#key])}`);
 		this.#updateValue(result[this.#key]);
 	}
 
@@ -60,9 +61,13 @@ export class SbpStore {
 	 */
 	async update(newVal) {
 		this.#updateValue(newVal);
-		const { syncing, initialized, connected, error, ...toSave } = this.#value;
+		const { syncing, initialized, connected, error, activeView, ...toSave } =
+			this.#value;
 		await browser.storage.sync.set({ [this.#key]: toSave });
+		console.log(`Saved state: ${JSON.stringify(toSave)}`);
 	}
+
+	// Base properties
 
 	get letter() {
 		return this.#value.letter ?? this.#value.gameData.validLetters[0] ?? "";
@@ -72,27 +77,12 @@ export class SbpStore {
 		return this.#value.gameData;
 	}
 
-	get gameStats() {
-		return getWordStats(this.#value.gameData.answers);
-	}
-
 	get borrowedWords() {
 		return this.#value.borrowedWords;
 	}
 
 	get words() {
 		return this.#value.words;
-	}
-
-	get wordStats() {
-		return getWordStats(this.#value.words);
-	}
-
-	get thresholds() {
-		return getThresholds(
-			this.#value.gameData.answers,
-			this.#value.gameData.pangrams,
-		);
 	}
 
 	get rank() {
@@ -133,5 +123,23 @@ export class SbpStore {
 
 	get error() {
 		return this.#value.error;
+	}
+
+	// Derived properties
+
+	get gameStats() {
+		return getWordStats(this.#value.gameData.answers);
+	}
+
+	get wordStats() {
+		console.log(`Getting word states from`, this.#value.words);
+		return getWordStats(this.#value.words);
+	}
+
+	get thresholds() {
+		return getThresholds(
+			this.#value.gameData.answers,
+			this.#value.gameData.pangrams,
+		);
 	}
 }

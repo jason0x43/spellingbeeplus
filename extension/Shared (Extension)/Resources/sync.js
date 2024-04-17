@@ -87,9 +87,11 @@ async function handleMessage(delegate, message) {
 		}
 	} else if ("joined" in message.content) {
 		if (message.content.joined.id === delegate.getState().player.id) {
-			await delegate.updateState({
-				player: message.content.joined,
-			});
+			if (message.content.joined.name) {
+				await delegate.updateState({
+					player: message.content.joined,
+				});
+			}
 		} else {
 			delegate.onJoin(message.content.joined);
 		}
