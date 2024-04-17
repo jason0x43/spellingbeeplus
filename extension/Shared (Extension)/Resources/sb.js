@@ -199,8 +199,6 @@ export function getThresholds(words, pangrams) {
 	}, 0);
 	const delta = 100 / 8;
 
-	console.debug("max score:", maxScore);
-
 	return {
 		beginner: {
 			score: Math.round((2 / 100) * maxScore),

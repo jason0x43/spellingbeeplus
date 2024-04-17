@@ -13,6 +13,8 @@ let SFExtensionMessageKey = "message"
 class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
   let apiKey = Bundle.main.object(forInfoDictionaryKey: "API_KEY") as? String
   let apiHost = Bundle.main.object(forInfoDictionaryKey: "API_HOST") as? String
+  let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+  let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
 
   func beginRequest(with context: NSExtensionContext) {
     let item = context.inputItems[0] as! NSExtensionItem
@@ -24,7 +26,8 @@ class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       if type == "getConfig" {
         response.userInfo = [SFExtensionMessageKey: [
           "apiKey": apiKey,
-          "apiHost": apiHost
+          "apiHost": apiHost,
+          "appVersion": "\(version ?? "")(\(build ?? ""))"
         ]]
       }
     }

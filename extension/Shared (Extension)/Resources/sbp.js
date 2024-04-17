@@ -374,9 +374,6 @@ function render() {
 	}
 
 	const nameBox = selDiv("#sbp-name-input-box");
-	console.debug(
-		`comparing new name "${state.newName}" to player name "${state.player.name}"`,
-	);
 	if (state.newName && state.newName !== state.player.name) {
 		nameBox?.classList.add("sbp-modified");
 	} else {
@@ -519,8 +516,16 @@ async function getConfig() {
 	}
 }
 
+/**
+ * @param {string} status
+ */
+async function setStatus(status) {
+	await browser.runtime.sendMessage({ type: "setStatus", status: status });
+}
+
 async function main() {
 	console.debug("Starting SBP...");
+	await setStatus("Starting");
 
 	const gameData = await getGameData();
 	if (!getGameData) {
@@ -585,81 +590,89 @@ async function main() {
 	if (config) {
 		console.debug("Connecting with config", config);
 
-		await connect(
-			{
-				apiKey: config.apiKey,
-				apiHost: config.apiHost ?? "sbp.jason0x43.dev",
-			},
-			{
-				onJoin: ({ id, name }) => {
-					console.debug("got join event");
-					const friends = sbpState.friends;
-					let index = friends.findIndex((f) => f.id === id);
-					if (index !== -1) {
-						sbpState.update({
-							friends: [
-								...friends.slice(0, index),
-								{ id, name },
-								...friends.slice(index + 1),
-							],
-						});
-					} else {
-						sbpState.update({ friends: [...friends, { id, name }] });
-					}
+		try {
+			await setStatus("Connecting");
+			await connect(
+				{
+					apiKey: config.apiKey,
+					apiHost: config.apiHost ?? "sbp.jason0x43.dev",
 				},
-				onLeave: (id) => {
-					console.debug("got leave event");
-					const friends = sbpState.friends;
-					const index = friends.findIndex((f) => f.id === id);
-					if (index !== -1) {
-						sbpState.update({
-							friends: [
-								...friends.slice(0, index),
-								...friends.slice(index + 1),
-							],
+				{
+					onJoin: ({ id, name }) => {
+						console.debug("got join event");
+						const friends = sbpState.friends;
+						let index = friends.findIndex((f) => f.id === id);
+						if (index !== -1) {
+							sbpState.update({
+								friends: [
+									...friends.slice(0, index),
+									{ id, name },
+									...friends.slice(index + 1),
+								],
+							});
+						} else {
+							sbpState.update({ friends: [...friends, { id, name }] });
+						}
+					},
+					onLeave: (id) => {
+						console.debug("got leave event");
+						const friends = sbpState.friends;
+						const index = friends.findIndex((f) => f.id === id);
+						if (index !== -1) {
+							sbpState.update({
+								friends: [
+									...friends.slice(0, index),
+									...friends.slice(index + 1),
+								],
+							});
+						}
+					},
+					onSync: (words) => {
+						// The other end accepted the sync request -- add its words and
+						// end the syncing state
+						clearTimeout(syncTimeout);
+						const borrowedWords = words.filter(
+							(word) => !sbpState.words.includes(word),
+						);
+						sbpState.update({ borrowedWords });
+						addWords(sbpState.borrowedWords).finally(() => {
+							// All the received words have been added -- syncing is done
+							sbpState.update({ syncing: false });
 						});
-					}
-				},
-				onSync: (words) => {
-					// The other end accepted the sync request -- add its words and
-					// end the syncing state
-					clearTimeout(syncTimeout);
-					const borrowedWords = words.filter(
-						(word) => !sbpState.words.includes(word),
-					);
-					sbpState.update({ borrowedWords });
-					addWords(sbpState.borrowedWords).finally(() => {
-						// All the received words have been added -- syncing is done
+					},
+					onSyncRequest: (from) => {
+						// We received a sync request from another player. If it's
+						// accepted, enable the syncing state.
+						const friend = sbpState.friends.find((f) => f.id === from);
+						if (friend && confirm(`Accept sync request from ${friend.name}?`)) {
+							// The request was accepted -- start syncing
+							sbpState.update({ syncing: true });
+							return sbpState.words;
+						}
+						return false;
+					},
+					onSyncRefused: () => {
+						clearTimeout(syncTimeout);
 						sbpState.update({ syncing: false });
-					});
+					},
+					onError: () => {
+						console.debug("error");
+					},
+					getState: () => sbpState,
+					updateState: (newState) => sbpState.update(newState),
 				},
-				onSyncRequest: (from) => {
-					// We received a sync request from another player. If it's
-					// accepted, enable the syncing state.
-					const friend = sbpState.friends.find((f) => f.id === from);
-					if (friend && confirm(`Accept sync request from ${friend.name}?`)) {
-						// The request was accepted -- start syncing
-						sbpState.update({ syncing: true });
-						return sbpState.words;
-					}
-					return false;
-				},
-				onSyncRefused: () => {
-					clearTimeout(syncTimeout);
-					sbpState.update({ syncing: false });
-				},
-				onError: () => {
-					console.debug("error");
-				},
-				getState: () => sbpState,
-				updateState: (newState) => sbpState.update(newState),
-			},
-		);
+			);
 
-		sbpState.update({ connected: true });
+			await sbpState.update({ connected: true });
+			await setStatus("Connected");
+		} catch (err) {
+			console.warn(`Error connecting: ${err}`);
+			await setStatus(`${err}`);
+		}
 	} else {
 		console.debug("Not connecting because no config");
-		sbpState.update({ error: "Unable to connect" });
+		await setStatus("No config");
+		await sbpState.update({ error: "Unable to connect" });
 	}
 
 	sbpState.update({ initialized: true });
