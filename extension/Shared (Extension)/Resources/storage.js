@@ -10,12 +10,30 @@ export class SbpStore {
 	/** @type {SbpState} */
 	#value;
 
-	/**
-	 * @param {SbpState} initialValue
-	 */
-	constructor(initialValue) {
+	constructor() {
 		this.#key = "sbp-state";
-		this.#value = initialValue;
+		this.#value = {
+			letter: "",
+			gameData: {
+				answers: [],
+				centerLetter: "",
+				outerLetter: "",
+				pangrams: [],
+				validLetters: [],
+			},
+			borrowedWords: [],
+			words: [],
+			rank: "beginner",
+			activeView: null,
+			player: { id: "", name: "" },
+			friends: [],
+			friendId: "",
+			newName: "",
+			syncing: false,
+			initialized: false,
+			connected: false,
+			error: undefined,
+		};
 	}
 
 	/**
@@ -50,7 +68,6 @@ export class SbpStore {
 	async load() {
 		/** @type {{ [key: string]: Partial<SbpState> }} */
 		const result = await browser.storage.sync.get(this.#key);
-		console.log(`Loaded state: ${JSON.stringify(result[this.#key])}`);
 		this.#updateValue(result[this.#key]);
 	}
 
@@ -60,11 +77,21 @@ export class SbpStore {
 	 * @param {Partial<SbpState>} newVal
 	 */
 	async update(newVal) {
+		if (newVal.gameData) {
+			newVal = {
+				...newVal,
+				gameData: {
+					...newVal.gameData,
+					validLetters: newVal.gameData.validLetters.slice().sort(),
+				},
+			};
+		}
+
 		this.#updateValue(newVal);
+
 		const { syncing, initialized, connected, error, activeView, ...toSave } =
 			this.#value;
 		await browser.storage.sync.set({ [this.#key]: toSave });
-		console.log(`Saved state: ${JSON.stringify(toSave)}`);
 	}
 
 	// Base properties
@@ -132,7 +159,6 @@ export class SbpStore {
 	}
 
 	get wordStats() {
-		console.log(`Getting word states from`, this.#value.words);
 		return getWordStats(this.#value.words);
 	}
 

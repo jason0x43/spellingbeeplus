@@ -57,38 +57,7 @@ const viewBoxId = "sbp-view-box";
 const syncViewButtonId = "sbp-sync-view-button";
 const syncButtonId = "sbp-sync-button";
 
-/** @type {SbpStore} */
-const sbpState = new SbpStore({
-	letter: "",
-	gameData: {
-		answers: [],
-		centerLetter: "",
-		outerLetter: "",
-		pangrams: [],
-		validLetters: [],
-	},
-	gameStats: {
-		firstLetters: {},
-		digraphs: {},
-	},
-	borrowedWords: [],
-	words: [],
-	wordStats: {
-		firstLetters: {},
-		digraphs: {},
-	},
-	thresholds: {},
-	rank: "beginner",
-	activeView: null,
-	player: { id: "", name: "" },
-	friends: [],
-	friendId: "",
-	newName: "",
-	syncing: false,
-	initialized: false,
-	connected: false,
-	error: undefined,
-});
+const sbpState = new SbpStore();
 
 /** @type {number | undefined} */
 let syncTimeout;

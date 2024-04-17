@@ -3,10 +3,10 @@
 }
 
 #sbp-view-box {
-	padding: 1rem;
+	padding: 1rem 25px;
 	display: flex;
 	flex-direction: row;
-	justify-content: center;
+	justify-content: flex-start;
 	align-items: center;
 	position: relative;
 }
@@ -112,6 +112,7 @@
 	justify-content: center;
 	align-items: center;
 	font-size: 150%;
+	gap: 6px;
 }
 
 .sbp-letter {
@@ -122,8 +123,10 @@
 	justify-content: center;
 	width: var(--size);
 	height: var(--size);
-	border-bottom: solid 2px transparent;
+	border: solid 2px transparent;
 	cursor: pointer;
+	background: #e6e6e6;
+	text-transform: uppercase;
 }
 
 .sbp-table {
@@ -141,7 +144,7 @@
 }
 
 .sbp-table-cell {
-	--size: 35px;
+	--size: 30px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -169,7 +172,7 @@
 }
 
 .sbp-complete {
-	color: #bbb;
+	opacity: 0.25;
 }
 
 .sb-progress-marker.sbp-progress-marker .sb-progress-value {
