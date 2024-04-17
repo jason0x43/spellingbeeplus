@@ -43,8 +43,7 @@ type SbpState = {
 	friendId: string;
 	newName: string;
 	syncing: boolean;
-	initialized?: boolean;
-	connected?: boolean;
+	status: 'Starting' | 'Connecting' | 'Connected';
 	error?: string | undefined;
 };
 

@@ -57,7 +57,7 @@ const viewBoxId = "sbp-view-box";
 const syncViewButtonId = "sbp-sync-view-button";
 const syncButtonId = "sbp-sync-button";
 
-const sbpState = new SbpStore();
+const state = new SbpStore();
 
 /** @type {number | undefined} */
 let syncTimeout;
@@ -102,7 +102,7 @@ function getViewBox() {
 function addHintsView() {
 	document.querySelector(`#${sbpViewId}`)?.remove();
 
-	const gameData = sbpState.gameData;
+	const gameData = state.gameData;
 	const view = h("div", { id: sbpViewId });
 
 	const letters = h("div", { class: lettersClass }, [
@@ -117,7 +117,7 @@ function addHintsView() {
 
 	letters.addEventListener("click", ({ target }) => {
 		const letter = /** @type HTMLDivElement */ (target);
-		sbpState.update({ letter: letter.textContent ?? undefined });
+		state.update({ letter: letter.textContent ?? undefined });
 	});
 
 	getViewBox().append(view);
@@ -148,11 +148,11 @@ function addSyncView() {
 	syncButton?.addEventListener("click", () => {
 		// Initiate the sync process -- syncing will be true until we receive
 		// confirmation that the other end acceped the sync request.
-		sbpState.update({ syncing: true });
+		state.update({ syncing: true });
 		syncTimeout = setTimeout(() => {
-			sbpState.update({ syncing: false });
+			state.update({ syncing: false });
 		}, 5000);
-		syncWords(sbpState.friendId, sbpState.words);
+		syncWords(state.friendId, state.words);
 	});
 
 	const nameInput = selInput("#sbp-name-input");
@@ -160,21 +160,21 @@ function addSyncView() {
 		event.stopPropagation();
 	});
 	nameInput?.addEventListener("input", () => {
-		sbpState.update({ newName: nameInput.value });
+		state.update({ newName: nameInput.value });
 		console.debug(`updated name to ${nameInput.value}`);
 	});
 
 	const nameButton = selButton("#sbp-name-button");
 	nameButton?.addEventListener("click", () => {
-		if (sbpState.newName) {
-			setName(sbpState.newName);
-			sbpState.update({ newName: "" });
+		if (state.newName) {
+			setName(state.newName);
+			state.update({ newName: "" });
 		}
 	});
 
 	const friendSelect = selSelect("#sbp-friend-select");
 	friendSelect?.addEventListener("change", () => {
-		sbpState.update({ friendId: friendSelect.value });
+		state.update({ friendId: friendSelect.value });
 	});
 }
 
@@ -188,8 +188,6 @@ function render() {
 	if (!view) {
 		return;
 	}
-
-	const state = sbpState;
 
 	const wantLetters = state.gameStats.firstLetters[state.letter];
 	const haveLetters = state.wordStats.firstLetters[state.letter];
@@ -360,7 +358,7 @@ function render() {
 		if (state.newName) {
 			nameInput.value = state.newName;
 		} else {
-			nameInput.value = sbpState.player.name;
+			nameInput.value = state.player.name;
 		}
 	}
 
@@ -429,8 +427,8 @@ function addHintsButton() {
 	);
 
 	button.addEventListener("click", () => {
-		sbpState.update({
-			activeView: sbpState.activeView === "hints" ? null : "hints",
+		state.update({
+			activeView: state.activeView === "hints" ? null : "hints",
 		});
 	});
 	document.querySelector(`#${buttonBoxId}`)?.append(button);
@@ -445,8 +443,8 @@ function addSyncButton() {
 	const button = h("button", { id: syncViewButtonId, type: "button" }, "Sync");
 
 	button.addEventListener("click", () => {
-		sbpState.update({
-			activeView: sbpState.activeView === "sync" ? null : "sync",
+		state.update({
+			activeView: state.activeView === "sync" ? null : "sync",
 		});
 	});
 	document.querySelector(`#${buttonBoxId}`)?.append(button);
@@ -456,10 +454,10 @@ function addSyncButton() {
  * Select the next letter to the left in the hints pane.
  */
 function selectLetterLeft() {
-	const { gameData, letter } = sbpState;
+	const { gameData, letter } = state;
 	const index = gameData.validLetters.indexOf(letter);
 	if (index > 0) {
-		sbpState.update({ letter: gameData.validLetters[index - 1] });
+		state.update({ letter: gameData.validLetters[index - 1] });
 	}
 }
 
@@ -467,10 +465,10 @@ function selectLetterLeft() {
  * Select the next letter to the right in the hints pane.
  */
 function selectLetterRight() {
-	const { gameData, letter } = sbpState;
+	const { gameData, letter } = state;
 	const index = gameData.validLetters.indexOf(letter);
 	if (index < gameData.validLetters.length - 1) {
-		sbpState.update({ letter: gameData.validLetters[index + 1] });
+		state.update({ letter: gameData.validLetters[index + 1] });
 	}
 }
 
@@ -525,7 +523,7 @@ async function setStatus(status) {
 
 async function main() {
 	console.debug("Starting SBP...");
-	await setStatus("Starting");
+	setStatus(state.status);
 
 	const gameData = await getGameData();
 	if (!getGameData) {
@@ -533,10 +531,20 @@ async function main() {
 		return;
 	}
 
-	await sbpState.load();
-	sbpState.subscribe(render);
+	await state.load();
+	state.subscribe(render);
 
-	await sbpState.update({
+	state.subscribe(() => {
+		if (state.error) {
+			setStatus(state.error);
+		} else if (state.syncing) {
+			setStatus("Syncing...");
+		} else {
+			setStatus(state.status);
+		}
+	});
+
+	await state.update({
 		gameData,
 		words: getWords(),
 		rank: /** @type {Rank} */ (getNormalizedText(getRank())),
@@ -557,7 +565,7 @@ async function main() {
 			const addedWords = Array.from(mutation.addedNodes).map((node) =>
 				(node.textContent ?? "").trim(),
 			);
-			sbpState.update({ words: [...sbpState.words, ...addedWords] });
+			state.update({ words: [...state.words, ...addedWords] });
 		}
 	});
 	wordsObserver.observe(wordList, { childList: true });
@@ -567,7 +575,7 @@ async function main() {
 	// rank changes.
 	const rank = getRank();
 	const rankObserver = new MutationObserver(() => {
-		sbpState.update({
+		state.update({
 			rank: /** @type {Rank} */ (getNormalizedText(getRank())),
 		});
 	});
@@ -589,9 +597,9 @@ async function main() {
 	const config = await getConfig();
 	if (config) {
 		console.debug("Connecting with config", config);
+		await state.update({ status: "Connecting" });
 
 		try {
-			await setStatus("Connecting");
 			await connect(
 				{
 					apiKey: config.apiKey,
@@ -600,10 +608,10 @@ async function main() {
 				{
 					onJoin: ({ id, name }) => {
 						console.debug("got join event");
-						const friends = sbpState.friends;
+						const friends = state.friends;
 						let index = friends.findIndex((f) => f.id === id);
 						if (index !== -1) {
-							sbpState.update({
+							state.update({
 								friends: [
 									...friends.slice(0, index),
 									{ id, name },
@@ -611,15 +619,15 @@ async function main() {
 								],
 							});
 						} else {
-							sbpState.update({ friends: [...friends, { id, name }] });
+							state.update({ friends: [...friends, { id, name }] });
 						}
 					},
 					onLeave: (id) => {
 						console.debug("got leave event");
-						const friends = sbpState.friends;
+						const friends = state.friends;
 						const index = friends.findIndex((f) => f.id === id);
 						if (index !== -1) {
-							sbpState.update({
+							state.update({
 								friends: [
 									...friends.slice(0, index),
 									...friends.slice(index + 1),
@@ -632,50 +640,48 @@ async function main() {
 						// end the syncing state
 						clearTimeout(syncTimeout);
 						const borrowedWords = words.filter(
-							(word) => !sbpState.words.includes(word),
+							(word) => !state.words.includes(word),
 						);
-						sbpState.update({ borrowedWords });
-						addWords(sbpState.borrowedWords).finally(() => {
+						state.update({ borrowedWords });
+						addWords(state.borrowedWords).finally(() => {
 							// All the received words have been added -- syncing is done
-							sbpState.update({ syncing: false });
+							state.update({ syncing: false });
 						});
 					},
 					onSyncRequest: (from) => {
 						// We received a sync request from another player. If it's
 						// accepted, enable the syncing state.
-						const friend = sbpState.friends.find((f) => f.id === from);
+						const friend = state.friends.find((f) => f.id === from);
 						if (friend && confirm(`Accept sync request from ${friend.name}?`)) {
 							// The request was accepted -- start syncing
-							sbpState.update({ syncing: true });
-							return sbpState.words;
+							state.update({ syncing: true });
+							return state.words;
 						}
 						return false;
 					},
 					onSyncRefused: () => {
 						clearTimeout(syncTimeout);
-						sbpState.update({ syncing: false });
+						state.update({ syncing: false });
 					},
 					onError: () => {
 						console.debug("error");
+						state.update({ error: "Connection errored" });
 					},
-					getState: () => sbpState,
-					updateState: (newState) => sbpState.update(newState),
+					getState: () => state,
+					updateState: (newState) => state.update(newState),
 				},
 			);
 
-			await sbpState.update({ connected: true });
-			await setStatus("Connected");
+			await state.update({ status: "Connected" });
 		} catch (err) {
 			console.warn(`Error connecting: ${err}`);
-			await setStatus(`${err}`);
+			await state.update({ error: "Error connecting" });
 		}
 	} else {
 		console.debug("Not connecting because no config");
-		await setStatus("No config");
-		await sbpState.update({ error: "Unable to connect" });
+		await state.update({ error: "No config" });
 	}
 
-	sbpState.update({ initialized: true });
 	console.debug("Started SBP");
 }
 

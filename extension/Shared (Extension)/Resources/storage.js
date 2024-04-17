@@ -30,8 +30,7 @@ export class SbpStore {
 			friendId: "",
 			newName: "",
 			syncing: false,
-			initialized: false,
-			connected: false,
+			status: 'Starting',
 			error: undefined,
 		};
 	}
@@ -89,7 +88,7 @@ export class SbpStore {
 
 		this.#updateValue(newVal);
 
-		const { syncing, initialized, connected, error, activeView, ...toSave } =
+		const { syncing, status, error, activeView, ...toSave } =
 			this.#value;
 		await browser.storage.sync.set({ [this.#key]: toSave });
 	}
@@ -140,12 +139,8 @@ export class SbpStore {
 		return this.#value.syncing;
 	}
 
-	get initialized() {
-		return this.#value.initialized;
-	}
-
-	get connected() {
-		return this.#value.connected;
+	get status() {
+		return this.#value.status;
 	}
 
 	get error() {
