@@ -603,7 +603,7 @@ async function main() {
 			await connect(
 				{
 					apiKey: config.apiKey,
-					apiHost: config.apiHost ?? "sbp.jason0x43.dev",
+					apiHost: config.apiHost,
 				},
 				{
 					onJoin: ({ id, name }) => {

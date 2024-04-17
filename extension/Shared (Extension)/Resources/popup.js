@@ -15,11 +15,11 @@ function updateStatus() {
 	});
 }
 
-const version = await browser.runtime.sendMessage({
-	type: "getVersion",
-});
-
+const version = await browser.runtime.sendMessage({ type: "getVersion", });
 setElemText("#version", version);
+
+const config = await browser.runtime.sendMessage({ type: "getConfig", });
+setElemText("#host", config?.apiHost);
 
 setInterval(() => {
 	updateStatus();
