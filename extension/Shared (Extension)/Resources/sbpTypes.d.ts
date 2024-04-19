@@ -1,5 +1,11 @@
 type Listener<T> = (newVal: T, oldVal: T) => void;
 
+type Config = {
+	apiKey: string;
+	apiHost: string;
+	appVersion: string;
+};
+
 type Store<T> = {
 	subscribe(listener: Listener<T>): void;
 	value: T;

@@ -1,6 +1,9 @@
 /// <reference path="global.d.ts" />
 
-let status = '';
+let status = "";
+
+/** @type {Config | undefined} */
+let config = undefined;
 
 browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 	if (typeof request !== "object" || !request) {
@@ -8,23 +11,38 @@ browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 	}
 
 	console.log("Handling request:", request);
+	console.log("Config:", config);
 
 	if (request.type === "getConfig") {
-		browser.runtime.sendNativeMessage(
-			"application.id",
-			{ type: "getConfig" },
-			(response) => {
-				sendResponse(response);
-			},
-		);
+		if (config) {
+			sendResponse(config);
+		} else {
+			browser.runtime.sendNativeMessage(
+				"application.id",
+				{ type: "getConfig" },
+				(response) => {
+					if (response) {
+						config = response;
+					}
+					sendResponse(response);
+				},
+			);
+		}
 	} else if (request.type === "getVersion") {
-		browser.runtime.sendNativeMessage(
-			"application.id",
-			{ type: "getConfig" },
-			(response) => {
-				sendResponse(response.appVersion);
-			},
-		);
+		if (config) {
+			sendResponse(config.appVersion);
+		} else {
+			browser.runtime.sendNativeMessage(
+				"application.id",
+				{ type: "getConfig" },
+				(response) => {
+					if (response) {
+						config = response;
+					}
+					sendResponse(response?.appVersion);
+				},
+			);
+		}
 	} else if (request.type === "setStatus") {
 		status = request.status;
 	} else if (request.type === "getStatus") {
