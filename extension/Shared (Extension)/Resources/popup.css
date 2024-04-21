@@ -3,7 +3,8 @@
 }
 
 body {
-	width: 15rem;
+	width: 100%;
+	max-width: 20rem;
 	margin: 0 auto;
 	padding: 1rem;
 	font-family: system-ui;
@@ -49,6 +50,7 @@ section {
 	padding: 0.25rem;
 	overflow-y: auto;
 	background: #f8f8f8;
+	color: #333;
 }
 
 @media (prefers-color-scheme: dark) {

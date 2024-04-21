@@ -61,6 +61,7 @@ try {
 	if (config) {
 		setElemText("#host", config?.apiHost);
 		log("Loaded config");
+		log(`Using API host ${config?.apiHost}`)
 	} else {
 		log("Unable to load config");
 	}
