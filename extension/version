@@ -1,45 +1,77 @@
-#!/bin/sh
+#!/usr/bin/env python
 
-set -e
+from sys import argv, exit
+from pathlib import Path
+import re
 
-project_file=SpellingBeePlus.xcodeproj/project.pbxproj
+args = argv[1:]
 
-if [[ ${BASH_ARGV} == "-" ]]; then
-  project=$(</dev/stdin)
-  # pop the last argument
-  set -- "${@:1:$(($#-1))}"
-else
-  project=$(<$project_file)
-fi
+if len(args) > 0 and args[0] in ['-h', '--help']:
+  print("usage: version [major|minor|patch|build]")
+  print("  major: increment the major version")
+  print("  minor: increment the minor version")
+  print("  patch: increment the patch version")
+  print("  build: increment the build version")
+  exit(0)
 
-build=$(echo "$project" | grep -m1 CURRENT_PROJECT_VERSION | grep -o -E '\d+')
-version=$(echo "$project" | grep -m1 MARKETING_VERSION |  grep -o -E '\d+(\.\d+)+')
+project_file = 'SpellingBeePlus.xcodeproj/project.pbxproj'
+project_lines = Path(project_file).read_text().splitlines()
 
-if [[ $1 == "build" ]]; then
-  if [[ -n "$2" ]]; then
-    new_build=$2
-    if [[ -z $new_build ]]; then
-      new_build=$(($build+1))
-    fi
+build: int | None = None
+version: str | None = None
 
-    matcher="[[:space:]]*CURRENT_PROJECT_VERSION[[:space:]]*=[[:space:]]"
-    sed -E -i "" "s/($matcher).*;/\1$new_build;/" "$project_file"
-    echo "Updated build to $new_build"
-  else
-    echo $build
-  fi
-elif [[ $1 == "version" ]]; then
-  if [[ -n "$2" ]]; then
-    version=$2
-    if [[ -z $version ]]; then
-      echo "Must provide a version"
-      exit 1
-    fi
-    matcher="[[:space:]]*MARKETING_VERSION[[:space:]]*=[[:space:]]"
-    sed -E -i "" "s/($matcher).*;/\1$2;/" "$project_file"
-  else
-    echo $version
-  fi
-else
-  echo "$version($build)"
-fi
+build_re = re.compile(r"(\s+)CURRENT_PROJECT_VERSION = (\d+);")
+version_re = re.compile(r"(\s+)MARKETING_VERSION = (\d+.\d+.\d+);")
+
+for line in project_lines:
+  if build_match := build_re.match(line):
+    if build is None:
+      build = int(build_match.group(2))
+  elif version_match := version_re.match(line):
+    if version is None:
+      version = version_match.group(2)
+  if build is not None and version is not None:
+    break
+
+if build is None or version is None:
+  print("Could not find version information in project file")
+  exit(1)
+
+new_build = build
+new_version = version
+
+if len(args) == 0:
+  print(f"{version}({build})")
+elif args[0] == "build":
+  new_build += 1
+elif args[0] == "patch":
+  new_build += 1
+  tmp_version = [int(v) for v in version.split('.')]
+  tmp_version[2] += 1
+  new_version = f"{tmp_version[0]}.{tmp_version[1]}.{tmp_version[2]}"
+elif args[0] == "minor":
+  new_build += 1
+  tmp_version = [int(v) for v in version.split('.')]
+  tmp_version[1] += 1
+  tmp_version[2] = 0
+  new_version = f"{tmp_version[0]}.{tmp_version[1]}.{tmp_version[2]}"
+elif args[0] == "major":
+  new_build += 1
+  tmp_version = [int(v) for v in version.split('.')]
+  tmp_version[0] += 1
+  tmp_version[1] = 0
+  tmp_version[2] = 0
+  new_version = f"{tmp_version[0]}.{tmp_version[1]}.{tmp_version[2]}"
+
+if new_build != build or new_version != version:
+  if new_build != build:
+    for index, line in enumerate(project_lines):
+      if build_match := build_re.match(line):
+        project_lines[index] = f"{build_match.group(1)}CURRENT_PROJECT_VERSION = {new_build};"
+
+  if new_version != version:
+    for index, line in enumerate(project_lines):
+      if version_match := version_re.match(line):
+        project_lines[index] = f"{version_match.group(1)}MARKETING_VERSION = {new_version};"
+
+  Path(project_file).write_text(f"{'\n'.join(project_lines)}\n")
