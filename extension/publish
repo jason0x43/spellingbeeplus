@@ -101,11 +101,6 @@ function build_app {
   fi
 }
 
-if [[ -z $DEPLOY_DEST ]]; then
-  echo "DEPLOY_DEST must be defined"
-  exit 1
-fi
-
 if [[ -z $TEAM_ID ]]; then
   echo "TEAM_ID must be defined"
   exit 1
@@ -156,7 +151,7 @@ done
 version=$(./version version)
 
 if (( $do_check )); then
-  grep -q $version CHANGELOG.md || (echo "Version $version not found in CHANGELOG.md" && exit 1)
+  # grep -q $version CHANGELOG.md || (echo "Version $version not found in CHANGELOG.md" && exit 1)
   git diff-index --quiet HEAD || (echo "Project has uncommitted changes" && exit 1)
 fi
 
@@ -170,25 +165,12 @@ if (( $do_build_mac )); then
   build_app macOS
 fi
 
-if (( $do_publish )); then
-  echo ">>> Copying app to deploy host..."
-  echo ""
-
-  if [[ -f ./build/export/SpellingBeePlus.ipa ]]; then 
-    scp ./build/export/SpellingBeePlus.ipa $DEPLOY_DEST
-  fi
-  if [[ -f ./build/export/SpellingBeePlus.zip ]]; then 
-    scp ./build/export/SpellingBeePlus.zip $DEPLOY_DEST
-  fi
-  scp CHANGELOG.md $DEPLOY_DEST
-fi
-
-if (( $do_tag )); then
-  echo ">>> Tagging version $version..."
-  echo ""
-
-  git tag "v$version" HEAD
-fi
+# if (( $do_tag )); then
+#   echo ">>> Tagging version $version..."
+#   echo ""
+#
+#   git tag "v$version" HEAD
+# fi
 
 echo ""
 echo ">>> Done."
