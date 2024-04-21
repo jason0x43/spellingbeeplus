@@ -24,6 +24,7 @@ function export_iOS_app {
   xcodebuild \
     DEV_TEAM=$DEV_TEAM \
     -exportArchive \
+    -allowProvisioningUpdates \
     -archivePath $archive \
     -exportPath $export_path \
     -exportOptionsPlist $export_options
