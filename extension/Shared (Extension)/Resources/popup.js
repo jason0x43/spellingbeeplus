@@ -1,3 +1,6 @@
+/** @type {string | undefined} */
+let status = undefined;
+
 /**
  * @param {string} selector
  * @param {string} text
@@ -10,16 +13,60 @@ function setElemText(selector, text) {
 }
 
 function updateStatus() {
-	browser.runtime.sendMessage({ type: "getStatus" }).then((status) => {
-		setElemText("#status", status);
-	});
+	browser.runtime
+		.sendMessage({ type: "getStatus" })
+		.then((newStatus) => {
+			if (newStatus !== status) {
+				if (newStatus) {
+					setElemText("#status", newStatus);
+					status = newStatus;
+					log(`Set status to ${newStatus}`);
+				} else {
+					log("Unable to get status");
+					status = "Unknown";
+				}
+			}
+		})
+		.catch((error) => {
+			log(`Error getting status: ${error}`);
+		});
 }
 
-const version = await browser.runtime.sendMessage({ type: "getVersion", });
-setElemText("#version", version);
+/**
+ * @param {string} message
+ */
+function log(message) {
+	const log = document.querySelector("#log");
+	const entry = document.createElement("p");
+	entry.textContent = message;
+	log?.append(entry);
+}
 
-const config = await browser.runtime.sendMessage({ type: "getConfig", });
-setElemText("#host", config?.apiHost);
+log("Starting up...");
+
+try {
+	const version = await browser.runtime.sendMessage({ type: "getVersion" });
+	if (version) {
+		setElemText("#version", version);
+		log(`Set version to ${version}`);
+	} else {
+		log("Unable to get version");
+	}
+} catch (error) {
+	log(`Error getting version: ${error}`);
+}
+
+try {
+	const config = await browser.runtime.sendMessage({ type: "getConfig" });
+	if (config) {
+		setElemText("#host", config?.apiHost);
+		log("Loaded config");
+	} else {
+		log("Unable to load config");
+	}
+} catch (error) {
+	log(`Error loading config: ${error}`);
+}
 
 setInterval(() => {
 	updateStatus();
