@@ -1,25 +1,80 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 set -e
 
 source env.xcconfig
 
-function export_iOS_app {
-  local archive=$1
-  local export_path=$2
-  local export_options="build/exportOptions_iOS.plist"
-  local export_plist="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-  <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
-  <plist version=\"1.0\">
-    <dict>
-      <key>method</key>
-      <string>release-testing</string>
+declare -A export_plists
 
-      <key>teamID</key>
-      <string>$DEV_TEAM</string>
-    </dict>
-  </plist>"
-  echo "$export_plist" > $export_options
+export_plists["iOS"]="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+  <dict>
+    <key>method</key>
+    <string>release-testing</string>
+
+    <key>teamID</key>
+    <string>$DEV_TEAM</string>
+  </dict>
+</plist>"
+
+export_plists["macOS"]="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+  <dict>
+    <key>method</key>
+    <string>app-store-connect</string>
+
+    <key>testFlightInternalTestingOnly</key>
+    <true/>
+
+    <key>teamID</key>
+    <string>$DEV_TEAM</string>
+  </dict>
+</plist>"
+
+declare -A export_exts
+
+export_exts["iOS"]="ipa"
+export_exts["macOS"]="pkg"
+
+declare -A export_types
+
+export_types["iOS"]="ios"
+export_types["macOS"]="macos"
+
+function spin {
+  local pid=$1
+  local spin='/-\|'
+  local i=0
+
+   # cursor invisible
+  tput civis
+
+  while kill -0 $pid 2>/dev/null; do
+    local i=$(((i + 1) % ${#spin}))
+    printf "%s" "${spin:$i:1}"
+    printf "\b"
+    sleep .1
+  done
+
+  tput cnorm
+
+  printf " \n"
+
+  wait $pid
+  return $?
+}
+
+function export_app {
+  local platform=$1
+  local build_dir=build/$platform
+  local archive=$build_dir/SpellingBeePlus.xcarchive
+  local export_path=$build_dir/export
+  local export_options=$build_dir/exportOptions.plist
+  echo "${export_plists[$platform]}" > $export_options
+
+  echo -n ">>> Archiving $platform app..."
 
   xcodebuild \
     DEV_TEAM=$DEV_TEAM \
@@ -27,81 +82,41 @@ function export_iOS_app {
     -allowProvisioningUpdates \
     -archivePath $archive \
     -exportPath $export_path \
-    -exportOptionsPlist $export_options
-}
+    -exportOptionsPlist $export_options 2>&1 > $build_dir/archive.log &
 
-function export_macOS_app {
-  local archive=$1
-  local export_path=$2
-  local export_options="build/exportOptions_macOS.plist"
-  local export_plist="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-  <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
-  <plist version=\"1.0\">
-    <dict>
-      <key>destination</key>
-      <string>export</string>
+  spin $!
 
-      <key>method</key>
-      <string>development</string>
+  echo -n ">>> Uploading $platform app..."
 
-      <key>signingStyle</key>
-      <string>manual</string>
+  local artifact=$export_path/SpellingBeePlus.${export_exts[$platform]}
+  local password=$(op read "$DEV_PASSWORD")
 
-      <key>signingCertificate</key>
-      <string>Developer ID Application</string>
+  xcrun altool \
+    --validate-app \
+    --file "$artifact" \
+    --username $DEV_USERNAME \
+    --password $password \
+    --type ${export_types[$platform]} 2>&1 > $build_dir/upload.log &
 
-      <key>teamID</key>
-      <string>$DEV_TEAM</string>
-    </dict>
-  </plist>"
-  echo "$export_plist" > $export_options
-
-  xcodebuild \
-    DEV_TEAM=$DEV_TEAM \
-    -exportArchive \
-    -archivePath $archive \
-    -exportPath $export_path \
-    -exportOptionsPlist $export_options
-
-  echo ">>> Creating bundle for upload..."
-
-  (cd $export_path \
-    && zip -r SpellingBeePlus.zip SpellingBeePlus.app \
-    && rm -rf SpellingBeePlus.app)
-
-  echo ">>> Notarizing..."
-
-  xcrun notarytool submit \
-    -p "Personal App Signing" \
-    --verbose \
-    --wait \
-    --timeout 2h \
-    $export_path/SpellingBeePlus.zip
+  spin $!
 }
 
 function build_app {
   local platform=$1
+  local build_dir=build/$platform
 
-  echo ">>> Building $platform app..."
-  echo ""
+  mkdir -p $build_dir
 
-  local archive=build/SpellingBeePlus_$platform.xcarchive
+  echo -n ">>> Building $platform app..."
 
   xcodebuild \
     DEV_TEAM=$DEV_TEAM \
     -scheme "SpellingBeePlus ($platform)" \
     -destination "generic/platform=$platform" \
-    -archivePath $archive \
-    archive
+    -archivePath "$build_dir/SpellingBeePlus.xcarchive" \
+    archive > $build_dir/build.log &
 
-  echo ">>> Archiving $platform app..."
-  echo ""
-
-  if [ $platform = "iOS" ]; then
-    export_iOS_app $archive "build/export"
-  else
-    export_macOS_app $archive "build/export"
-  fi
+  spin $!
 }
 
 if [[ -z $DEV_TEAM ]]; then
@@ -151,29 +166,35 @@ while getopts "hp:b" options; do
   esac
 done
 
-version=$(./version version)
-
 if (( $do_check )); then
-  # grep -q $version CHANGELOG.md || (echo "Version $version not found in CHANGELOG.md" && exit 1)
   git diff-index --quiet HEAD || (echo "Project has uncommitted changes" && exit 1)
 fi
+
+version="v$(./version | cut -f 1 -d"(")"
+if [[ -n $(git tag -l $version) ]]; then
+  echo "Version $version has already been tagged"
+  exit 1
+fi
+
+echo ">>> Building $version"
 
 echo ">>> Clearing previous builds..."
 rm -rf ./build
 
 if (( $do_build_ios )); then
   build_app iOS
+  export_app iOS
 fi
 if (( $do_build_mac )); then
   build_app macOS
+  export_app macOS
 fi
 
-# if (( $do_tag )); then
-#   echo ">>> Tagging version $version..."
-#   echo ""
-#
-#   git tag "v$version" HEAD
-# fi
+if (( $do_tag )); then
+  echo ">>> Tagging version $version..."
+  echo ""
+  git tag $version HEAD
+fi
 
 echo ""
 echo ">>> Done."
