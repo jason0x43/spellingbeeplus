@@ -13,7 +13,7 @@ function export_iOS_app {
   <plist version=\"1.0\">
     <dict>
       <key>method</key>
-      <string>ad-hoc</string>
+      <string>release-testing</string>
 
       <key>teamID</key>
       <string>$DEV_TEAM</string>
