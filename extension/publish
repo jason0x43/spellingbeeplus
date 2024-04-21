@@ -66,6 +66,40 @@ function spin {
   return $?
 }
 
+function validate_app {
+  local platform=$1
+  local build_dir=build/$platform
+  local artifact=$build_dir/export/SpellingBeePlus.${export_exts[$platform]}
+
+  echo -n ">>> Validating $platform app..."
+
+  xcrun altool \
+    --validate-app \
+    --file "$artifact" \
+    --username $DEV_USERNAME \
+    --password $(op read "$DEV_PASSWORD") \
+    --type ${export_types[$platform]} > $build_dir/validate.log 2>&1 &
+
+  spin $!
+}
+
+function upload_app {
+  local platform=$1
+  local build_dir=build/$platform
+  local artifact=$build_dir/export/SpellingBeePlus.${export_exts[$platform]}
+
+  echo -n ">>> Uploading $platform app..."
+
+  xcrun altool \
+    --upload-app \
+    --file "$artifact" \
+    --username $DEV_USERNAME \
+    --password $(op read "$DEV_PASSWORD") \
+    --type ${export_types[$platform]} > $build_dir/upload.log 2>&1 &
+
+  spin $!
+}
+
 function export_app {
   local platform=$1
   local build_dir=build/$platform
@@ -82,21 +116,7 @@ function export_app {
     -allowProvisioningUpdates \
     -archivePath $archive \
     -exportPath $export_path \
-    -exportOptionsPlist $export_options 2>&1 > $build_dir/archive.log &
-
-  spin $!
-
-  echo -n ">>> Uploading $platform app..."
-
-  local artifact=$export_path/SpellingBeePlus.${export_exts[$platform]}
-  local password=$(op read "$DEV_PASSWORD")
-
-  xcrun altool \
-    --validate-app \
-    --file "$artifact" \
-    --username $DEV_USERNAME \
-    --password $password \
-    --type ${export_types[$platform]} 2>&1 > $build_dir/upload.log &
+    -exportOptionsPlist $export_options > $build_dir/archive.log 2>&1 &
 
   spin $!
 }
@@ -130,7 +150,7 @@ do_publish=1
 do_tag=1
 do_check=1
 
-while getopts "hp:b" options; do
+while getopts "hp:c" options; do
   case "${options}" in
     p)
       platform=${OPTARG}
@@ -147,15 +167,14 @@ while getopts "hp:b" options; do
         ;;
       esac
       ;;
-    b)
-      do_check=0
+    c)
       do_publish=0
       do_tag=0
       ;;
     h)
       echo "usage: $0 [-p platform] [-P] [-T] [-h]"
       echo "  -p platform: build for platform (mac or ios)"
-      echo "  -b: build-only"
+      echo "  -c: check (build and validate only)"
       echo "  -h: print this message"
       exit 0
       ;;
@@ -178,16 +197,26 @@ fi
 
 echo ">>> Building $version"
 
-echo ">>> Clearing previous builds..."
+echo ">>> Clearing build directory..."
 rm -rf ./build
 
 if (( $do_build_ios )); then
   build_app iOS
   export_app iOS
+  if (( $do_publish )); then
+    upload_app iOS
+  else
+    validate_app iOS
+  fi
 fi
 if (( $do_build_mac )); then
   build_app macOS
   export_app macOS
+  if (( $do_publish )); then
+    upload_app macOS
+  else
+    validate_app macOS
+  fi
 fi
 
 if (( $do_tag )); then
@@ -196,5 +225,4 @@ if (( $do_tag )); then
   git tag $version HEAD
 fi
 
-echo ""
 echo ">>> Done."
