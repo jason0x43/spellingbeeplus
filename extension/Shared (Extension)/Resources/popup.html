@@ -6,18 +6,16 @@
 		<script type="module" src="popup.js"></script>
 	</head>
 	<body>
-		<header>
-			<h4>SpellingBeePlus v<span id="version" /></h4>
-		</header>
+		<div id="content">
+			<h4 id="header">SpellingBeePlus v<span id="version" /></h4>
 
-		<main>
-			<section>
+			<div class="section">
 				<p><strong>Host:</strong> <span id="host" /></p>
 				<p><strong>Status:</strong> <span id="status" /></p>
-			</section>
-			<section>
+			</div>
+			<div id="log-wrapper" class="section">
 				<div id="log" />
-			</section>
-		</main>
+			</div>
+		</div>
 	</body>
 </html>
