@@ -2,6 +2,8 @@
 
 set -e
 
+source env.xcconfig
+
 function export_iOS_app {
   local archive=$1
   local export_path=$2
@@ -14,13 +16,13 @@ function export_iOS_app {
       <string>ad-hoc</string>
 
       <key>teamID</key>
-      <string>$TEAM_ID</string>
+      <string>$DEV_TEAM</string>
     </dict>
   </plist>"
   echo "$export_plist" > $export_options
 
   xcodebuild \
-    TEAM_ID=$TEAM_ID \
+    DEV_TEAM=$DEV_TEAM \
     -exportArchive \
     -archivePath $archive \
     -exportPath $export_path \
@@ -48,13 +50,13 @@ function export_macOS_app {
       <string>Developer ID Application</string>
 
       <key>teamID</key>
-      <string>$TEAM_ID</string>
+      <string>$DEV_TEAM</string>
     </dict>
   </plist>"
   echo "$export_plist" > $export_options
 
   xcodebuild \
-    TEAM_ID=$TEAM_ID \
+    DEV_TEAM=$DEV_TEAM \
     -exportArchive \
     -archivePath $archive \
     -exportPath $export_path \
@@ -85,7 +87,7 @@ function build_app {
   local archive=build/SpellingBeePlus_$platform.xcarchive
 
   xcodebuild \
-    TEAM_ID=$TEAM_ID \
+    DEV_TEAM=$DEV_TEAM \
     -scheme "SpellingBeePlus ($platform)" \
     -destination "generic/platform=$platform" \
     -archivePath $archive \
@@ -101,8 +103,8 @@ function build_app {
   fi
 }
 
-if [[ -z $TEAM_ID ]]; then
-  echo "TEAM_ID must be defined"
+if [[ -z $DEV_TEAM ]]; then
+  echo "DEV_TEAM must be defined"
   exit 1
 fi
 
