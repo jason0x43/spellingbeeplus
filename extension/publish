@@ -172,7 +172,7 @@ while getopts "hp:c" options; do
       do_tag=0
       ;;
     h)
-      echo "usage: $0 [-p platform] [-P] [-T] [-h]"
+      echo "usage: $0 [-p platform] [-c] [-h]"
       echo "  -p platform: build for platform (mac or ios)"
       echo "  -c: check (build and validate only)"
       echo "  -h: print this message"
