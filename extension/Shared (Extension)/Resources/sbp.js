@@ -479,13 +479,19 @@ function selectLetterRight() {
 export async function addWords(words) {
 	for (const word of words) {
 		if (isCongratsPaneOpen()) {
-			await wait(500);
+			await wait(250);
+
 			closeCongratsPane();
-			await wait(500);
+
+			while (isCongratsPaneOpen()) {
+				await wait(100);
+			}
+
+			await wait(250);
 		}
 
 		await addWord(word);
-		await wait(100);
+		await wait(250);
 	}
 }
 

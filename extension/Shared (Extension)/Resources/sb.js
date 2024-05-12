@@ -119,6 +119,10 @@ export async function addWord(word) {
 	}
 
 	click(enter);
+
+	while (document.querySelector('[data-testid="sb-input"]')) {
+		await wait(100);
+	}
 }
 
 /**
