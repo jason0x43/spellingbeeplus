@@ -10,7 +10,7 @@ let version;
 /** @type {string | undefined} */
 let syncRequestId;
 
-let reconnectWait = 500;
+let reconnectWait = 1000;
 
 /**
  * Get a token
@@ -165,16 +165,23 @@ export async function connect(config, delegate) {
 	skt.addEventListener("close", () => {
 		console.warn("Connection closed");
 		socket = undefined;
+
 		setTimeout(() => {
 			connect(config, delegate).catch((error) => {
 				console.warn("connection error:", error);
 			});
-		}, reconnectWait);
-		reconnectWait *= 1.5;
+		}, 500 + Math.random() * 1000);
 	});
 
 	skt.addEventListener("error", () => {
 		console.warn("Connection error");
+		socket = undefined;
+
+		setTimeout(() => {
+			connect(config, delegate).catch((error) => {
+				console.warn("connection error:", error);
+			});
+		}, 500 + Math.random() * 1000);
 	});
 
 	skt.addEventListener("message", async (event) => {

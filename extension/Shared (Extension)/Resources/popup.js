@@ -1,3 +1,5 @@
+import { getNativeInfo } from "./info.js";
+
 /** @type {string | undefined} */
 let status = undefined;
 
@@ -19,12 +21,12 @@ function updateStatus() {
 			if (newStatus !== status) {
 				if (newStatus) {
 					setElemText("#status", newStatus);
-					status = newStatus;
 					log(`Set status to ${newStatus}`);
 				} else {
-					log("Unable to get status");
-					status = "Unknown";
+					setElemText("#status", "Unavailable");
+					log("Waiting for status...");
 				}
+				status = newStatus;
 			}
 		})
 		.catch((error) => {
@@ -44,33 +46,19 @@ function log(message) {
 
 log("Starting up...");
 
-try {
-	const version = await browser.runtime.sendMessage({ type: "getVersion" });
-	if (version) {
-		setElemText("#version", version);
-		log(`Set version to ${version}`);
-	} else {
-		log("Unable to get version");
-	}
-} catch (error) {
-	log(`Error getting version: ${error}`);
-}
-
-try {
-	const config = await browser.runtime.sendMessage({ type: "getConfig" });
-	if (config) {
-		setElemText("#host", config?.apiHost);
-		log("Loaded config");
-		log(`Using API host ${config?.apiHost}`)
-	} else {
-		log("Unable to load config");
-	}
-} catch (error) {
-	log(`Error loading config: ${error}`);
-}
+await new Promise((resolve) => setTimeout(resolve, 1000));
 
 setInterval(() => {
 	updateStatus();
 }, 1000);
 
 updateStatus();
+
+const version = await getNativeInfo("version", "getVersion");
+setElemText("#version", version);
+log(`Set version to ${version}`);
+
+const config = await getNativeInfo("config", "getConfig");
+setElemText("#host", config?.apiHost);
+log("Loaded config");
+log(`Using API host ${config?.apiHost}`);

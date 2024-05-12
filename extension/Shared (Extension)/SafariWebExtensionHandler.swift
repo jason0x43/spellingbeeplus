@@ -17,7 +17,7 @@ class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
   let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
 
   func beginRequest(with context: NSExtensionContext) {
-    let item = context.inputItems[0] as! NSExtensionItem
+    let item = context.inputItems.first as! NSExtensionItem
     let message = item.userInfo?[SFExtensionMessageKey]
     let messageDict = message as! NSDictionary
     let response = NSExtensionItem()

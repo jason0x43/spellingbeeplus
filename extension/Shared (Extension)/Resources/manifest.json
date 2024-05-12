@@ -32,8 +32,15 @@
 
 	"web_accessible_resources": [
 		{
-			"matches": ["<all_urls>"],
-			"resources": ["sb.js", "sbp.js", "storage.js", "sync.js", "util.js"]
+			"matches": ["https://www.nytimes.com/puzzles/spelling-bee"],
+			"resources": [
+				"info.js",
+				"sb.js",
+				"sbp.js",
+				"storage.js",
+				"sync.js",
+				"util.js"
+			]
 		}
 	],
 

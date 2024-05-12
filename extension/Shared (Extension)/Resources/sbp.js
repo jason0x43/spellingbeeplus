@@ -3,6 +3,7 @@
 // firstLetters maps a letter to an array of word lengths. For example,
 // firstLetters.a[4] is the number of 4 letter 'a' words.
 
+import { getNativeInfo } from "./info.js";
 import {
 	addWord,
 	closeCongratsPane,
@@ -489,32 +490,6 @@ export async function addWords(words) {
 }
 
 /**
- * @returns {Promise<SyncConfig | undefined>}
- */
-async function getConfig() {
-	async function getCfg() {
-		return await browser.runtime.sendMessage({
-			type: "getConfig",
-		});
-	}
-
-	let tries = 5;
-
-	while (tries > 0) {
-		tries--;
-
-		console.log("Getting config...");
-
-		const config = await getCfg();
-		if (config) {
-			return config;
-		}
-
-		await new Promise((resolve) => setTimeout(resolve, 500));
-	}
-}
-
-/**
  * @param {string} status
  */
 async function setStatus(status) {
@@ -594,92 +569,88 @@ async function main() {
 	});
 	console.debug("Installed key handler");
 
-	const config = await getConfig();
-	if (config) {
-		console.debug("Connecting with config", config);
-		await state.update({ status: "Connecting" });
+	const config = await getNativeInfo("config", "getConfig");
+	console.debug("Connecting with config", config);
 
-		try {
-			await connect(
-				{
-					apiKey: config.apiKey,
-					apiHost: config.apiHost,
-				},
-				{
-					onJoin: ({ id, name }) => {
-						console.debug("got join event");
-						const friends = state.friends;
-						let index = friends.findIndex((f) => f.id === id);
-						if (index !== -1) {
-							state.update({
-								friends: [
-									...friends.slice(0, index),
-									{ id, name },
-									...friends.slice(index + 1),
-								],
-							});
-						} else {
-							state.update({ friends: [...friends, { id, name }] });
-						}
-					},
-					onLeave: (id) => {
-						console.debug("got leave event");
-						const friends = state.friends;
-						const index = friends.findIndex((f) => f.id === id);
-						if (index !== -1) {
-							state.update({
-								friends: [
-									...friends.slice(0, index),
-									...friends.slice(index + 1),
-								],
-							});
-						}
-					},
-					onSync: (words) => {
-						// The other end accepted the sync request -- add its words and
-						// end the syncing state
-						clearTimeout(syncTimeout);
-						const borrowedWords = words.filter(
-							(word) => !state.words.includes(word),
-						);
-						state.update({ borrowedWords });
-						addWords(state.borrowedWords).finally(() => {
-							// All the received words have been added -- syncing is done
-							state.update({ syncing: false });
+	await state.update({ status: "Connecting" });
+
+	try {
+		await connect(
+			{
+				apiKey: config.apiKey,
+				apiHost: config.apiHost,
+			},
+			{
+				onJoin: ({ id, name }) => {
+					console.debug("got join event");
+					const friends = state.friends;
+					let index = friends.findIndex((f) => f.id === id);
+					if (index !== -1) {
+						state.update({
+							friends: [
+								...friends.slice(0, index),
+								{ id, name },
+								...friends.slice(index + 1),
+							],
 						});
-					},
-					onSyncRequest: (from) => {
-						// We received a sync request from another player. If it's
-						// accepted, enable the syncing state.
-						const friend = state.friends.find((f) => f.id === from);
-						if (friend && confirm(`Accept sync request from ${friend.name}?`)) {
-							// The request was accepted -- start syncing
-							state.update({ syncing: true });
-							return state.words;
-						}
-						return false;
-					},
-					onSyncRefused: () => {
-						clearTimeout(syncTimeout);
-						state.update({ syncing: false });
-					},
-					onError: () => {
-						console.debug("error");
-						state.update({ error: "Connection errored" });
-					},
-					getState: () => state,
-					updateState: (newState) => state.update(newState),
+					} else {
+						state.update({ friends: [...friends, { id, name }] });
+					}
 				},
-			);
+				onLeave: (id) => {
+					console.debug("got leave event");
+					const friends = state.friends;
+					const index = friends.findIndex((f) => f.id === id);
+					if (index !== -1) {
+						state.update({
+							friends: [
+								...friends.slice(0, index),
+								...friends.slice(index + 1),
+							],
+						});
+					}
+				},
+				onSync: (words) => {
+					// The other end accepted the sync request -- add its words and
+					// end the syncing state
+					clearTimeout(syncTimeout);
+					const borrowedWords = words.filter(
+						(word) => !state.words.includes(word),
+					);
+					state.update({ borrowedWords });
+					addWords(state.borrowedWords).finally(() => {
+						// All the received words have been added -- syncing is done
+						state.update({ syncing: false });
+					});
+				},
+				onSyncRequest: (from) => {
+					// We received a sync request from another player. If it's
+					// accepted, enable the syncing state.
+					const friend = state.friends.find((f) => f.id === from);
+					if (friend && confirm(`Accept sync request from ${friend.name}?`)) {
+						// The request was accepted -- start syncing
+						state.update({ syncing: true });
+						return state.words;
+					}
+					return false;
+				},
+				onSyncRefused: () => {
+					clearTimeout(syncTimeout);
+					state.update({ syncing: false });
+				},
+				onError: () => {
+					console.debug("error");
+					state.update({ error: "Connection errored" });
+				},
+				getState: () => state,
+				updateState: (newState) => state.update(newState),
+			},
+		);
 
-			await state.update({ status: "Connected" });
-		} catch (err) {
-			console.warn(`Error connecting: ${err}`);
-			await state.update({ error: "Error connecting" });
-		}
-	} else {
-		console.debug("Not connecting because no config");
-		await state.update({ error: "No config" });
+		await state.update({ status: "Connected" });
+	} catch (err) {
+		console.warn(`Error connecting: ${err}`);
+		await state.update({ error: "Error connecting" });
 	}
 
 	console.debug("Started SBP");

@@ -59,6 +59,8 @@
 		96520EC02B510B9C00ED40CC /* util.js in Resources */ = {isa = PBXBuildFile; fileRef = 96520EBE2B510B9C00ED40CC /* util.js */; };
 		96520EC22B5208DA00ED40CC /* sb.js in Resources */ = {isa = PBXBuildFile; fileRef = 96520EC12B5208DA00ED40CC /* sb.js */; };
 		96520EC32B5208DA00ED40CC /* sb.js in Resources */ = {isa = PBXBuildFile; fileRef = 96520EC12B5208DA00ED40CC /* sb.js */; };
+		96D44A362BF02B7700969FB1 /* info.js in Resources */ = {isa = PBXBuildFile; fileRef = 96D44A352BF02B7700969FB1 /* info.js */; };
+		96D44A372BF02B7700969FB1 /* info.js in Resources */ = {isa = PBXBuildFile; fileRef = 96D44A352BF02B7700969FB1 /* info.js */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -143,6 +145,7 @@
 		96520EBE2B510B9C00ED40CC /* util.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = util.js; sourceTree = "<group>"; };
 		96520EC12B5208DA00ED40CC /* sb.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = sb.js; sourceTree = "<group>"; };
 		966C8D56293D7DC100820342 /* SpellingBeePlus--macOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "SpellingBeePlus--macOS--Info.plist"; sourceTree = "<group>"; };
+		96D44A352BF02B7700969FB1 /* info.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = info.js; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -232,6 +235,7 @@
 				9607DB4F27CBD87300DBC4E3 /* background.js */,
 				9607DB5027CBD87300DBC4E3 /* content.js */,
 				9607DBB527CE6CD200DBC4E3 /* content.css */,
+				96D44A352BF02B7700969FB1 /* info.js */,
 				9607DB5127CBD87300DBC4E3 /* popup.html */,
 				9607DB5227CBD87300DBC4E3 /* popup.css */,
 				9607DB5327CBD87300DBC4E3 /* popup.js */,
@@ -455,6 +459,7 @@
 				9607DBA127CBD87400DBC4E3 /* popup.css in Resources */,
 				9607DB9F27CBD87400DBC4E3 /* popup.html in Resources */,
 				96520EB92B51060500ED40CC /* sbp.js in Resources */,
+				96D44A362BF02B7700969FB1 /* info.js in Resources */,
 				9607DB9727CBD87400DBC4E3 /* images in Resources */,
 				9607DB9927CBD87400DBC4E3 /* manifest.json in Resources */,
 				9607DB9527CBD87400DBC4E3 /* _locales in Resources */,
@@ -476,6 +481,7 @@
 				9607DBA227CBD87400DBC4E3 /* popup.css in Resources */,
 				9607DBA027CBD87400DBC4E3 /* popup.html in Resources */,
 				96520EBA2B51060500ED40CC /* sbp.js in Resources */,
+				96D44A372BF02B7700969FB1 /* info.js in Resources */,
 				9607DB9827CBD87400DBC4E3 /* images in Resources */,
 				9607DB9A27CBD87400DBC4E3 /* manifest.json in Resources */,
 				9607DB9627CBD87400DBC4E3 /* _locales in Resources */,

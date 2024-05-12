@@ -50,7 +50,7 @@ class ViewController: PlatformViewController, WKNavigationDelegate, WKScriptMess
         }
 
         DispatchQueue.main.async {
-          webView.evaluateJavaScript("show('mac', \(state.isEnabled))")
+          webView.evaluateJavaScript("show('mac', \(state.isEnabled), true)")
         }
       }
     #endif
@@ -71,7 +71,7 @@ class ViewController: PlatformViewController, WKNavigationDelegate, WKScriptMess
         }
 
         DispatchQueue.main.async {
-          NSApplication.shared.terminate(nil)
+          NSApp.terminate(nil)
         }
       }
     #endif
