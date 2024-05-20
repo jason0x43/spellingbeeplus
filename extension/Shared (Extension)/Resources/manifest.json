@@ -35,6 +35,7 @@
 			"matches": ["https://www.nytimes.com/puzzles/spelling-bee"],
 			"resources": [
 				"info.js",
+				"config.js",
 				"sb.js",
 				"sbp.js",
 				"storage.js",

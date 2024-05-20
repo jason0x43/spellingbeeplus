@@ -3,7 +3,7 @@
 // firstLetters maps a letter to an array of word lengths. For example,
 // firstLetters.a[4] is the number of 4 letter 'a' words.
 
-import { getNativeInfo } from "./info.js";
+import config from "./config.js";
 import {
 	addWord,
 	closeCongratsPane,
@@ -575,7 +575,6 @@ async function main() {
 	});
 	console.debug("Installed key handler");
 
-	const config = await getNativeInfo("config", "getConfig");
 	console.debug("Connecting with config", config);
 
 	await state.update({ status: "Connecting" });
