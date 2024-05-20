@@ -130,18 +130,26 @@ function addHintsView() {
 function addSyncView() {
 	document.querySelector(`#${sbpSyncViewId}`)?.remove();
 	const view = h("div", { id: sbpSyncViewId }, [
-		h("label", { for: "sbp-name-input" }, "Name"),
-		h("div", { id: "sbp-name-input-box" }, [
-			h("input", {
-				id: "sbp-name-input",
-				"data-1p-ignore": "true",
-			}),
-			h("button", { id: "sbp-name-button" }, "💾"),
+		h("div", { class: 'sbp-form-field' }, [
+			h("label", { for: "sbp-name-input" }, "Name"),
+			h("div", { id: "sbp-name-input-box" }, [
+				h("input", {
+					id: "sbp-name-input",
+					"data-1p-ignore": "true",
+				}),
+				h("button", { id: "sbp-name-button" }, "💾"),
+			]),
 		]),
-		h("label", { for: "sbp-friend-select" }, "Friend"),
-		h("select", { id: "sbp-friend-select" }),
+		h("div", { class: 'sbp-form-field' }, [
+			h("label", { for: "sbp-friend-select" }, "Friend"),
+			h("select", { id: "sbp-friend-select" }),
+		]),
 		h("button", { id: syncButtonId }, "Sync Words"),
 		h("div", { id: "sbp-sync-spinner" }, [h("div", { class: "sbp-spinner" })]),
+		h("div", { id: "sbp-sync-info" }, [
+			h("div", { id: "sbp-sync-status" }),
+			h("div", { id: "sbp-sync-log" }),
+		]),
 	]);
 	getViewBox().append(view);
 
@@ -150,7 +158,9 @@ function addSyncView() {
 		// Initiate the sync process -- syncing will be true until we receive
 		// confirmation that the other end acceped the sync request.
 		state.update({ syncing: true });
+		log("Syncing...");
 		syncTimeout = setTimeout(() => {
+			log("Sync timed out");
 			state.update({ syncing: false });
 		}, 5000);
 		syncWords(state.friendId, state.words);
@@ -496,19 +506,35 @@ export async function addWords(words) {
 }
 
 /**
+ * @param {string} message
+ */
+async function log(message) {
+	const syncLog = document.querySelector("#sbp-sync-log");
+	if (syncLog) {
+		syncLog.append(h("p", message));
+	}
+}
+
+/**
  * @param {string} status
  */
 async function setStatus(status) {
-	await browser.runtime.sendMessage({ type: "setStatus", status: status });
+	const syncStatus = document.querySelector("#sbp-sync-status");
+	if (syncStatus) {
+		syncStatus.textContent = status;
+	}
 }
 
 async function main() {
 	console.debug("Starting SBP...");
+	log("Starting SBP...");
+
 	setStatus(state.status);
 
 	const gameData = await getGameData();
 	if (!getGameData) {
 		console.warn("Could not load game data -- aborting!");
+		log("Could not load game data -- aborting!");
 		return;
 	}
 
@@ -577,6 +603,7 @@ async function main() {
 
 	console.debug("Connecting with config", config);
 
+	log(`Connecting to ${config.apiHost}...`);
 	await state.update({ status: "Connecting" });
 
 	try {
@@ -653,6 +680,7 @@ async function main() {
 		);
 
 		await state.update({ status: "Connected" });
+		log("Connected");
 	} catch (err) {
 		console.warn(`Error connecting: ${err}`);
 		await state.update({ error: "Error connecting" });
