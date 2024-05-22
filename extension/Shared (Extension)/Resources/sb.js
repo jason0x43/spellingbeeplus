@@ -239,25 +239,33 @@ export function getThresholds(words, pangrams) {
 	};
 }
 
+export function getCongratsPane() {
+	return def(
+		document.querySelector(
+			"#portal-game-moments .pz-moment__congrats",
+		),
+	);
+}
+
+export function getGamePane() {
+	return def(document.querySelector("#js-hook-game-wrapper .pz-game-screen"));
+}
+
 /**
  * @returns {boolean}
  */
 export function isCongratsPaneOpen() {
-	return document.querySelector(".pz-moment__congrats.on-stage") != null;
+	const congratsPane = getCongratsPane();
+	return congratsPane.classList.contains("on-stage");
 }
 
 /**
  * @returns {void}
  */
 export function closeCongratsPane() {
-	/** @type {HTMLButtonElement | null} */
-	const button =
-		document.querySelector(".on-stage .pz-moment__close") ||
-		document.querySelector(".on-stage .pz-moment__close-text");
+	const congratsPane = getCongratsPane();
+	const gamePane = getGamePane();
 
-	if (button) {
-		click(button);
-	} else {
-		console.warn("Could not find close button");
-	}
+	congratsPane.classList.remove("on-stage");
+	gamePane.classList.add("on-stage");
 }

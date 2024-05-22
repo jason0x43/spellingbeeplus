@@ -18,6 +18,8 @@ import {
 	sbProgressMarker,
 	sbProgressValue,
 	getRank,
+	getCongratsPane,
+	getGamePane,
 } from "./sb.js";
 import { SbpStore } from "./storage.js";
 import { connect, setName, syncWords } from "./sync.js";
@@ -130,7 +132,7 @@ function addHintsView() {
 function addSyncView() {
 	document.querySelector(`#${sbpSyncViewId}`)?.remove();
 	const view = h("div", { id: sbpSyncViewId }, [
-		h("div", { class: 'sbp-form-field' }, [
+		h("div", { class: "sbp-form-field" }, [
 			h("label", { for: "sbp-name-input" }, "Name"),
 			h("div", { id: "sbp-name-input-box" }, [
 				h("input", {
@@ -140,7 +142,7 @@ function addSyncView() {
 				h("button", { id: "sbp-name-button" }, "💾"),
 			]),
 		]),
-		h("div", { class: 'sbp-form-field' }, [
+		h("div", { class: "sbp-form-field" }, [
 			h("label", { for: "sbp-friend-select" }, "Friend"),
 			h("select", { id: "sbp-friend-select" }),
 		]),
@@ -684,6 +686,22 @@ async function main() {
 	} catch (err) {
 		console.warn(`Error connecting: ${err}`);
 		await state.update({ error: "Error connecting" });
+	}
+
+	/** @type {number | undefined} */
+	let congratsTimer;
+	const congratsObserver = new MutationObserver((_mutations) => {
+		clearTimeout(congratsTimer);
+		congratsTimer = setTimeout(() => {
+			if (isCongratsPaneOpen()) {
+				closeCongratsPane();
+			}
+		}, 500);
+	});
+	congratsObserver.observe(getCongratsPane(), { attributes: true });
+
+	if (isCongratsPaneOpen()) {
+		closeCongratsPane();
 	}
 
 	console.debug("Started SBP");
