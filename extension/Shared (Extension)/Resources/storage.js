@@ -30,7 +30,7 @@ export class SbpStore {
 			friendId: "",
 			newName: "",
 			syncing: false,
-			status: 'Starting',
+			status: "Starting",
 			error: undefined,
 		};
 	}
@@ -88,7 +88,7 @@ export class SbpStore {
 
 		this.#updateValue(newVal);
 
-		const { syncing, status, error, activeView, ...toSave } =
+		const { syncing, status, error, activeView, friends, ...toSave } =
 			this.#value;
 		await browser.storage.sync.set({ [this.#key]: toSave });
 	}
