@@ -125,6 +125,17 @@ export async function addWord(word) {
 	}
 }
 
+export async function clearWord() {
+	const del = def(
+		selDiv(".sb-controls .hive-actions > .hive-action__delete"),
+	);
+
+	while (document.querySelector('[data-testid="sb-input"]')) {
+		click(del);
+		await wait(50);
+	}
+}
+
 /**
  * Get the game data from the host page.
  */

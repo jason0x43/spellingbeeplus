@@ -18,8 +18,7 @@ import {
 	sbProgressMarker,
 	sbProgressValue,
 	getRank,
-	getCongratsPane,
-	getGamePane,
+	clearWord,
 } from "./sb.js";
 import { SbpStore } from "./storage.js";
 import { connect, setName, syncWords } from "./sync.js";
@@ -489,7 +488,10 @@ function selectLetterRight() {
  * @param {string[]} words
  */
 export async function addWords(words) {
-	for (const word of words) {
+	const toAdd = words.slice();
+	let adding = false;
+
+	while (toAdd.length > 0) {
 		if (isCongratsPaneOpen()) {
 			await wait(250);
 
@@ -502,8 +504,19 @@ export async function addWords(words) {
 			await wait(250);
 		}
 
-		await addWord(word);
-		await wait(250);
+		if (adding) {
+			// the last add didn't succeed; clear the entry area and try again
+			clearWord();
+			await wait(250);
+		}
+
+		try {
+			adding = true;
+			await addWord(toAdd[0]);
+			await wait(250);
+			toAdd.shift();
+			adding = false;
+		} catch (error) {}
 	}
 }
 
@@ -686,22 +699,6 @@ async function main() {
 	} catch (err) {
 		console.warn(`Error connecting: ${err}`);
 		await state.update({ error: "Error connecting" });
-	}
-
-	/** @type {number | undefined} */
-	let congratsTimer;
-	const congratsObserver = new MutationObserver((_mutations) => {
-		clearTimeout(congratsTimer);
-		congratsTimer = setTimeout(() => {
-			if (isCongratsPaneOpen()) {
-				closeCongratsPane();
-			}
-		}, 500);
-	});
-	congratsObserver.observe(getCongratsPane(), { attributes: true });
-
-	if (isCongratsPaneOpen()) {
-		closeCongratsPane();
 	}
 
 	console.debug("Started SBP");
