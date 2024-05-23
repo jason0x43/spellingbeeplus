@@ -118,8 +118,10 @@ function addHintsView() {
 	view.append(h("div", { id: digraphTableId }));
 
 	letters.addEventListener("click", ({ target }) => {
-		const letter = /** @type HTMLDivElement */ (target);
-		state.update({ letter: letter.textContent ?? undefined });
+		const letter = /** @type HTMLElement */ (target);
+		if (letter.classList.contains('sbp-letter')) {
+			state.update({ letter: letter.textContent ?? undefined });
+		}
 	});
 
 	getViewBox().append(view);
