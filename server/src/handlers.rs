@@ -221,10 +221,10 @@ async fn handle_connection(
                             debug!("Name '{new_name}' was already in use, asked for another name from {client_id}");
                         } else {
                             debug!("Name '{new_name}' is already assigned to {client_id} ");
-                            name = new_name.clone();
+                            name.clone_from(&new_name);
                         }
                     } else {
-                        name = new_name.clone();
+                        name.clone_from(&new_name);
                         debug!("Set {client_id}'s name to {name}");
                     }
                 }
