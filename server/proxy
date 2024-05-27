@@ -1,3 +1,0 @@
-#!/bin/bash
-
-local-ssl-proxy --target 3003 --cert localhost.pem --key localhost-key.pem

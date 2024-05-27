@@ -1,0 +1,26 @@
+{
+	"name": "sbp-server",
+	"version": "1.0.0",
+	"description": "",
+	"main": "dist/index.js",
+	"type": "module",
+	"scripts": {
+		"build": "tsc",
+		"dev": "tsc-watch --preserveWatchOutput --onSuccess 'node ./dist'",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@9.1.2+sha256.19c17528f9ca20bd442e4ca42f00f1b9808a9cb419383cd04ba32ef19322aba7",
+	"devDependencies": {
+		"@types/node": "^20.12.12",
+		"tsc-watch": "^6.2.0",
+		"typescript": "^5.4.5"
+	},
+	"dependencies": {
+		"@paralleldrive/cuid2": "^2.2.2",
+		"hyper-express": "^6.16.2",
+		"zod": "^3.23.8"
+	}
+}

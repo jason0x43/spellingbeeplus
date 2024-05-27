@@ -1,25 +1,35 @@
-FROM rust:bookworm as builder
+FROM node:20-slim AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+WORKDIR /app
 
-# Build server
-WORKDIR /build
-RUN --mount=source=Cargo.lock,target=Cargo.lock \
-    --mount=source=Cargo.toml,target=Cargo.toml \
+FROM base as prod-deps
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    --mount=source=package.json,target=package.json \
+    --mount=source=pnpm-lock.yaml,target=pnpm-lock.yaml \
+    pnpm i --prod --frozen-lockfile
+
+FROM base as build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    --mount=source=package.json,target=package.json \
+    --mount=source=pnpm-lock.yaml,target=pnpm-lock.yaml \
+    pnpm i --frozen-lockfile
+
+RUN --mount=source=package.json,target=package.json \
+    --mount=source=pnpm-lock.yaml,target=pnpm-lock.yaml \
+    --mount=source=tsconfig.json,target=tsconfig.json \
     --mount=source=src,target=src \
-    --mount=source=public,target=/build/public \
-    --mount=source=templates,target=/build/templates \
-    --mount=type=cache,target=/build/target/ \
-    --mount=type=cache,target=/usr/local/cargo/registry/ \
-    <<EOF
-set -e
-cargo build --locked --release
-cp ./target/release/spellingbeeplus /build
-EOF
+    pnpm build
 
-FROM debian:bookworm-slim as runner
+FROM node:20-slim
 LABEL org.opencontainers.image.source=https://github.com/jason0x43/spellingbeeplus
 LABEL org.opencontainers.image.description="A sync server for SpellingBeePlus"
 LABEL org.opencontainers.image.licenses="MIT"
-COPY --from=builder /build/spellingbeeplus /bin/
-
-STOPSIGNAL SIGQUIT
-ENTRYPOINT ["/bin/spellingbeeplus"]
+WORKDIR /app
+COPY --from=build /app/dist dist/
+COPY --from=prod-deps /app/node_modules node_modules/
+COPY package.json .
+EXPOSE 3000
+ENV NODE_ENV=production
+CMD [ "node", "dist" ]

@@ -1,5 +1,5 @@
-/** @typedef {import("../../../server/bindings/MessageFrom.ts").MessageFrom} MessageFrom */
-/** @typedef {import("../../../server/bindings/MessageTo.ts").MessageTo} MessageTo */
+/** @typedef {import("../../../server/src/message.ts").MessageFrom} MessageFrom */
+/** @typedef {import("../../../server/src/message.ts").MessageTo} MessageTo */
 
 /** @type {WebSocket | undefined} */
 let socket;
