@@ -66,6 +66,7 @@ type SyncDelegate = {
 	onError: (kind: string, message: string) => void;
 	getState: () => SbpState;
 	updateState: (update: Partial<SbpState>) => Promise<void>;
+	log: (message: string) => void;
 };
 
 type SyncHandle = {

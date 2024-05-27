@@ -719,6 +719,7 @@ export async function main(config) {
 				},
 				getState: () => state,
 				updateState: (newState) => state.update(newState),
+				log: (message) => log(message)
 			},
 		);
 

@@ -154,34 +154,47 @@ export async function connect(config, delegate) {
 
 	const token = await getToken(config);
 	console.debug(`Connecting to socket with token: ${token}`);
+	delegate.log(`Connecting to ${config.apiHost}...`);
 
 	const skt = new WebSocket(`wss://${config.apiHost}/ws?token=${token}`);
 
 	skt.addEventListener("open", () => {
 		reconnectWait = 500;
 		console.debug("Connected to server");
+		delegate.log(`Connected to ${config.apiHost}`);
 	});
 
 	skt.addEventListener("close", () => {
 		console.warn("Connection closed");
+		delegate.log("Connection closed");
 		socket = undefined;
 
-		setTimeout(() => {
-			connect(config, delegate).catch((error) => {
-				console.warn("connection error:", error);
-			});
-		}, 500 + Math.random() * 1000);
+		setTimeout(
+			() => {
+				connect(config, delegate).catch((error) => {
+					console.warn("connection error:", error);
+					delegate.log(`Connection error: ${error}`);
+				});
+			},
+			500 + Math.random() * 1000,
+		);
 	});
 
 	skt.addEventListener("error", () => {
 		console.warn("Connection error");
+		delegate.log("Connection error");
+
 		socket = undefined;
 
-		setTimeout(() => {
-			connect(config, delegate).catch((error) => {
-				console.warn("connection error:", error);
-			});
-		}, 500 + Math.random() * 1000);
+		setTimeout(
+			() => {
+				connect(config, delegate).catch((error) => {
+					console.warn("connection error:", error);
+					delegate.log(`Connection error: ${error}`);
+				});
+			},
+			500 + Math.random() * 1000,
+		);
 	});
 
 	skt.addEventListener("message", async (event) => {
