@@ -160,13 +160,15 @@ export async function connect(config, delegate) {
 
 	skt.addEventListener("open", () => {
 		reconnectWait = 500;
-		console.debug("Connected to server");
-		delegate.log(`Connected to ${config.apiHost}`);
+		console.debug("Connected");
+		delegate.log("Connected");
+		delegate.updateState({ status: "Connected" });
 	});
 
 	skt.addEventListener("close", () => {
 		console.warn("Connection closed");
 		delegate.log("Connection closed");
+		delegate.updateState({ status: "Not connected" });
 		socket = undefined;
 
 		setTimeout(
@@ -183,7 +185,7 @@ export async function connect(config, delegate) {
 	skt.addEventListener("error", () => {
 		console.warn("Connection error");
 		delegate.log("Connection error");
-
+		delegate.updateState({ status: "Not connected" });
 		socket = undefined;
 
 		setTimeout(

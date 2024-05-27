@@ -642,9 +642,6 @@ export async function main(config) {
 	});
 	console.debug("Installed key handler");
 
-	console.debug("Connecting with config", config);
-
-	log(`Connecting to ${config.apiHost}...`);
 	await state.update({ status: "Connecting" });
 
 	try {
@@ -722,9 +719,6 @@ export async function main(config) {
 				log: (message) => log(message)
 			},
 		);
-
-		await state.update({ status: "Connected" });
-		log("Connected");
 	} catch (err) {
 		console.warn(`Error connecting: ${err}`);
 		await state.update({ error: "Error connecting" });
