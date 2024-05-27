@@ -1,7 +1,6 @@
-/// <reference path="./sbpTypes.d.ts" />
-
 // firstLetters maps a letter to an array of word lengths. For example,
 // firstLetters.a[4] is the number of 4 letter 'a' words.
+
 
 import {
 	addWord,
@@ -60,7 +59,7 @@ const syncButtonId = "sbp-sync-button";
 
 const state = new SbpStore();
 
-/** @type {number | undefined} */
+/** @type {number} */
 let syncTimeout;
 
 /**

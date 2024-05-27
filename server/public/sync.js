@@ -1,5 +1,5 @@
-/** @typedef {import("../../../server/src/message.ts").MessageFrom} MessageFrom */
-/** @typedef {import("../../../server/src/message.ts").MessageTo} MessageTo */
+/** @typedef {import("../src/message.ts").MessageFrom} MessageFrom */
+/** @typedef {import("../src/message.ts").MessageTo} MessageTo */
 
 /** @type {WebSocket | undefined} */
 let socket;
@@ -36,7 +36,11 @@ async function getToken(config) {
  */
 function send(msg) {
 	console.debug("Sending message:", msg);
-	const socket = assertConnected();
+
+	if (!socket || socket.readyState !== WebSocket.OPEN) {
+		throw new Error("Not connected");
+	}
+
 	socket.send(JSON.stringify(msg));
 }
 
@@ -104,7 +108,7 @@ async function handleMessage(delegate, message) {
 			message.content.sync.requestId === syncRequestId
 		) {
 			// This is a confirmation response from a player we requested to
-			// sync with -- perform the sync
+			// sync with -- perform the sync and clear the request ID
 			delegate.onSync(message.content.sync.words);
 			syncRequestId = undefined;
 		} else {
@@ -153,11 +157,13 @@ export async function connect(config, delegate) {
 	socket = new WebSocket(`wss://${config.apiHost}/ws?token=${token}`);
 
 	const destroy = () => {
-		socket.onopen = undefined;
-		socket.onclose = undefined;
-		socket.onmessage = undefined;
-		socket.onerror = undefined;
-		socket = undefined;
+		if (socket) {
+			socket.onopen = null;
+			socket.onclose = null;
+			socket.onmessage = null;
+			socket.onerror = null;
+			socket = undefined;
+		}
 	};
 
 	const reconnect = () => {
@@ -211,7 +217,7 @@ export async function setName(name) {
 }
 
 /**
- * Update the player's name
+ * Send a request to sync words to another player
  *
  * @param {string} friendId
  * @param {string[]} words
@@ -222,16 +228,4 @@ export async function syncWords(friendId, words) {
 		to: friendId,
 		content: { sync: { requestId: syncRequestId, words } },
 	});
-}
-
-/**
- * Check that there's an active connection
- *
- * @returns {WebSocket}
- */
-function assertConnected() {
-	if (!socket) {
-		throw new Error("Not connected");
-	}
-	return socket;
 }
