@@ -10,8 +10,6 @@ let version;
 /** @type {string | undefined} */
 let syncRequestId;
 
-let reconnectWait = 1000;
-
 /**
  * Get a token
  *
@@ -149,66 +147,58 @@ async function handleMessage(delegate, message) {
  * @param {SyncDelegate} delegate
  */
 export async function connect(config, delegate) {
-	socket?.close();
-	socket = undefined;
-
 	const token = await getToken(config);
-	console.debug(`Connecting to socket with token: ${token}`);
 	delegate.log(`Connecting to ${config.apiHost}...`);
 
-	const skt = new WebSocket(`wss://${config.apiHost}/ws?token=${token}`);
+	socket = new WebSocket(`wss://${config.apiHost}/ws?token=${token}`);
 
-	skt.addEventListener("open", () => {
-		reconnectWait = 500;
-		console.debug("Connected");
+	const destroy = () => {
+		socket.onopen = undefined;
+		socket.onclose = undefined;
+		socket.onmessage = undefined;
+		socket.onerror = undefined;
+		socket = undefined;
+	};
+
+	const reconnect = () => {
+		setTimeout(
+			() => {
+				connect(config, delegate).catch((error) => {
+					delegate.log(`Connection error: ${error}`);
+					reconnect();
+				});
+			},
+			1000 + Math.random() * 2000,
+		);
+	};
+
+	socket.onopen = () => {
 		delegate.log("Connected");
 		delegate.updateState({ status: "Connected" });
-	});
+	};
 
-	skt.addEventListener("close", () => {
-		console.warn("Connection closed");
+	socket.onclose = () => {
 		delegate.log("Connection closed");
 		delegate.updateState({ status: "Not connected" });
-		socket = undefined;
+		destroy();
+		reconnect();
+	};
 
-		setTimeout(
-			() => {
-				connect(config, delegate).catch((error) => {
-					console.warn("connection error:", error);
-					delegate.log(`Connection error: ${error}`);
-				});
-			},
-			500 + Math.random() * 1000,
-		);
-	});
-
-	skt.addEventListener("error", () => {
-		console.warn("Connection error");
+	socket.onerror = () => {
 		delegate.log("Connection error");
 		delegate.updateState({ status: "Not connected" });
-		socket = undefined;
+		destroy();
+		reconnect();
+	};
 
-		setTimeout(
-			() => {
-				connect(config, delegate).catch((error) => {
-					console.warn("connection error:", error);
-					delegate.log(`Connection error: ${error}`);
-				});
-			},
-			500 + Math.random() * 1000,
-		);
-	});
-
-	skt.addEventListener("message", async (event) => {
+	socket.onmessage = async (event) => {
 		console.debug("Received message:", event.data);
 		try {
 			await handleMessage(delegate, JSON.parse(event.data));
 		} catch (error) {
 			console.warn(`${error}`);
 		}
-	});
-
-	socket = skt;
+	};
 }
 
 /**

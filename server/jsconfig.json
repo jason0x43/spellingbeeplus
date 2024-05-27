@@ -4,6 +4,7 @@
 		"allowImportingTsExtensions": true,
 		"checkJs": true,
 		"strict": true,
+		"noImplicitAny": true,
 		"module": "es2022",
 		"target": "es2022",
 		"moduleResolution": "nodenext"
