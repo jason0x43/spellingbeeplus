@@ -1,4 +1,4 @@
-import { click, def, getNormalizedText, h, selDiv, wait } from "./util.js";
+import { click, def, h, selDiv, wait } from "./util.js";
 
 /** The element containing the player's current progress rank. */
 export const sbProgressRank = "sb-progress-rank";

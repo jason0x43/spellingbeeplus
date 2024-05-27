@@ -3,6 +3,8 @@ import type { AppLocals, Request, Response, Websocket } from "./server.js";
 import { createId } from "@paralleldrive/cuid2";
 import { MessageTo, messageFrom } from "./message.js";
 import { log } from "./util.js";
+import { promises as fs } from "node:fs";
+import { extname } from "node:path";
 
 const serverId = "00000";
 
@@ -10,6 +12,20 @@ export function connect(request: Request, response: Response) {
 	response.upgrade({
 		locals: request.app.locals,
 	});
+}
+
+export async function getFile(request: Request, response: Response) {
+	const file = request.params.file;
+	try {
+		const source = await fs.readFile(
+			`public/${file}`,
+			"utf-8",
+		);
+		const ext = extname(file).slice(1);
+		response.type(ext).send(source);
+	} catch (error) {
+		response.status(404).send("Not found");
+	}
 }
 
 export function getToken(request: Request, response: Response) {
@@ -70,9 +86,7 @@ export async function ws(socket: Websocket) {
 		locals.clients.delete(clientId);
 
 		// Tell other clients that one left
-		log.debug(
-			`Notifying other clients that ${clientId} left...`,
-		);
+		log.debug(`Notifying other clients that ${clientId} left...`);
 		for (const [_, otherClient] of locals.clients) {
 			otherClient.socket.send(
 				messageFrom(serverId, {

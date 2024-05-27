@@ -25,7 +25,6 @@
 	"content_scripts": [
 		{
 			"js": ["content.js"],
-			"css": ["content.css"],
 			"matches": ["https://www.nytimes.com/puzzles/spelling-bee"]
 		}
 	],
@@ -33,15 +32,7 @@
 	"web_accessible_resources": [
 		{
 			"matches": ["https://www.nytimes.com/puzzles/spelling-bee"],
-			"resources": [
-				"info.js",
-				"config.js",
-				"sb.js",
-				"sbp.js",
-				"storage.js",
-				"sync.js",
-				"util.js"
-			]
+			"resources": ["config.js"]
 		}
 	],
 
@@ -60,10 +51,8 @@
 	"host_permissions": [
 		"https://www.nytimes.com/puzzles/spelling-bee",
 		"https://sbp.jason0x43.dev",
-		"wss://sbp.jason0x43.dev",
-		"https://localhost:9001",
-		"wss://localhost:9001"
+		"wss://sbp.jason0x43.dev"
 	],
 
-	"permissions": ["nativeMessaging", "storage"]
+	"permissions": ["nativeMessaging", "storage", "scripting"]
 }

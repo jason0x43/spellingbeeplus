@@ -1,4 +1,4 @@
-import { connect, getToken, hello, ws } from "./handlers.js";
+import { connect, getFile, getToken, hello, ws } from "./handlers.js";
 import { keyRequired, tokenRequired, useCors } from "./middlewares.js";
 import { Client, createServer } from "./server.js";
 import { getEnv, log } from "./util.js";
@@ -29,11 +29,11 @@ server.set_error_handler((_request, response, error) => {
 
 server.use(useCors({ extraHeaders: "x-api-key" }));
 
-//server.options("*", { middlewares: [useCors()] }, (req, res) => res.send(""));
 server.get("/", {}, hello);
 server.get("/token", { middlewares: [keyRequired] }, getToken);
 server.upgrade("/ws", { middlewares: [tokenRequired] }, connect);
 server.ws("/ws", ws);
+server.get("/:file", {}, getFile);
 
 try {
 	await server.listen(Number(port));

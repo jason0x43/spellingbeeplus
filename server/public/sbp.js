@@ -3,7 +3,6 @@
 // firstLetters maps a letter to an array of word lengths. For example,
 // firstLetters.a[4] is the number of 4 letter 'a' words.
 
-import config from "./config.js";
 import {
 	addWord,
 	closeCongratsPane,
@@ -119,7 +118,7 @@ function addHintsView() {
 
 	letters.addEventListener("click", ({ target }) => {
 		const letter = /** @type HTMLElement */ (target);
-		if (letter.classList.contains('sbp-letter')) {
+		if (letter.classList.contains("sbp-letter")) {
 			state.update({ letter: letter.textContent ?? undefined });
 		}
 	});
@@ -542,9 +541,25 @@ async function setStatus(status) {
 	}
 }
 
-async function main() {
+/**
+ * @param {string} host
+ */
+function injectCss(host) {
+	const stylesheet = h("link", {
+		href: `https://${host}/sbp.css`,
+		rel: "stylesheet",
+	});
+	document.head.append(stylesheet);
+}
+
+/**
+ * @param {Config} config
+ */
+export async function main(config) {
 	console.debug("Starting SBP...");
 	log("Starting SBP...");
+
+	injectCss(config.apiHost);
 
 	setStatus(state.status);
 
@@ -704,10 +719,4 @@ async function main() {
 	}
 
 	console.debug("Started SBP");
-}
-
-try {
-	await main();
-} catch (error) {
-	console.error("Error running main:", error);
 }
