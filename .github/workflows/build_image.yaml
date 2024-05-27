@@ -63,8 +63,6 @@ jobs:
             HostName $SSH_HOST
             User $SSH_USER
             IdentityFile ~/.ssh/staging.key
-            StrictHostKeyChecking no
-            AddressFamily inet6
           END
 
       - name: Deploy app
