@@ -1,9 +1,11 @@
 name: Build Docker image
 
-on: workflow_dispatch
-  # push:
-  #   branches:
-  #     - main
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - server/**
 
 env:
   REGISTRY: ghcr.io
