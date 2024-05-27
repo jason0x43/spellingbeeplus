@@ -710,6 +710,7 @@ export async function main(config) {
 				},
 				onSyncRefused: () => {
 					clearTimeout(syncTimeout);
+					log("Sync request rejected");
 					state.update({ syncing: false });
 				},
 				onError: () => {
