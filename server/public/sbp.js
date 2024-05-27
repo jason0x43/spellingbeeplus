@@ -132,26 +132,28 @@ function addHintsView() {
 function addSyncView() {
 	document.querySelector(`#${sbpSyncViewId}`)?.remove();
 	const view = h("div", { id: sbpSyncViewId }, [
-		h("div", { class: "sbp-form-field" }, [
-			h("label", { for: "sbp-name-input" }, "Name"),
-			h("div", { id: "sbp-name-input-box" }, [
-				h("input", {
-					id: "sbp-name-input",
-					"data-1p-ignore": "true",
-				}),
-				h("button", { id: "sbp-name-button" }, "💾"),
+		h("div", { id: "sbp-sync-view-content" }, [
+			h("div", { class: "sbp-form-field" }, [
+				h("label", { for: "sbp-name-input" }, "Name"),
+				h("div", { id: "sbp-name-input-box" }, [
+					h("input", {
+						id: "sbp-name-input",
+						"data-1p-ignore": "true",
+					}),
+					h("button", { id: "sbp-name-button" }, "💾"),
+				]),
+			]),
+			h("div", { class: "sbp-form-field" }, [
+				h("label", { for: "sbp-friend-select" }, "Friend"),
+				h("select", { id: "sbp-friend-select" }),
+			]),
+			h("button", { id: syncButtonId }, "Sync Words"),
+			h("div", { id: "sbp-sync-info" }, [
+				h("div", { id: "sbp-sync-status" }),
+				h("div", { id: "sbp-sync-log" }),
 			]),
 		]),
-		h("div", { class: "sbp-form-field" }, [
-			h("label", { for: "sbp-friend-select" }, "Friend"),
-			h("select", { id: "sbp-friend-select" }),
-		]),
-		h("button", { id: syncButtonId }, "Sync Words"),
 		h("div", { id: "sbp-sync-spinner" }, [h("div", { class: "sbp-spinner" })]),
-		h("div", { id: "sbp-sync-info" }, [
-			h("div", { id: "sbp-sync-status" }),
-			h("div", { id: "sbp-sync-log" }),
-		]),
 	]);
 	getViewBox().append(view);
 

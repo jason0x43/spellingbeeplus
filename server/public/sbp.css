@@ -16,7 +16,7 @@
 #sbp-sync-info {
 	display: flex;
 	flex-direction: column;
-	grid-column: 1 / span 2;
+	flex-grow: 1;
 	overflow: hidden;
 }
 
@@ -57,13 +57,20 @@
 	display: none;
 }
 
-#sbp-sync-view {
+#sbp-sync-view-content {
+	display: flex;
 	flex-direction: column;
 	gap: 1rem;
-	width: 100%;
-	max-height: 100%;
-	/* padding for spinner */
-	padding-bottom: 80px;
+	flex-grow: 1;
+}
+
+#sbp-sync-view {
+	position: relative;
+	flex-direction: column;
+	gap: 1rem;
+	flex-grow: 1;
+	width: 16rem;
+	padding-bottom: 1rem;
 
 	#sbp-name-button {
 		display: none;
@@ -126,13 +133,17 @@
 		display: none;
 		position: absolute;
 		left: 50%;
-		transform: translateX(-50%);
-		bottom: 0;
+		top: 50%;
+		transform: translate(-50%, -50%);
 	}
 
 	&.sbp-syncing {
 		#sbp-sync-spinner {
 			display: block;
+		}
+
+		#sbp-sync-view-content {
+			opacity: 0.25;
 		}
 	}
 }
@@ -277,9 +288,9 @@
 
 .sbp-spinner {
 	display: inline-block;
-	width: 50px;
-	height: 50px;
-	border: 4px solid rgba(128, 128, 128, 0.1);
+	width: 80px;
+	height: 80px;
+	border: 6px solid rgba(128, 128, 128, 0.1);
 	border-radius: 50%;
 	border-top-color: #fd0;
 	animation: sbp-spin 1s ease-in-out infinite;
