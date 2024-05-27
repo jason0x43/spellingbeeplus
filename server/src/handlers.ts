@@ -68,6 +68,18 @@ export async function ws(socket: Websocket) {
 	socket.once("close", () => {
 		log.info(`Client ${clientId} disconnected`);
 		locals.clients.delete(clientId);
+
+		// Tell other clients that one left
+		log.debug(
+			`Notifying other clients that ${clientId} left...`,
+		);
+		for (const [_, otherClient] of locals.clients) {
+			otherClient.socket.send(
+				messageFrom(serverId, {
+					left: clientId,
+				}),
+			);
+		}
 	});
 
 	// Tell the new client about any existing clients
