@@ -494,6 +494,12 @@ export async function addWords(words) {
 	const toAdd = words.slice();
 	let adding = false;
 
+	if (words.length > 0) {
+		log(`Adding ${words.length} words...`);
+	} else {
+		log("No words to add");
+	}
+
 	while (toAdd.length > 0) {
 		if (isCongratsPaneOpen()) {
 			await wait(250);
@@ -516,6 +522,7 @@ export async function addWords(words) {
 		try {
 			adding = true;
 			await addWord(toAdd[0]);
+			log(`Added "${toAdd[0]}"`);
 			await wait(250);
 			toAdd.shift();
 			adding = false;
@@ -687,6 +694,7 @@ export async function main(config) {
 					addWords(state.borrowedWords).finally(() => {
 						// All the received words have been added -- syncing is done
 						state.update({ syncing: false });
+						log("Sync complete");
 					});
 				},
 				onSyncRequest: (from) => {
