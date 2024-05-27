@@ -1,7 +1,6 @@
 // firstLetters maps a letter to an array of word lengths. For example,
 // firstLetters.a[4] is the number of 4 letter 'a' words.
 
-
 import {
 	addWord,
 	closeCongratsPane,
@@ -535,7 +534,7 @@ export async function addWords(words) {
 async function log(message) {
 	const syncLog = document.querySelector("#sbp-sync-log");
 	if (syncLog) {
-		syncLog.append(h("p", message));
+		syncLog.insertBefore(h("p", message), syncLog.firstElementChild);
 	}
 }
 
@@ -715,7 +714,7 @@ export async function main(config) {
 				},
 				getState: () => state,
 				updateState: (newState) => state.update(newState),
-				log: (message) => log(message)
+				log: (message) => log(message),
 			},
 		);
 	} catch (err) {
