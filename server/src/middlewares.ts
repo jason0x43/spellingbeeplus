@@ -1,27 +1,30 @@
 import type { Request, Response } from "./server.js";
 import { log } from "./util.js";
 
-export async function keyRequired(request: Request, _response: Response) {
+export async function keyRequired(request: Request, response: Response) {
 	const headers = request.headers;
 	const apiKey = headers["x-api-key"];
 	if (!apiKey) {
 		log.warn("Missing authorization header");
-		throw new Error("not authorized");
+		response.status(401).send("not authorized");
+		return;
 	}
 
 	if (apiKey !== request.app.locals.apiKey) {
 		log.warn("Invalid API key");
-		throw new Error("not authorized");
+		response.status(401).send("not authorized");
+		return;
 	}
 }
 
-export async function tokenRequired(request: Request, _response: Response) {
+export async function tokenRequired(request: Request, response: Response) {
 	const query = request.query_parameters;
 	const token = query.token;
 
 	if (!token) {
 		log.warn("Missing token");
-		throw new Error("not authorized");
+		response.status(401).send("not authorized");
+		return;
 	}
 
 	const tokens = request.app.locals.tokens;
@@ -29,12 +32,14 @@ export async function tokenRequired(request: Request, _response: Response) {
 
 	if (!expiry) {
 		log.warn("Invalid token");
-		throw new Error("not authorized");
+		response.status(401).send("not authorized");
+		return;
 	}
 
 	if (expiry < new Date()) {
 		log.warn("Expired token");
-		throw new Error("not authorized");
+		response.status(401).send("not authorized");
+		return;
 	}
 }
 
