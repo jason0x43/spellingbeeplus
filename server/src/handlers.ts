@@ -44,7 +44,7 @@ export async function ws(socket: Websocket) {
 	const locals = socket.context.locals as AppLocals;
 	let clientId = createId();
 
-	const messages: MessagesIterator = events.on(socket, "message");
+	const messages = events.on(socket, "message") as MessagesIterator;
 	log.debug(`Connected client at ${socket.ip} with temp ID ${clientId}`);
 
 	// Send the client a unique ID for it to use, along with the current server
