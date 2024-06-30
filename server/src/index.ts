@@ -1,10 +1,11 @@
 import { connect, getFile, getToken, hello, ws } from "./handlers.js";
+import { ClientId } from "./message.js";
 import { keyRequired, tokenRequired, useCors } from "./middlewares.js";
 import { Client, createServer } from "./server.js";
 import { getEnv, log } from "./util.js";
 
 const apiKey = getEnv("API_KEY");
-const clients = new Map<string, Client>();
+const clients = new Map<ClientId, Client>();
 const tokens = new Map<string, Date>();
 const version = Number(Date.now());
 const port = process.env.API_PORT ?? 3000;

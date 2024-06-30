@@ -1,7 +1,7 @@
 import events from "node:events";
 import type { AppLocals, Request, Response, Websocket } from "./server.js";
 import { createId } from "@paralleldrive/cuid2";
-import { MessageTo, messageFrom } from "./message.js";
+import { ClientId, MessageTo, messageFrom } from "./message.js";
 import { log } from "./util.js";
 import { promises as fs } from "node:fs";
 import { extname } from "node:path";
@@ -17,10 +17,7 @@ export function connect(request: Request, response: Response) {
 export async function getFile(request: Request, response: Response) {
 	const file = request.params.file;
 	try {
-		const source = await fs.readFile(
-			`public/${file}`,
-			"utf-8",
-		);
+		const source = await fs.readFile(`public/${file}`, "utf-8");
 		const ext = extname(file).slice(1);
 		response.type(ext).send(source);
 	} catch (error) {
@@ -42,10 +39,11 @@ export async function hello(_request: Request, response: Response) {
 
 export async function ws(socket: Websocket) {
 	const locals = socket.context.locals as AppLocals;
-	let clientId = createId();
+	let tempClientId = createId();
+	let clientId: ClientId | undefined;
 
 	const messages = events.on(socket, "message") as MessagesIterator;
-	log.debug(`Connected client at ${socket.ip} with temp ID ${clientId}`);
+	log.debug(`Connected client at ${socket.ip} with temp ID ${tempClientId}`);
 
 	// Send the client a unique ID for it to use, along with the current server
 	// version, which may cause the client to reload
@@ -53,7 +51,7 @@ export async function ws(socket: Websocket) {
 		messageFrom(serverId, {
 			connect: {
 				version: locals.version,
-				id: clientId,
+				id: tempClientId,
 			},
 		}),
 	);
@@ -64,8 +62,7 @@ export async function ws(socket: Websocket) {
 	};
 
 	// Wait for the client to acknowledge the ID, or reply with a new one
-	let idAcknowledged = false;
-	while (!idAcknowledged) {
+	while (!clientId) {
 		log.debug(`Waiting for SetClientId message from ${clientId}...`);
 		const msg = await nextMessage(messages);
 		if (!msg) {
@@ -77,10 +74,11 @@ export async function ws(socket: Websocket) {
 			log.debug(`Client ${clientId} changed ID to ${msg.content.setClientId}`);
 			clientId = msg.content.setClientId;
 			locals.clients.set(clientId, client);
-			idAcknowledged = true;
 		}
 	}
 
+	// After the ID has been negotiated, add a close handler that will remove
+	// the client from the clients list when the socket closes
 	socket.once("close", () => {
 		log.info(`Client ${clientId} disconnected`);
 		locals.clients.delete(clientId);

@@ -27,10 +27,13 @@ export type ErrMsg = z.infer<typeof ErrMsg>;
 export const Message = z.union([Connect, Joined, Sync, ErrMsg]);
 export type Message = z.infer<typeof Message>;
 
+export type ClientId = string & { __type: "ClientId" };
+export const ClientId: z.Schema<ClientId> = z.string() as any;
+
 export const MessageContent = z.union([
 	z.object({ connect: Connect }),
 	z.object({ setName: z.string() }),
-	z.object({ setClientId: z.string() }),
+	z.object({ setClientId: ClientId }),
 	z.object({ sync: Sync }),
 	z.object({ noSync: z.string() }),
 	z.object({ joined: Joined }),
@@ -46,7 +49,7 @@ export const MessageFrom = z.object({
 export type MessageFrom = z.infer<typeof MessageFrom>;
 
 export const MessageTo = z.object({
-	to: z.union([z.string(), z.null()]),
+	to: z.union([ClientId, z.null()]),
 	content: MessageContent,
 });
 export type MessageTo = z.infer<typeof MessageTo>;

@@ -8,6 +8,7 @@ import HyperExpress, {
 	Websocket as HeWebsocket,
 	ServerConstructorOptions,
 } from "hyper-express";
+import type { ClientId } from "./message.js";
 
 export type Client = {
 	name: string;
@@ -15,7 +16,6 @@ export type Client = {
 };
 
 type Token = string;
-type ClientId = string;
 
 export type AppLocals = {
 	version: number;
