@@ -9,6 +9,8 @@ const tokens = new Map<string, Date>();
 const version = Number(Date.now());
 const port = process.env.API_PORT ?? 3000;
 
+// If an SSL key is defined in the environment, create an HTTPS server.
+// Otherwise, use HTTP.
 const server = process.env.SSL_KEY_NAME
 	? createServer(
 			{ clients, apiKey, tokens, version },
@@ -29,10 +31,19 @@ server.set_error_handler((_request, response, error) => {
 
 server.use(useCors({ extraHeaders: "x-api-key" }));
 
+// Test route
 server.get("/", {}, hello);
+
+// Get a token to use when opening a websocket connection
 server.get("/token", { middlewares: [keyRequired] }, getToken);
+
+// Open a websocket connection
 server.upgrade("/ws", { middlewares: [tokenRequired] }, connect);
+
+// Connect to a websocket
 server.ws("/ws", ws);
+
+// Load a static file
 server.get("/:file", {}, getFile);
 
 try {
