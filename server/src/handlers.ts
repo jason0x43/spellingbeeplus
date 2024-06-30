@@ -6,7 +6,7 @@ import { log } from "./util.js";
 import { promises as fs } from "node:fs";
 import { extname } from "node:path";
 
-const serverId = "00000";
+const serverId = "00000" as ClientId;
 
 export function connect(request: Request, response: Response) {
 	response.upgrade({
@@ -39,7 +39,7 @@ export async function hello(_request: Request, response: Response) {
 
 export async function ws(socket: Websocket) {
 	const locals = socket.context.locals as AppLocals;
-	let tempClientId = createId();
+	let tempClientId = createId() as ClientId;
 	let clientId: ClientId | undefined;
 
 	const messages = events.on(socket, "message") as MessagesIterator;
@@ -137,17 +137,19 @@ export async function ws(socket: Websocket) {
 		);
 	}
 
+	// Handle new messages as they come in
 	for await (const msg of messageIterator(messages)) {
 		if ("close" in msg.content) {
+			// A client is disconnecting
 			socket.close();
-			return;
-		}
-
-		if ("setName" in msg.content) {
+			break;
+		} else if ("setName" in msg.content) {
+			// A client is updating its display name
 			client.name = msg.content.setName;
 			log.debug(
 				`Set ${clientId} name to ${client.name}; notifying other clients...`,
 			);
+
 			for (const [_, otherClient] of locals.clients) {
 				otherClient.socket.send(
 					messageFrom(serverId, {
@@ -158,26 +160,20 @@ export async function ws(socket: Websocket) {
 					}),
 				);
 			}
-
-			continue;
-		}
-
-		if (msg.to) {
+		} else if (msg.to) {
+			// Forward any other messages to the proper receiver
 			const target = locals.clients.get(msg.to);
-			if (!target) {
+			if (target) {
+				target.socket.send(messageFrom(clientId, msg.content));
+				log.debug(`Sent message from ${clientId} to ${msg.to}`);
+			} else {
 				log.warn(
 					`Client ${clientId} tried to send message to unknown client ${msg.to}`,
 				);
-				continue;
 			}
-
-			target.socket.send(messageFrom(clientId, msg.content));
-			log.debug(`Sent message from ${clientId} to ${msg.to}`);
-
-			continue;
+		} else {
+			log.warn(`Not handling message from ${clientId}:`, msg);
 		}
-
-		log.warn(`Not handling message from ${clientId}:`, msg);
 	}
 }
 

@@ -1,5 +1,8 @@
-/** @typedef {import("../src/message.ts").MessageFrom} MessageFrom */
-/** @typedef {import("../src/message.ts").MessageTo} MessageTo */
+/** @typedef {import("../src/message").MessageFrom} MessageFrom */
+/** @typedef {import("../src/message").MessageTo} MessageTo */
+/** @typedef {import("../src/message").ClientId} ClientId */
+/** @typedef {import("./sbpTypes").SyncConfig} SyncConfig */
+/** @typedef {import("./sbpTypes").SyncDelegate} SyncDelegate */
 
 /** @type {WebSocket | undefined} */
 let socket;
@@ -219,7 +222,7 @@ export async function setName(name) {
 /**
  * Send a request to sync words to another player
  *
- * @param {string} friendId
+ * @param {ClientId} friendId
  * @param {string[]} words
  */
 export async function syncWords(friendId, words) {

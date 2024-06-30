@@ -1,3 +1,10 @@
+/**
+ * @template T
+ * @typedef {import('./sbpTypes').Listener<T>} Listener<T>
+ */
+/** @typedef {import('./sbpTypes').SbpState} SbpState */
+/** @typedef {import('../src/message').ClientId} ClientId */
+
 import { getWordStats, getThresholds } from "./sb.js";
 
 export class SbpStore {
@@ -25,9 +32,9 @@ export class SbpStore {
 			words: [],
 			rank: "beginner",
 			activeView: null,
-			player: { id: "", name: "" },
+			player: { id: /** @type {ClientId} */ (""), name: "" },
 			friends: [],
-			friendId: "",
+			friendId: /** @type {ClientId} */ (""),
 			newName: "",
 			syncing: false,
 			status: "Starting",

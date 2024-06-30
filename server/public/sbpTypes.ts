@@ -1,12 +1,14 @@
-type Listener<T> = (newVal: T, oldVal: T) => void;
+import type { ClientId } from '../src/message.js';
 
-type Config = {
+export type Listener<T> = (newVal: T, oldVal: T) => void;
+
+export type Config = {
 	apiKey: string;
 	apiHost: string;
 	appVersion: string;
 };
 
-type Store<T> = {
+export type Store<T> = {
 	subscribe(listener: Listener<T>): void;
 	value: T;
 	update(newVal: Partial<T>): Promise<void>;
@@ -22,11 +24,11 @@ type GameData = {
 };
 
 type Player = {
-	id: string;
+	id: ClientId;
 	name: string;
 };
 
-type Rank =
+export type Rank =
 	| "beginner"
 	| "good start"
 	| "moving up"
@@ -37,7 +39,7 @@ type Rank =
 	| "amazing"
 	| "genius";
 
-type SbpState = {
+export type SbpState = {
 	letter: string;
 	gameData: GameData;
 	borrowedWords: string[];
@@ -46,16 +48,16 @@ type SbpState = {
 	activeView: "hints" | "sync" | null;
 	player: Player;
 	friends: Player[];
-	friendId: string;
+	friendId: ClientId;
 	newName: string;
 	syncing: boolean;
 	status: 'Starting' | 'Connecting' | 'Connected' | 'Not connected';
 	error?: string | undefined;
 };
 
-type SyncDelegate = {
-	onJoin: (data: { id: string; name: string }) => void;
-	onLeave: (id: string) => void;
+export type SyncDelegate = {
+	onJoin: (data: { id: ClientId; name: string }) => void;
+	onLeave: (id: ClientId) => void;
 	// Called when a device that made a sync request receives confirmation
 	// that the request was accepted
 	onSync: (words: string[]) => void;
@@ -69,15 +71,15 @@ type SyncDelegate = {
 	log: (message: string) => void;
 };
 
-type SyncHandle = {
+export type SyncHandle = {
 	updateName: (name: string) => Promise<void>;
 };
 
-type SyncConfig = {
-	apiKey: str;
-	apiHost: str;
+export type SyncConfig = {
+	apiKey: string;
+	apiHost: string;
 };
 
-type StoreOptions<T> = {
+export type StoreOptions<T> = {
 	noPersist?: (keyof T)[];
 };

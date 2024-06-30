@@ -1,6 +1,10 @@
 // firstLetters maps a letter to an array of word lengths. For example,
 // firstLetters.a[4] is the number of 4 letter 'a' words.
 
+/** @typedef {import('./sbpTypes').Config} Config */
+/** @typedef {import('./sbpTypes').Rank} Rank */
+/** @typedef {import('../src/message').ClientId} ClientId */
+
 import {
 	addWord,
 	closeCongratsPane,
@@ -187,7 +191,7 @@ function addSyncView() {
 
 	const friendSelect = selSelect("#sbp-friend-select");
 	friendSelect?.addEventListener("change", () => {
-		state.update({ friendId: friendSelect.value });
+		state.update({ friendId: /** @type {ClientId} */ (friendSelect.value) });
 	});
 }
 
