@@ -117,26 +117,28 @@ async function sim(args) {
 			break;
 
 		case "build":
-			const buildArgs = [
-				"build",
-				"--platform",
-				"ios",
-				"--local",
-				"--profile",
-				"sim",
-			];
-
-			const buildName = args.shift();
-			if (buildName) {
-				if (!buildName.endsWith(".tar.gz")) {
-					buildName = `${buildName}.tar.gz`;
-				}
-				buildArgs.push("--output", buildName);
-			}
-
-			spawnSync("eas", buildArgs, {
-				stdio: "inherit",
-			});
+			spawnSync(
+				"xcodebuild",
+				[
+					"-project",
+					"SpellingBeePlus.xcodeproj",
+					"-scheme",
+					"SpellingBeePlus (iOS)",
+					"-configuration",
+					"Debug",
+					"-sdk",
+					"iphonesimulator",
+					"-destination",
+					"generic/platform=iOS Simulator",
+					"-derivedDataPath",
+					`build/iOS`,
+					"clean",
+					"build",
+				],
+				{
+					stdio: "inherit",
+				},
+			);
 
 			break;
 
