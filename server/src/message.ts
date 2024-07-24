@@ -30,14 +30,48 @@ export type ErrMsg = z.infer<typeof ErrMsg>;
 export const Message = z.union([Connect, Joined, Sync, ErrMsg]);
 export type Message = z.infer<typeof Message>;
 
+export type GameId = string & { __type: "GameId" };
+export const GameId: z.Schema<GameId> = z.string() as any;
+
+export const StatusRequest = z.object({
+	otherPlayer: ClientId,
+	gameId: GameId,
+});
+export type StatusRequest = z.infer<typeof StatusRequest>;
+
+export const GameStatus = z.object({
+	player1: ClientId,
+	player2: ClientId,
+	gameId: GameId,
+	words: z.array(
+		z.object({
+			word: z.string(),
+			player: ClientId,
+		}),
+	),
+});
+export type GameStatus = z.infer<typeof GameStatus>;
+
 export const MessageContent = z.union([
+	// A client is connecting
 	z.object({ connect: Connect }),
-	z.object({ setName: z.string() }),
+	// A client is updating its unique ID
 	z.object({ setClientId: ClientId }),
-	z.object({ sync: Sync }),
-	z.object({ noSync: z.string() }),
+	// A client is updating its display name
+	z.object({ setName: z.string() }),
+	// A new client has joined the server
 	z.object({ joined: Joined }),
+	// A client is requesting to sync with another client
+	z.object({ sync: Sync }),
+	// A client is requesting the status of a game with another client
+	z.object({ getStatus: StatusRequest }),
+	// A client is requesting the status of a game with another client
+	z.object({ status: GameStatus }),
+	// A client refused a sync request
+	z.object({ noSync: z.string() }),
+	// A client disconnected from the server
 	z.object({ left: ClientId }),
+	// An error was emitted in response to a message
 	z.object({ error: ErrMsg }),
 ]);
 export type MessageContent = z.infer<typeof MessageContent>;
