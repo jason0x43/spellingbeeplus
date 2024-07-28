@@ -1,6 +1,7 @@
 import { click, def, h, selDiv, wait } from "./util.js";
 
 /** @typedef {import("./sbpTypes").GameData} GameData */
+/** @typedef {import("../src/message").ClientId} ClientId */
 
 /** The element containing the player's current progress rank. */
 export const sbProgressRank = "sb-progress-rank";
@@ -8,6 +9,24 @@ export const sbProgressRank = "sb-progress-rank";
 export const sbProgressMarker = "sb-progress-marker";
 /** The element containing the value of the player's progress. */
 export const sbProgressValue = "sb-progress-value";
+
+/**
+ * Get the NYT user ID
+ *
+ * @returns {ClientId}
+ */
+export function getUserId() {
+	const cookies = document.cookie.split(/;\s*/);
+	for (const cookie of cookies) {
+		if (cookie.startsWith("nyt-jkidd=")) {
+			const val = cookie.slice("nyt-jkidd=".length);
+			const params = new URLSearchParams(val);
+			return /** @type {ClientId} */ (params.get("uid"));
+		}
+	}
+
+	throw new Error("No user ID");
+}
 
 /**
  * Get the word drawer.

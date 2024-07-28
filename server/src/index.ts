@@ -1,11 +1,12 @@
 import { connect, getFile, getToken, hello, ws } from "./handlers.js";
 import { ClientId } from "./message.js";
 import { keyRequired, tokenRequired, useCors } from "./middlewares.js";
-import { Client, createServer } from "./server.js";
+import { Client, createServer, Websocket } from "./server.js";
 import { getEnv, log } from "./util.js";
 
 const apiKey = getEnv("API_KEY");
 const clients = new Map<ClientId, Client>();
+const connections = new Map<Websocket, ClientId>();
 const tokens = new Map<string, Date>();
 const version = Number(Date.now());
 const port = process.env.API_PORT ?? 3000;
@@ -14,13 +15,13 @@ const port = process.env.API_PORT ?? 3000;
 // Otherwise, use HTTP.
 const server = process.env.SSL_KEY_NAME
 	? createServer(
-			{ clients, apiKey, tokens, version },
+			{ clients, connections, apiKey, tokens, version },
 			{
 				cert_file_name: `${process.env.SSL_KEY_NAME}.pem`,
 				key_file_name: `${process.env.SSL_KEY_NAME}-key.pem`,
 			},
 		)
-	: createServer({ clients, apiKey, tokens, version });
+	: createServer({ clients, connections, apiKey, tokens, version });
 
 server.set_error_handler((_request, response, error) => {
 	log.warn(error);

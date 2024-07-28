@@ -1,5 +1,11 @@
 import events from "node:events";
-import type { AppLocals, Request, Response, Websocket } from "./server.js";
+import type {
+	AppLocals,
+	Client,
+	Request,
+	Response,
+	Websocket,
+} from "./server.js";
 import { createId } from "@paralleldrive/cuid2";
 import { ClientId, MessageTo, messageFrom } from "./message.js";
 import { log } from "./util.js";
@@ -39,31 +45,26 @@ export async function hello(_request: Request, response: Response) {
 
 export async function ws(socket: Websocket) {
 	const locals = socket.context.locals as AppLocals;
-	let tempClientId = createId() as ClientId;
-	let clientId: ClientId | undefined;
-
 	const messages = events.on(socket, "message") as MessagesIterator;
-	log.debug(`Connected client at ${socket.ip} with temp ID ${tempClientId}`);
 
-	// Send the client a unique ID for it to use, along with the current server
-	// version, which may cause the client to reload
+	// Send the client the current server version, which may cause the client to
+	// reload
 	socket.send(
 		messageFrom(serverId, {
 			connect: {
 				version: locals.version,
-				id: tempClientId,
 			},
 		}),
 	);
 
-	const client = {
-		socket,
+	let client: Client = {
+		id: "" as ClientId,
 		name: "",
 	};
 
-	// Wait for the client to acknowledge the ID, or reply with a new one
-	while (!clientId) {
-		log.debug(`Waiting for SetClientId message from ${clientId}...`);
+	// Wait for the client reply with its ID
+	while (!client.id) {
+		log.debug(`Waiting for SetClientId message...`);
 		const msg = await nextMessage(messages);
 		if (!msg) {
 			log.warn("Stream ended without setting ID");
@@ -71,70 +72,87 @@ export async function ws(socket: Websocket) {
 		}
 
 		if ("setClientId" in msg.content) {
-			log.debug(`Client ${clientId} changed ID to ${msg.content.setClientId}`);
-			clientId = msg.content.setClientId;
-			locals.clients.set(clientId, client);
+			log.debug(`Client ID is ${msg.content.setClientId}`);
+
+			const clientId = msg.content.setClientId;
+
+			if (locals.clients.has(clientId)) {
+				// A client record already exists for the client's ID
+				client = locals.clients.get(clientId)!;
+			} else {
+				// Use the default record for this client ID
+				client.id = clientId;
+				locals.clients.set(client.id, client);
+			}
+
+			locals.connections.set(socket, client.id);
 		}
 	}
 
 	// After the ID has been negotiated, add a close handler that will remove
 	// the client from the clients list when the socket closes
 	socket.once("close", () => {
-		log.info(`Client ${clientId} disconnected`);
-		locals.clients.delete(clientId);
+		locals.connections.delete(socket);
 
 		// Tell other clients that one left
-		log.debug(`Notifying other clients that ${clientId} left...`);
-		for (const [_, otherClient] of locals.clients) {
-			otherClient.socket.send(
+		log.debug(`Notifying other clients that ${client.id} left...`);
+		for (const [otherClient, _] of locals.connections) {
+			otherClient.send(
 				messageFrom(serverId, {
-					left: clientId,
+					left: client.id,
 				}),
 			);
 		}
 	});
 
 	// Tell the new client about any existing clients
-	log.debug(`Notifying ${clientId} of existing clients...`);
-	for (const [id, otherClient] of locals.clients) {
-		socket.send(
-			messageFrom(serverId, {
-				joined: {
-					id,
-					name: otherClient.name,
-				},
-			}),
-		);
+	log.debug(`Notifying ${client.id} of existing clients...`);
+	for (const [_, otherClient] of locals.clients) {
+		if (otherClient.id !== client.id) {
+			socket.send(
+				messageFrom(serverId, {
+					joined: otherClient,
+				}),
+			);
+		}
 	}
 
-	// Wait for the client to set its name
-	while (!client.name) {
-		log.debug(`Waiting for name from ${clientId}...`);
-		const msg = await nextMessage(messages);
-		if (!msg) {
-			log.warn("Stream ended without setting name");
-			return;
-		}
+	if (client.name) {
+		// The client ID alreayd has a name; tell it to the newly connected client
+		socket.send(
+			messageFrom(serverId, {
+				joined: client,
+			}),
+		);
+	} else {
+		// Wait for the client to set its name
+		while (!client.name) {
+			log.debug(`Waiting for name from ${client.id}...`);
+			const msg = await nextMessage(messages);
+			if (!msg) {
+				log.warn("Stream ended without setting name");
+				return;
+			}
 
-		if ("setName" in msg.content) {
-			client.name = msg.content.setName;
-			log.debug(`Client ${clientId} is named ${client.name}`);
+			if ("setName" in msg.content) {
+				client.name = msg.content.setName;
+				log.debug(`Client ${client.id} is named ${client.name}`);
+			}
 		}
 	}
 
 	// Tell existing clients about the new client
 	log.debug(
-		`Notifying other clients that ${client.name} (${clientId}) joined...`,
+		`Notifying other clients that ${client.name} (${client.id}) joined...`,
 	);
-	for (const [_, otherClient] of locals.clients) {
-		otherClient.socket.send(
-			messageFrom(serverId, {
-				joined: {
-					id: clientId,
-					name: client.name,
-				},
-			}),
-		);
+	for (const [otherSocket, _] of locals.connections) {
+		if (otherSocket !== socket) {
+			otherSocket.send(
+				messageFrom(serverId, {
+					joined: client,
+				}),
+			);
+		}
 	}
 
 	// Handle new messages as they come in
@@ -147,32 +165,26 @@ export async function ws(socket: Websocket) {
 			// A client is updating its display name
 			client.name = msg.content.setName;
 			log.debug(
-				`Set ${clientId} name to ${client.name}; notifying other clients...`,
+				`Set ${client.id} name to ${client.name}; notifying clients...`,
 			);
 
-			for (const [_, otherClient] of locals.clients) {
-				otherClient.socket.send(
+			for (const [otherSocket, _] of locals.connections) {
+				otherSocket.send(
 					messageFrom(serverId, {
-						joined: {
-							id: clientId,
-							name: client.name,
-						},
+						joined: client,
 					}),
 				);
 			}
 		} else if (msg.to) {
 			// Forward any other messages to the proper receiver
-			const target = locals.clients.get(msg.to);
-			if (target) {
-				target.socket.send(messageFrom(clientId, msg.content));
-				log.debug(`Sent message from ${clientId} to ${msg.to}`);
-			} else {
-				log.warn(
-					`Client ${clientId} tried to send message to unknown client ${msg.to}`,
-				);
+			for (const [otherSocket, otherClientId] of locals.connections) {
+				if (otherClientId === msg.to) {
+					otherSocket.send(messageFrom(client.id, msg.content));
+					log.debug(`Sent message from ${client.id} to ${msg.to}`);
+				}
 			}
 		} else {
-			log.warn(`Not handling message from ${clientId}:`, msg);
+			log.warn(`Not handling message from ${client.id}:`, msg);
 		}
 	}
 }
@@ -190,7 +202,9 @@ async function nextMessage(
 	messages: MessagesIterator,
 ): Promise<MessageTo | undefined> {
 	const msgVal = await messages.next();
-	return msgVal.done ? undefined : MessageTo.parse(JSON.parse(msgVal.value[0]));
+	return msgVal.done
+		? undefined
+		: MessageTo.parse(JSON.parse(msgVal.value[0]));
 }
 
 /**

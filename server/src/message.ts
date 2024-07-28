@@ -5,7 +5,6 @@ export const ClientId: z.Schema<ClientId> = z.string() as any;
 
 export const Connect = z.object({
 	version: z.number(),
-	id: ClientId,
 });
 export type Connect = z.infer<typeof Connect>;
 

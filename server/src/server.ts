@@ -11,8 +11,8 @@ import HyperExpress, {
 import type { ClientId } from "./message.js";
 
 export type Client = {
+	id: ClientId;
 	name: string;
-	socket: Websocket;
 };
 
 type Token = string;
@@ -21,6 +21,7 @@ export type AppLocals = {
 	version: number;
 	apiKey: string;
 	clients: Map<ClientId, Client>;
+	connections: Map<Websocket, ClientId>;
 	tokens: Map<Token, Date>;
 };
 

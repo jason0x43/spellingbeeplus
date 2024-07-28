@@ -65,23 +65,11 @@ async function handleMessage(delegate, message) {
 		}
 
 		const clientId = delegate.getState().player.id;
-		if (clientId) {
-			console.debug("Received connect message with existing client ID!");
-			send({
-				to: null,
-				content: { setClientId: clientId },
-			});
-			console.debug(`Sent request to set client ID to ${clientId}`);
-		} else {
-			const player = delegate.getState().player;
-			await delegate.updateState({
-				player: {
-					...player,
-					id: message.content.connect.id,
-				},
-			});
-			console.debug(`Connected as ${delegate.getState().player.id}`);
-		}
+		send({
+			to: null,
+			content: { setClientId: clientId },
+		});
+		console.debug(`Sent request to set client ID to ${clientId}`);
 
 		const name = delegate.getState().player.name;
 		if (name) {

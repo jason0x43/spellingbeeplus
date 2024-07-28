@@ -74,6 +74,16 @@ export class SbpStore {
 	async load() {
 		/** @type {{ [key: string]: Partial<SbpState> }} */
 		const result = await browser.storage.sync.get(this.#key);
+
+		// clear any values that shouldn't have been saved
+		delete result.syncing;
+		delete result.status;
+		delete result.error;
+		delete result.activeView;
+		delete result.friends;
+		delete result.friendId;
+		delete result.newName;
+
 		this.#updateValue(result[this.#key]);
 	}
 
@@ -95,8 +105,16 @@ export class SbpStore {
 
 		this.#updateValue(newVal);
 
-		const { syncing, status, error, activeView, friends, friendId, ...toSave } =
-			this.#value;
+		const {
+			syncing,
+			status,
+			error,
+			activeView,
+			friends,
+			friendId,
+			newName,
+			...toSave
+		} = this.#value;
 		await browser.storage.sync.set({ [this.#key]: toSave });
 	}
 

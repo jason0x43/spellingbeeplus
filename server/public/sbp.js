@@ -21,6 +21,7 @@ import {
 	getRank,
 	clearWord,
 	getNextRank,
+	getUserId,
 } from "./sb.js";
 import { SbpStore } from "./storage.js";
 import { connect, setName, syncWords } from "./sync.js";
@@ -616,6 +617,10 @@ export async function main(config) {
 		gameData,
 		words: getWords(),
 		rank: /** @type {Rank} */ (getNormalizedText(getRank())),
+		player: {
+			...state.player,
+			id: getUserId(),
+		},
 	});
 
 	addViewBox();
@@ -663,6 +668,11 @@ export async function main(config) {
 	console.debug("Installed key handler");
 
 	await state.update({ status: "Connecting" });
+
+	const playerId = /** @type {ClientId} */ (getUserId());
+	if (!playerId) {
+		throw new Error("No player ID");
+	}
 
 	try {
 		await connect(
