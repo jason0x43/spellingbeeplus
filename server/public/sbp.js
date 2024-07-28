@@ -20,6 +20,7 @@ import {
 	sbProgressValue,
 	getRank,
 	clearWord,
+    getNextRank,
 } from "./sb.js";
 import { SbpStore } from "./storage.js";
 import { connect, setName, syncWords } from "./sync.js";
@@ -344,7 +345,7 @@ function render() {
 			);
 			progressBar.append(mrkr);
 		}
-		const nextRank = state.thresholds[state.rank];
+		const nextRank = getNextRank();
 		if (nextRank) {
 			mrkr.style.left = `${nextRank.distance}%`;
 			const marker = def(mrkr.querySelector(`.${sbProgressValue}`));

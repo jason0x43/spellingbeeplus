@@ -1,5 +1,7 @@
 import { click, def, h, selDiv, wait } from "./util.js";
 
+/** @typedef {import("./sbpTypes").GameData} GameData */
+
 /** The element containing the player's current progress rank. */
 export const sbProgressRank = "sb-progress-rank";
 /** The element marking the player's progress on the progress bar. */
@@ -49,8 +51,8 @@ export function getWordList() {
  * @returns {string[]}
  */
 export function getWords() {
-	return Array.from(getWordList().querySelectorAll(".sb-anagram")).map((node) =>
-		def(node.textContent).trim(),
+	return Array.from(getWordList().querySelectorAll(".sb-anagram")).map(
+		(node) => def(node.textContent).trim(),
 	);
 }
 
@@ -201,6 +203,39 @@ export function getWordStats(words) {
 }
 
 /**
+ * @returns {{ score: number, distance: number } | undefined}
+ */
+export function getNextRank() {
+	const table = def(document.querySelector("table.sb-modal-ranks__list"));
+	const rows = Array.from(table.querySelectorAll("tr")).reverse();
+
+	const current =
+		rows.findIndex((row) =>
+			row.classList.contains("sb-modal-ranks__current"),
+		);
+	if (current === -1) {
+		return;
+	}
+
+	const next = current + 1;
+	if (!rows[next]) {
+		return;
+	}
+
+	const points = /** @type {Element} */ (
+		rows[next].querySelector(".sb-modal-ranks__rank-points")
+	);
+
+	const score = Number(points.textContent);
+
+	// 100% / 8 positions
+	const delta = 100 / 8;
+	const distance = delta * (next + 1);
+
+	return { score, distance };
+}
+
+/**
  * @param {string[]} words
  * @param {string[]} pangrams
  */
@@ -252,9 +287,7 @@ export function getThresholds(words, pangrams) {
 
 export function getCongratsPane() {
 	return def(
-		document.querySelector(
-			"#portal-game-moments .pz-moment__congrats",
-		),
+		document.querySelector("#portal-game-moments .pz-moment__congrats"),
 	);
 }
 

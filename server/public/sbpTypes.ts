@@ -15,7 +15,7 @@ export type Store<T> = {
 	load(): Promise<void>;
 };
 
-type GameData = {
+export type GameData = {
 	answers: string[];
 	centerLetter: string;
 	outerLetter: string;
