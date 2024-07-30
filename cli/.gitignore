@@ -1,0 +1,5 @@
+cookie.txt
+*.json
+!jsconfig.json
+!package.json
+
