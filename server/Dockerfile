@@ -27,7 +27,7 @@ LABEL org.opencontainers.image.source=https://github.com/jason0x43/spellingbeepl
 LABEL org.opencontainers.image.description="A sync server for SpellingBeePlus"
 LABEL org.opencontainers.image.licenses="MIT"
 WORKDIR /app
-COPY --from=build /app/dist dist/
+COPY --from=build /app/build build/
 COPY --from=prod-deps /app/node_modules node_modules/
 COPY package.json .
 COPY public public/
