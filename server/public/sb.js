@@ -225,12 +225,20 @@ export function getNextRank() {
 	const points = /** @type {Element} */ (
 		rows[next].querySelector(".sb-modal-ranks__rank-points")
 	);
-
 	const score = Number(points.textContent);
 
-	// 100% / 8 positions
+	const dots = def(document.querySelectorAll('.sb-progress-dots .sb-progress-dot'));
+	let currentIndex = 0;
+	for (const dot of dots) {
+		if (!dot.classList.contains('completed')) {
+			break;
+		}
+		currentIndex++;
+	}
+
+	// 100% / 8 steps
 	const delta = 100 / 8;
-	const distance = delta * (next + 1);
+	const distance = delta * (currentIndex + 1);
 
 	return { score, distance };
 }

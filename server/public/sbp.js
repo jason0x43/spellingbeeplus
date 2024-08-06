@@ -357,6 +357,7 @@ function render() {
 			);
 			progressBar.append(mrkr);
 		}
+
 		const nextRank = getNextRank();
 		if (nextRank) {
 			mrkr.style.left = `${nextRank.distance}%`;
