@@ -1,7 +1,10 @@
 import { Command } from "@commander-js/extra-typings";
 import { readFileSync } from "node:fs";
+import * as cheerio from "cheerio";
+import * as vm from "node:vm";
 
 /** @typedef {import("./types.ts").GameData} GameData */
+/** @typedef {import("./types.ts").TodayData} TodayData */
 
 const program = new Command();
 
@@ -15,10 +18,14 @@ program
 program
 	.command("state")
 	.description("Get the state for a game")
-	.argument("<id>", "A game id")
+	.argument("[id]", "A game id")
 	.action(async (id) => {
-		const data = await getGameState(id);
-		console.log(JSON.stringify(data, null, 2));
+		if (!id) {
+			await getTodaysGame();
+		} else {
+			const data = await getGameState(id);
+			console.log(JSON.stringify(data, null, 2));
+		}
 	});
 
 program
@@ -54,6 +61,41 @@ function loadCookie() {
 	return readFileSync("cookie.txt", "utf8");
 }
 
+/*
+ * @returns {Promise<GameData>}
+ */
+async function getTodaysGame() {
+	const resp = await fetch(`https://www.nytimes.com/puzzles/spelling-bee`, {
+		headers: {
+			cookie: loadCookie(),
+		},
+	});
+
+	const html = await resp.text();
+	const $ = cheerio.load(html);
+	const script = $("script")
+		.map((_, elem) => $(elem).contents().text())
+		.toArray()
+		.find((scr) => scr.includes("window.gameData = "));
+
+	if (!script) {
+		throw new Error("Couldn't find reactContext script");
+	}
+
+	/** @type {Record<string, any>} */
+	const context = {
+		window: {},
+	};
+
+	vm.createContext(context);
+	vm.runInContext(script, context);
+
+	/** @type {TodayData} */
+	const today = context.window.gameData;
+
+	return await getGameState(`${today.today.id}`);
+}
+
 /**
  * @param {string} gameId
  * @returns {Promise<GameData>}
@@ -74,6 +116,7 @@ async function getGameState(gameId) {
 	}
 
 	const data = await resp.json();
+	console.log(JSON.stringify(data, null, 2));
 	return data.states[0];
 }
 

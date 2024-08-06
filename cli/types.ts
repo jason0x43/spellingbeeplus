@@ -12,3 +12,9 @@ export type GameData = {
 	print_date: string;
 	schema_version: string;
 };
+
+export type TodayData = {
+	today: {
+		id: number;
+	}
+};
