@@ -21,6 +21,7 @@ export type GameData = {
 	outerLetter: string;
 	pangrams: string[];
 	validLetters: string[];
+	id: number;
 };
 
 type Player = {
@@ -61,7 +62,7 @@ export type SyncDelegate = {
 	onLeave: (id: ClientId) => void;
 	// Called when a device that made a sync request receives confirmation
 	// that the request was accepted
-	onSync: (words: string[]) => void;
+	onSync: (words: string[]) => Promise<void>;
 	// Called when the extension receives a sync request
 	onSyncRequest: (id: string) => string[] | false;
 	// Called when the other player refused a sync request

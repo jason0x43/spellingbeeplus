@@ -1,6 +1,8 @@
 import { click, def, h, selDiv, wait } from "./util.js";
 
 /** @typedef {import("./sbpTypes").GameData} GameData */
+/** @typedef {import("./sbTypes").GameState} GameState */
+/** @typedef {import("./sbTypes").LatestsResponse} LatestsResponse */
 /** @typedef {import("../src/message").ClientId} ClientId */
 
 /** The element containing the player's current progress rank. */
@@ -289,4 +291,61 @@ export function closeCongratsPane() {
 
 	congratsPane.classList.remove("on-stage");
 	gamePane.classList.add("on-stage");
+}
+
+/**
+ * @param {number} gameId
+ * @returns {Promise<GameState>}
+ */
+async function getGameState(gameId) {
+	const params = new URLSearchParams({ puzzle_ids: `${gameId}` });
+	const resp = await fetch(
+		`https://www.nytimes.com/svc/games/state/spelling_bee/latests?${params}`,
+	);
+
+	if (!resp.ok) {
+		throw new Error("Failed to get game state");
+	}
+
+	/** @type {LatestsResponse} */
+	const data = await resp.json();
+	return data.states[0];
+}
+
+/**
+ * @param {number} gameId
+ * @param {string[]} words
+ * @returns {Promise<string[]>}
+ */
+export async function uploadWords(gameId, words) {
+	const data = await getGameState(gameId);
+	const newWords = [];
+
+	for (const word of words) {
+		if (!data.game_data.answers.includes(word)) {
+			newWords.push(word);
+		}
+	}
+
+	if (newWords.length === 0) {
+		return newWords;
+	}
+
+	data.game_data.answers.push(...newWords);
+	data.timestamp = Date.now();
+
+	const resp = await fetch("https://www.nytimes.com/svc/games/state", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(data),
+	});
+
+	if (!resp.ok) {
+		const text = await resp.text();
+		throw new Error(`Failed to set game state: ${text}`);
+	}
+
+	return newWords;
 }

@@ -27,6 +27,7 @@ export class SbpStore {
 				outerLetter: "",
 				pangrams: [],
 				validLetters: [],
+				id: -1,
 			},
 			borrowedWords: [],
 			words: [],

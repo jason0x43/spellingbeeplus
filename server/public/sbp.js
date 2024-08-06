@@ -22,9 +22,10 @@ import {
 	clearWord,
 	getNextRank,
 	getUserId,
+	uploadWords,
 } from "./sb.js";
 import { SbpStore } from "./storage.js";
-import { connect, setName, syncWords } from "./sync.js";
+import { connect, setName, sendSyncRequest } from "./sync.js";
 import {
 	className,
 	def,
@@ -173,7 +174,7 @@ function addSyncView() {
 			log("Sync timed out");
 			state.update({ syncing: false });
 		}, 5000);
-		syncWords(state.friendId, state.words);
+		sendSyncRequest(state.friendId, state.words);
 	});
 
 	const nameInput = selInput("#sbp-name-input");
@@ -182,7 +183,7 @@ function addSyncView() {
 	});
 	nameInput?.addEventListener("input", () => {
 		state.update({ newName: nameInput.value });
-		console.debug(`updated name to ${nameInput.value}`);
+		log(`Updated name to ${nameInput.value}`);
 	});
 
 	const nameButton = selButton("#sbp-name-button");
@@ -512,43 +513,7 @@ function selectLetterRight() {
  * @param {string[]} words
  */
 export async function addWords(words) {
-	const toAdd = words.slice();
-	let adding = false;
-
-	if (words.length > 0) {
-		log(`Adding ${words.length} words...`);
-	} else {
-		log("No words to add");
-	}
-
-	while (toAdd.length > 0) {
-		if (isCongratsPaneOpen()) {
-			await wait(250);
-
-			closeCongratsPane();
-
-			while (isCongratsPaneOpen()) {
-				await wait(100);
-			}
-
-			await wait(250);
-		}
-
-		if (adding) {
-			// the last add didn't succeed; clear the entry area and try again
-			clearWord();
-			await wait(250);
-		}
-
-		try {
-			adding = true;
-			await addWord(toAdd[0]);
-			log(`Added "${toAdd[0]}"`);
-			await wait(250);
-			toAdd.shift();
-			adding = false;
-		} catch (error) {}
-	}
+	await uploadWords(state.gameData.id, words);
 }
 
 /**
@@ -586,7 +551,7 @@ function injectCss(host) {
  * @param {Config} config
  */
 export async function main(config) {
-	console.debug("Starting SBP...");
+	log("Starting SBP...");
 	log("Starting SBP...");
 
 	injectCss(config.apiHost);
@@ -595,7 +560,7 @@ export async function main(config) {
 
 	const gameData = await getGameData();
 	if (!getGameData) {
-		console.warn("Could not load game data -- aborting!");
+		log("Could not load game data -- aborting!");
 		log("Could not load game data -- aborting!");
 		return;
 	}
@@ -710,19 +675,31 @@ export async function main(config) {
 						});
 					}
 				},
-				onSync: (words) => {
+				onSync: async (words) => {
 					// The other end accepted the sync request -- add its words and
 					// end the syncing state
 					clearTimeout(syncTimeout);
-					const borrowedWords = words.filter(
-						(word) => !state.words.includes(word),
-					);
-					state.update({ borrowedWords });
-					addWords(state.borrowedWords).finally(() => {
+
+					try {
+						// Add the borrowed words to our game
+						const addedWords = await uploadWords(
+							state.gameData.id,
+							words,
+						);
+
 						// All the received words have been added -- syncing is done
-						state.update({ syncing: false });
+						await state.update({
+							borrowedWords: addedWords,
+							syncing: false,
+						});
+
 						log("Sync complete");
-					});
+
+						// refresh the app
+						window.location.reload();
+					} catch (error) {
+						log(`Error adding words: ${error}`);
+					}
 				},
 				onSyncRequest: (from) => {
 					// We received a sync request from another player. If it's
@@ -743,8 +720,8 @@ export async function main(config) {
 					log("Sync request rejected");
 					state.update({ syncing: false });
 				},
-				onError: () => {
-					console.debug("error");
+				onError: (kind, message) => {
+					log(`Error: ${kind} - ${message}`);
 					state.update({ error: "Connection errored" });
 				},
 				getState: () => state,
@@ -753,7 +730,7 @@ export async function main(config) {
 			},
 		);
 	} catch (err) {
-		console.warn(`Error connecting: ${err}`);
+		log(`Error connecting: ${err}`);
 		await state.update({ error: "Error connecting" });
 	}
 

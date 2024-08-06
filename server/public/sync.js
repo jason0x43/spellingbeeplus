@@ -94,37 +94,38 @@ async function handleMessage(delegate, message) {
 		// Sync was refused
 		delegate.onSyncRefused(message.content.noSync);
 	} else if ("sync" in message.content) {
-		if (
-			message.content.sync.requestId &&
-			message.content.sync.requestId === syncRequestId
-		) {
-			// This is a confirmation response from a player we requested to
-			// sync with -- perform the sync and clear the request ID
-			delegate.onSync(message.content.sync.words);
-			syncRequestId = undefined;
-		} else {
-			// This is a new incoming sync request; if we agree to it, sync the
-			// provided words and send a confirmation response
-			const gameWords = delegate.onSyncRequest(message.from);
-			if (gameWords) {
-				send({
-					to: message.from,
-					content: {
-						sync: {
-							words: gameWords,
-							requestId: message.content.sync.requestId,
-						},
-					},
-				});
+		if (message.content.sync.requestId) {
+			if (message.content.sync.requestId === syncRequestId) {
+				// This is a confirmation response from a player we requested to
+				// sync with -- perform the sync and clear the request ID
 				delegate.onSync(message.content.sync.words);
+				syncRequestId = undefined;
 			} else {
-				send({
-					to: message.from,
-					content: {
-						noSync: message.content.sync.requestId,
-					},
-				});
+				// This is a new incoming sync request; if we agree to it, sync the
+				// provided words and send a confirmation response
+				const gameWords = delegate.onSyncRequest(message.from);
+				if (gameWords) {
+					send({
+						to: message.from,
+						content: {
+							sync: {
+								words: gameWords,
+								requestId: message.content.sync.requestId,
+							},
+						},
+					});
+					delegate.onSync(message.content.sync.words);
+				} else {
+					send({
+						to: message.from,
+						content: {
+							noSync: message.content.sync.requestId,
+						},
+					});
+				}
 			}
+		} else {
+			console.warn("Ignoring invalid sync request (missing ID)");
 		}
 	} else if ("error" in message.content) {
 		console.debug("Server error:", message);
@@ -213,7 +214,7 @@ export async function setName(name) {
  * @param {ClientId} friendId
  * @param {string[]} words
  */
-export async function syncWords(friendId, words) {
+export async function sendSyncRequest(friendId, words) {
 	syncRequestId = Math.random().toString(36).slice(2);
 	send({
 		to: friendId,
