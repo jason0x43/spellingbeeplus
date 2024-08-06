@@ -20,7 +20,7 @@ import {
 	sbProgressValue,
 	getRank,
 	clearWord,
-    getNextRank,
+	getNextRank,
 } from "./sb.js";
 import { SbpStore } from "./storage.js";
 import { connect, setName, syncWords } from "./sync.js";
@@ -156,7 +156,9 @@ function addSyncView() {
 				h("div", { id: "sbp-sync-log" }),
 			]),
 		]),
-		h("div", { id: "sbp-sync-spinner" }, [h("div", { class: "sbp-spinner" })]),
+		h("div", { id: "sbp-sync-spinner" }, [
+			h("div", { class: "sbp-spinner" }),
+		]),
 	]);
 	getViewBox().append(view);
 
@@ -192,7 +194,9 @@ function addSyncView() {
 
 	const friendSelect = selSelect("#sbp-friend-select");
 	friendSelect?.addEventListener("change", () => {
-		state.update({ friendId: /** @type {ClientId} */ (friendSelect.value) });
+		state.update({
+			friendId: /** @type {ClientId} */ (friendSelect.value),
+		});
 	});
 }
 
@@ -260,15 +264,23 @@ function render() {
 	const digraphs = Object.keys(state.gameStats.digraphs).filter(
 		(dg) => dg[0] === state.letter,
 	);
-	const wantDigraphs = digraphs.map((dg) => state.gameStats.digraphs[dg] ?? 0);
-	const haveDigraphs = digraphs.map((dg) => state.wordStats.digraphs[dg] ?? 0);
+	const wantDigraphs = digraphs.map(
+		(dg) => state.gameStats.digraphs[dg] ?? 0,
+	);
+	const haveDigraphs = digraphs.map(
+		(dg) => state.wordStats.digraphs[dg] ?? 0,
+	);
 	const needDigraphs = digraphs.map(
 		(_, i) => wantDigraphs[i] - haveDigraphs[i],
 	);
 
 	const digraphTable = h("div", { id: digraphTableId, class: tableClass }, [
 		h("div", { class: rowClass }, [
-			h("div", { class: className(leftLabelClass, cellClass) }, "Digraph"),
+			h(
+				"div",
+				{ class: className(leftLabelClass, cellClass) },
+				"Digraph",
+			),
 			...digraphs.map((digraph, i) => {
 				return h(
 					"div",
@@ -458,7 +470,11 @@ function addHintsButton() {
 function addSyncButton() {
 	document.querySelector(`#${syncViewButtonId}`)?.remove();
 
-	const button = h("button", { id: syncViewButtonId, type: "button" }, "Sync");
+	const button = h(
+		"button",
+		{ id: syncViewButtonId, type: "button" },
+		"Sync",
+	);
 
 	button.addEventListener("click", () => {
 		state.update({
@@ -701,7 +717,10 @@ export async function main(config) {
 					// We received a sync request from another player. If it's
 					// accepted, enable the syncing state.
 					const friend = state.friends.find((f) => f.id === from);
-					if (friend && confirm(`Accept sync request from ${friend.name}?`)) {
+					if (
+						friend &&
+						confirm(`Accept sync request from ${friend.name}?`)
+					) {
 						// The request was accepted -- start syncing
 						state.update({ syncing: true });
 						return state.words;
