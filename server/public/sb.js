@@ -332,7 +332,7 @@ export async function uploadWords(gameId, words) {
 	}
 
 	data.game_data.answers.push(...newWords);
-	data.timestamp = Date.now();
+	data.timestamp = Math.floor(Date.now() / 1000);
 
 	const resp = await fetch("https://www.nytimes.com/svc/games/state", {
 		method: "POST",
