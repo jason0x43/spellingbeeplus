@@ -18,37 +18,49 @@ program
 program
 	.command("state")
 	.description("Get the state for a game")
-	.argument("[id]", "A game id")
+	.argument("[id]", "A game id", Number)
 	.action(async (id) => {
-		if (!id) {
-			await getTodaysGame();
-		} else {
-			const data = await getGameState(id);
-			console.log(JSON.stringify(data, null, 2));
-		}
+		id = id ?? (await getTodaysGameId());
+		const data = await getGameState(id);
+		console.log(JSON.stringify(data, null, 2));
 	});
 
 program
 	.command("add")
 	.description("Add a word to a puzzle")
-	.argument("<id>", "A puzzle id")
 	.argument("<word>", "A word to add")
-	.action(async (id, word) => {
+	.argument("[id]", "A puzzle id", Number)
+	.action(async (word, id) => {
+		id = id ?? (await getTodaysGameId());
 		const data = await getGameState(id);
 
-		const newAswers = [];
-		for (const ans of data.game_data.answers) {
-			if (!newAswers.includes(ans)) {
-				newAswers.push(ans);
-			}
+		if (data.game_data.answers.includes(word)) {
+			return;
 		}
-		data.game_data.answers = newAswers;
 
-		if (!data.game_data.answers.includes(word)) {
-			data.game_data.answers.push(word);
-			data.timestamp = Date.now();
-			await setGameState(data);
+		data.game_data.answers.push(word);
+		data.timestamp = timestamp();
+
+		await setGameState(data);
+	});
+
+program
+	.command("remove")
+	.description("Remove a word from a puzzle")
+	.argument("<word>", "A word to add")
+	.argument("[id]", "A puzzle id", Number)
+	.action(async (word, id) => {
+		id = id ?? (await getTodaysGameId());
+		const data = await getGameState(id);
+
+		const index = data.game_data.answers.indexOf(word);
+		if (index === -1) {
+			return;
 		}
+
+		data.game_data.answers.splice(index, 1);
+		data.timestamp = timestamp();
+		await setGameState(data);
 	});
 
 try {
@@ -62,9 +74,9 @@ function loadCookie() {
 }
 
 /*
- * @returns {Promise<GameData>}
+ * @returns {Promise<number>}
  */
-async function getTodaysGame() {
+async function getTodaysGameId() {
 	const resp = await fetch(`https://www.nytimes.com/puzzles/spelling-bee`, {
 		headers: {
 			cookie: loadCookie(),
@@ -92,16 +104,15 @@ async function getTodaysGame() {
 
 	/** @type {TodayData} */
 	const today = context.window.gameData;
-
-	return await getGameState(`${today.today.id}`);
+	return today.today.id;
 }
 
 /**
- * @param {string} gameId
+ * @param {number} gameId
  * @returns {Promise<GameData>}
  */
 async function getGameState(gameId) {
-	const params = new URLSearchParams({ puzzle_ids: gameId });
+	const params = new URLSearchParams({ puzzle_ids: `${gameId}` });
 	const resp = await fetch(
 		`https://www.nytimes.com/svc/games/state/spelling_bee/latests?${params}`,
 		{
@@ -116,7 +127,6 @@ async function getGameState(gameId) {
 	}
 
 	const data = await resp.json();
-	console.log(JSON.stringify(data, null, 2));
 	return data.states[0];
 }
 
@@ -124,6 +134,7 @@ async function getGameState(gameId) {
  * @param {GameData} state
  */
 async function setGameState(state) {
+	console.log(JSON.stringify(state));
 	const resp = await fetch("https://www.nytimes.com/svc/games/state", {
 		method: "POST",
 		headers: {
@@ -137,4 +148,11 @@ async function setGameState(state) {
 		const text = await resp.text();
 		throw new Error(`Failed to set game state: ${text}`);
 	}
+}
+
+/**
+ * Get the current timestamp in seconds
+ */
+function timestamp() {
+	return Math.floor(Date.now() / 1000);
 }
