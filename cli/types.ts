@@ -1,4 +1,4 @@
-export type GameData = {
+export type GameState = {
 	game_data: {
 		answers: string[];
 		isRevealed: boolean;
@@ -13,8 +13,10 @@ export type GameData = {
 	schema_version: string;
 };
 
+export type GameData = {
+	id: number;
+};
+
 export type TodayData = {
-	today: {
-		id: number;
-	}
+	today: GameData;
 };
