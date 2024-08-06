@@ -37,7 +37,8 @@ export type Rank =
 	| "nice"
 	| "great"
 	| "amazing"
-	| "genius";
+	| "genius"
+	| "queen bee";
 
 export type SbpState = {
 	letter: string;

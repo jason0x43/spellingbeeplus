@@ -209,10 +209,10 @@ export function getNextRank() {
 	const table = def(document.querySelector("table.sb-modal-ranks__list"));
 	const rows = Array.from(table.querySelectorAll("tr")).reverse();
 
-	const current =
-		rows.findIndex((row) =>
-			row.classList.contains("sb-modal-ranks__current"),
-		);
+	const current = rows.findIndex((row) =>
+		row.classList.contains("sb-modal-ranks__current"),
+	);
+
 	if (current === -1) {
 		return;
 	}

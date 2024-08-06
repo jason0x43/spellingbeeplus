@@ -319,7 +319,7 @@ function render() {
 	const progressBar = getProgressBar();
 	const nextMarker = selElement(`.${progressMarkerClass}`);
 
-	if (state.rank === "genius") {
+	if (state.rank === "genius" || state.rank === "queen bee") {
 		const wordListBox = getWordListOuter();
 		if (wordListBox && !wordListBox.classList.contains(baseClass)) {
 			wordListBox.classList.add(baseClass);
