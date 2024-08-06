@@ -5,7 +5,7 @@
 /** @typedef {import('./sbpTypes').SbpState} SbpState */
 /** @typedef {import('../src/message').ClientId} ClientId */
 
-import { getWordStats, getThresholds } from "./sb.js";
+import { getWordStats } from "./sb.js";
 
 export class SbpStore {
 	/** @type {Set<Listener<SbpState>>} */
@@ -162,12 +162,5 @@ export class SbpStore {
 
 	get wordStats() {
 		return getWordStats(this.#value.words);
-	}
-
-	get thresholds() {
-		return getThresholds(
-			this.#value.gameData.answers,
-			this.#value.gameData.pangrams,
-		);
 	}
 }

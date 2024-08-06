@@ -235,56 +235,6 @@ export function getNextRank() {
 	return { score, distance };
 }
 
-/**
- * @param {string[]} words
- * @param {string[]} pangrams
- */
-export function getThresholds(words, pangrams) {
-	const maxScore = words.reduce((score, word) => {
-		score += word.length === 4 ? 1 : word.length;
-		if (pangrams.includes(word)) {
-			score += 7;
-		}
-		return score;
-	}, 0);
-	const delta = 100 / 8;
-
-	return {
-		beginner: {
-			score: Math.round((2 / 100) * maxScore),
-			distance: delta,
-		},
-		"good start": {
-			score: Math.round((5 / 100) * maxScore),
-			distance: delta * 2,
-		},
-		"moving up": {
-			score: Math.round((8 / 100) * maxScore),
-			distance: delta * 3,
-		},
-		good: {
-			score: Math.round((15 / 100) * maxScore),
-			distance: delta * 4,
-		},
-		solid: {
-			score: Math.round((25 / 100) * maxScore),
-			distance: delta * 5,
-		},
-		nice: {
-			score: Math.round((48 / 100) * maxScore),
-			distance: delta * 6,
-		},
-		great: {
-			score: Math.round((50 / 100) * maxScore),
-			distance: delta * 7,
-		},
-		amazing: {
-			score: Math.round((70 / 100) * maxScore),
-			distance: delta * 8,
-		},
-	};
-}
-
 export function getCongratsPane() {
 	return def(
 		document.querySelector("#portal-game-moments .pz-moment__congrats"),
