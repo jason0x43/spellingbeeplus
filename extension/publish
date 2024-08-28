@@ -189,11 +189,7 @@ if (( $do_check )); then
   git diff-index --quiet HEAD || (echo "Project has uncommitted changes" && exit 1)
 fi
 
-version="v$(./version | cut -f 1 -d"(")"
-if [[ -n $(git tag -l $version) ]]; then
-  echo "Version $version has already been tagged"
-  exit 1
-fi
+version="v$(./version)"
 
 echo ">>> Building $version"
 
