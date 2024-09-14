@@ -6,8 +6,6 @@
 /** @typedef {import('../src/message').ClientId} ClientId */
 
 import {
-	addWord,
-	closeCongratsPane,
 	getGameData,
 	getProgressBar,
 	getWordList,
@@ -15,11 +13,9 @@ import {
 	getWordListOuter,
 	getWords,
 	hightlightWord,
-	isCongratsPaneOpen,
 	sbProgressMarker,
 	sbProgressValue,
 	getRank,
-	clearWord,
 	getNextRank,
 	getUserId,
 	uploadWords,
@@ -38,7 +34,6 @@ import {
 	selInput,
 	selSelect,
 	setClass,
-	wait,
 } from "./util.js";
 
 const activeLetterClass = "sbp-letter-active";
