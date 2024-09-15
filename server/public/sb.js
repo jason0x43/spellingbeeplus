@@ -78,12 +78,16 @@ export function getWords() {
 }
 
 /**
- * Get the rank element.
+ * Get the current rank.
  *
- * @returns {HTMLElement}
+ * @returns {string}
  */
 export function getRank() {
-	return def(document.querySelector(`.${sbProgressRank}`));
+	const currentRank = def(document.body.querySelector(".sb-modal-ranks__current"));
+	const rank = def(
+		currentRank.querySelector(".sb-modal-ranks__rank-title .current-rank"),
+	).textContent ?? "";
+	return rank.trim().toLowerCase();
 }
 
 /**
@@ -248,10 +252,12 @@ export function getNextRank() {
 	);
 	const score = Number(points.textContent);
 
-	const dots = def(document.querySelectorAll('.sb-progress-dots .sb-progress-dot'));
+	const dots = def(
+		document.querySelectorAll(".sb-progress-dots .sb-progress-dot"),
+	);
 	let currentIndex = 0;
 	for (const dot of dots) {
-		if (!dot.classList.contains('completed')) {
+		if (!dot.classList.contains("completed")) {
 			break;
 		}
 		currentIndex++;

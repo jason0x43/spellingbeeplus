@@ -1,12 +1,4 @@
 /**
- * @param {Element} node
- * @returns string
- */
-export function getNormalizedText(node) {
-	return node.textContent?.trim().toLowerCase();
-}
-
-/**
  * @param {(string | Record<string, boolean>)[]} names
  * @return {string}
  */

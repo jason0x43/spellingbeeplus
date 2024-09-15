@@ -25,7 +25,6 @@ import { connect, setName, sendSyncRequest } from "./sync.js";
 import {
 	className,
 	def,
-	getNormalizedText,
 	h,
 	replace,
 	selButton,
@@ -505,13 +504,6 @@ function selectLetterRight() {
 }
 
 /**
- * @param {string[]} words
- */
-export async function addWords(words) {
-	await uploadWords(state.gameData.id, words);
-}
-
-/**
  * @param {string} message
  */
 async function log(message) {
@@ -576,7 +568,7 @@ export async function main(config) {
 	await state.update({
 		gameData,
 		words: getWords(),
-		rank: /** @type {Rank} */ (getNormalizedText(getRank())),
+		rank: /** @type {Rank} */ (getRank()),
 		player: {
 			...state.player,
 			id: getUserId(),
@@ -598,25 +590,14 @@ export async function main(config) {
 			const addedWords = Array.from(mutation.addedNodes).map((node) =>
 				(node.textContent ?? "").trim(),
 			);
-			state.update({ words: [...state.words, ...addedWords] });
+			state.update({
+				words: [...state.words, ...addedWords],
+				rank: /** @type {Rank} */ (getRank()),
+			});
 		}
 	});
 	wordsObserver.observe(wordList, { childList: true });
 	console.debug("Installed word list observer");
-
-	// Add a rank observer that will update the app state when the player's
-	// rank changes.
-	const rank = getRank();
-	const rankObserver = new MutationObserver(() => {
-		state.update({
-			rank: /** @type {Rank} */ (getNormalizedText(getRank())),
-		});
-	});
-	rankObserver.observe(rank, {
-		subtree: true,
-		characterData: true,
-	});
-	console.debug("Installed rank observer");
 
 	installKeyHandler((event) => {
 		if (event.key === "ArrowLeft" && event.shiftKey) {
