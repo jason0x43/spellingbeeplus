@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 
+// @ts-check
+
 // This script can be used to list available Apple simulators and install
 // builds on them.
-
-import { spawnSync, spawn } from "node:child_process";
-import { rmSync, writeFileSync, readFileSync } from "node:fs";
-import readline from "node:readline";
 
 /**
  * @typedef {{
@@ -20,104 +18,58 @@ import readline from "node:readline";
  *   name: string;
  * }} Device
  */
+/** @typedef {{ devices: { [runtime: string]: Device[] } }} Simulators */
 
-/**
- * @param {string} message
- */
-function die(message) {
-	console.error(message);
-	process.exit(1);
-}
+import { Command, Option, Argument } from "@commander-js/extra-typings";
+import dedent from "dedent";
+import { spawn } from "node:child_process";
+import { writeFileSync, readFileSync, createWriteStream } from "node:fs";
+import { moveCursor } from "node:readline";
 
-class Spinner {
-	constructor() {
-		this.spinnerIndex = 0;
-		this.spinnerChars = ["-", "\\", "|", "/"];
-		this.interval = 100;
-		this.spinnerInterval = null;
-	}
+const program = new Command();
 
-	start() {
-		process.stdout.write(" ");
-		this.spinnerInterval = setInterval(() => {
-			readline.moveCursor(process.stdout, -1);
-			process.stdout.write(this.spinnerChars[this.spinnerIndex]);
-			this.spinnerIndex = (this.spinnerIndex + 1) % this.spinnerChars.length;
-		}, this.interval);
-	}
+const platforms = /** @type {const} */ (["iOS", "macOS"]);
+/** @typedef {platforms[number]} Platform */
 
-	stop() {
-		clearInterval(this.spinnerInterval);
-		readline.moveCursor(process.stdout, -1);
-		process.stdout.write(" ");
-		readline.moveCursor(process.stdout, -1);
-		process.stdout.write("\n");
-	}
-}
+const versionParts = /** @type {const} */ ([
+	"major",
+	"minor",
+	"patch",
+	"build",
+]);
+/** @typedef {versionParts[number]} VersionPart */
 
-/**
- * @param {string[]} args
- */
-async function sim(args) {
-	function printUsage() {
-		console.log("Usage: ./dev sim COMMAND");
-		console.log("");
-		console.log("Commands:");
-		console.log("  list");
-		console.log("  build [NAME]");
-		console.log("  install APP UDID [UDID...]");
-		console.log("  start UDID");
-	}
+/** @type {Record<Platform, string>} */
+const exportExts = {
+	iOS: "ipa",
+	macOS: "pkg",
+};
 
-	/**
-	 * @param {string} id
-	 * @returns {string}
-	 */
-	function idToUdid(id) {
-		const udids = availableIosRuntimes.flatMap((runtime) =>
-			simulators.devices[runtime].map((dev) => dev.udid),
-		);
-		const udid = udids.find((u) => u.startsWith(id.toUpperCase()));
-		if (!udid) {
-			throw new Error(`Invalid device ID: ${id}`);
-		}
-		return udid;
-	}
+/** @type {Record<Platform, string>} */
+const exportTypes = {
+	iOS: "ios",
+	macOS: "macos",
+};
 
-	const output = spawnSync("xcrun", ["simctl", "list", "--json"], {
-		encoding: "utf-8",
-	});
+program
+	.name("dev")
+	.description("Dev tools")
+	.configureHelp({ sortSubcommands: true })
+	.showHelpAfterError()
+	.version("1.0.0");
 
-	/** @type {{ devices: { [runtime: string]: Device[] } }} */
-	const simulators = JSON.parse(output.stdout);
+const simCmd = program.command("sim").description("Work with simulators");
 
-	const runtimes = Object.keys(simulators.devices).sort();
-	const availableIosRuntimes = runtimes
-		.filter((runtime) => runtime.includes("iOS"))
-		.filter((runtime) =>
-			simulators.devices[runtime].some((device) => device.isAvailable),
-		);
+simCmd
+	.command("build")
+	.description("Build the extension for the simulator")
+	.action(async () => {
+		loadEnv("dev");
 
-	const command = args.shift();
+		print(">>> Building...");
 
-	switch (command) {
-		case "list":
-			for (const runtime of availableIosRuntimes) {
-				const indent = availableIosRuntimes.length > 1 ? "  " : "";
-
-				if (availableIosRuntimes.length > 1) {
-					console.log(runtime);
-				}
-
-				for (const dev of simulators.devices[runtime]) {
-					console.log(`${indent}${dev.udid}: ${dev.name}`);
-				}
-			}
-
-			break;
-
-		case "build":
-			spawnSync(
+		await spin(() =>
+			run(
 				"xcodebuild",
 				[
 					"-project",
@@ -136,203 +88,493 @@ async function sim(args) {
 					"build",
 				],
 				{
-					stdio: "inherit",
+					logFile: "build/iOS-sim.log",
 				},
-			);
+			),
+		);
 
-			break;
+		print(">>> Done!\n");
+	});
 
-		case "install":
-			const app = args.shift();
-			const devs = args;
+simCmd
+	.command("list")
+	.description("List available simulators")
+	.action(async () => {
+		const sims = await getSimulators();
+		const runtimes = getAvailableRuntimes(sims);
 
-			if (!app || devs.length === 0) {
-				console.log("usage: ./sim install APP UDID [UDID...]");
-				console.log("");
-				console.log("UDIDs may be partial, as long as they're unique.");
-				return 1;
+		for (const runtime of runtimes) {
+			const indent = runtimes.length > 1 ? "  " : "";
+
+			if (runtimes.length > 1) {
+				console.log(runtime);
 			}
 
-			let cleanupApp = false;
+			for (const dev of sims.devices[runtime]) {
+				console.log(`${indent}${dev.udid}: ${dev.name}`);
+			}
+		}
+	});
 
+simCmd
+	.command("install")
+	.argument("<app>", "Path to app")
+	.argument("<udid>", "Device ID")
+	.description("Install an app in a simulator")
+	.action(async (app, udid) => {
+		const fullUdid = await getMatchingUdid(udid);
+		print(`Installing ${app} on device ${fullUdid}...\n`);
+		await run("xcrun", ["simctl", "install", fullUdid, app]);
+		print("Done!\n");
+	});
+
+simCmd
+	.command("start")
+	.argument("<udid>", "Device ID")
+	.description("Start a simulator")
+	.action(async (udid) => {
+		const fullUdid = await getMatchingUdid(udid);
+		await run("xcrun", ["simctl", "boot", fullUdid]);
+	});
+
+program
+	.command("publish")
+	.description("Publish the app to the App Store")
+	.addOption(
+		new Option(
+			"-p, --platform <platform>",
+			"Platform to build for",
+		).choices(platforms),
+	)
+	.option("-c, --check", "Check (build and validate only)")
+	.action(async (options) => {
+		const env = loadEnv("prod");
+
+		const doBuild = new Set(platforms);
+		let doPublish = true;
+		let doTag = true;
+		let doCheck = true;
+
+		if (options.platform === "iOS") {
+			doBuild.delete("macOS");
+		} else if (options.platform === "macOS") {
+			doBuild.delete("iOS");
+		}
+
+		if (options.check) {
+			doPublish = false;
+			doTag = false;
+		}
+
+		if (doCheck) {
 			try {
-				const devices = devs.map(idToUdid);
-				if (app.endsWith(".tar.gz")) {
-					if (spawnSync("tar", ["xvf", app]).status !== 0) {
-						console.warn(`Failed to extract ${app}`);
-						process.exit(1);
-					}
-
-					// The first line is the name of the app dir
-					const files = `${spawnSync("tar", ["tf", app]).stdout}`;
-					app = files.split("\n")[0].replace(/\/$/, "");
-					cleanupApp = true;
-				}
-
-				for (const dev of devices) {
-					process.stdout.write(`Installing ${app} on device ${dev}...`);
-					const result = spawnSync("xcrun", ["simctl", "install", dev, app]);
-					if (result.status !== 0) {
-						console.warn(`Failed to install ${app} on device ${dev}`);
-						console.warn(`${result.stderr}`);
-					} else {
-						console.log("done");
-					}
-				}
-			} finally {
-				if (cleanupApp) {
-					rmSync(app, {
-						recursive: true,
-					});
-				}
+				await run("git", ["diff-index", "--quiet", "HEAD"]);
+			} catch {
+				console.log("Project has uncommitted changes");
+				process.exit(1);
 			}
+		}
 
-			break;
+		const version = getSetVersion();
 
-		case "start":
-			const udid = args.shift();
+		print(`>>> Building ${version}\n`);
+		print(">>> Clearing build directory...\n");
 
-			if (!udid) {
-				console.log("usage: ./sim start UDID");
-				console.log("");
-				console.log("UDIDs may be partial, as long as they're unique.");
-				return 1;
+		await run("rm", ["-rf", "./build"]);
+
+		for (const platform of doBuild) {
+			await buildApp(platform, env);
+			await exportApp(platform, env);
+			if (doPublish) {
+				await uploadApp(platform, env);
+			} else {
+				await validateApp(platform, env);
 			}
+		}
+	});
 
-			const devices = args.slice(1).map(idToUdid);
-			for (const dev of devices) {
-				spawnSync("xcrun", ["simctl", "boot", dev]);
+program
+	.command("version")
+	.description("Show or update the current project version")
+	.addArgument(new Argument("[part]", "Part to bump").choices(versionParts))
+	.action(async (part) => {
+		getSetVersion(part);
+	});
+
+process.on("SIGINT", () => {
+	showCursor();
+	process.exit();
+});
+
+try {
+	await program.parseAsync();
+} catch (error) {
+	console.error(`Error: ${error}`);
+}
+
+/**
+ * @return {Promise<Simulators>}
+ */
+async function getSimulators() {
+	const { output } = await run("xcrun", ["simctl", "list", "--json"]);
+
+	/** @type {{ devices: { [runtime: string]: Device[] } }} */
+	return JSON.parse(output.trim());
+}
+
+/**
+ * @param {Simulators} simulators
+ * @return {string[]}
+ */
+function getAvailableRuntimes(simulators) {
+	const runtimes = Object.keys(simulators.devices).sort();
+	const availableIosRuntimes = runtimes
+		.filter((runtime) => runtime.includes("iOS"))
+		.filter((runtime) =>
+			simulators.devices[runtime].some((device) => device.isAvailable),
+		);
+
+	return availableIosRuntimes;
+}
+
+/**
+ * @param {string} partialUdid
+ */
+async function getMatchingUdid(partialUdid) {
+	const sims = await getSimulators();
+
+	let udid;
+	partialUdid = partialUdid.toUpperCase();
+
+	for (const runtime of Object.keys(sims.devices)) {
+		const dev = sims.devices[runtime].find((dev) =>
+			dev.udid.startsWith(partialUdid),
+		);
+		if (dev) {
+			return dev.udid;
+		}
+	}
+
+	throw new Error(`Invalid partial device ID "${udid}"`);
+}
+
+/**
+ * @param {string} cmd
+ * @param {string[]} args
+ * @param {{logFile?: string, inheritStdio?: boolean }} [opts]
+ *
+ * @return {Promise<{
+ *   output: string,
+ *   status: number | null,
+ * }>}
+ */
+async function run(cmd, args, opts) {
+	return new Promise((resolve, reject) => {
+		const proc = spawn(cmd, args, {
+			stdio: opts?.inheritStdio ? "inherit" : "pipe",
+		});
+		let output = "";
+
+		if (opts?.logFile) {
+			const logstream = createWriteStream(opts.logFile);
+			proc.stdout?.pipe(logstream);
+			proc.stderr?.pipe(logstream);
+		} else if (!opts?.inheritStdio) {
+			proc.stdout?.setEncoding("utf8");
+			proc.stderr?.setEncoding("utf8");
+			proc.stdout?.on("data", (chunk) => (output += chunk));
+			proc.stderr?.on("data", (chunk) => (output += chunk));
+		}
+
+		proc.on("exit", (status) => {
+			if (status !== 0) {
+				const error = new Error(`command '${cmd}' failed`);
+				reject({ error, output });
+			} else {
+				resolve({
+					output,
+					status,
+				});
 			}
+		});
+	});
+}
 
-			break;
+function hideCursor() {
+	process.stdout.write("\u001B[?25l");
+}
 
-		default:
-			console.error(`Invalid command "${command}"\n`);
-			printUsage();
-			return 1;
+function showCursor() {
+	process.stdout.write("\u001B[?25h");
+}
+
+/**
+ * @template T
+ * @param {() => Promise<T>} callback
+ * @return Promise<T>
+ */
+async function spin(callback) {
+	const out = process.stdout;
+	const spinners = ["-", "\\", "|", "/"];
+	let index = 0;
+
+	hideCursor();
+
+	const interval = setInterval(() => {
+		let line = spinners[index];
+		out.write(line);
+		moveCursor(out, -1, 0);
+		index = (index + 1) % spinners.length;
+	}, 90);
+
+	try {
+		return await callback();
+	} finally {
+		clearInterval(interval);
+		out.write(" ");
+		showCursor();
 	}
 }
 
 /**
- * @param {string[]} args
+ * @param {string} str
  */
-async function build(args) {
-	function printUsage() {
-		console.log("Usage: ./dev build PLATFORM");
-		console.log("");
-		console.log("PLATFORM - iOS or macOS");
+function print(str) {
+	process.stdout.write(str);
+}
+
+/**
+ * @param {'dev' | 'prod'} envName
+ * @return {Record<string, string>}
+ */
+function loadEnv(envName) {
+	const env = JSON.parse(
+		readFileSync(`env.${envName}.json`, { encoding: "utf8" }),
+	);
+	for (const key of Object.keys(env)) {
+		process.env[key] = env[key];
 	}
 
-	const platform = args.shift();
-	if (!platform || !["iOS", "macOS"].includes(platform)) {
-		printUsage();
-		return -1;
+	const xcconfig = [];
+	for (const key of Object.keys(env)) {
+		xcconfig.push(`${key}=${env[key]}`);
 	}
 
+	writeFileSync("env.xcconfig", xcconfig.join("\n"));
+
+	return env;
+}
+
+/**
+ * @param {VersionPart} [part]
+ */
+function getSetVersion(part) {
+	const projectFile = "SpellingBeePlus.xcodeproj/project.pbxproj";
+	const projectLines = readFileSync(projectFile, {
+		encoding: "utf8",
+	}).split("\n");
+
+	const buildLineIndex = projectLines.findIndex((line) =>
+		/\s+CURRENT_PROJECT_VERSION = \d+/.test(line),
+	);
+	if (buildLineIndex === -1) {
+		throw new Error("missing build number line");
+	}
+	const buildLine = projectLines[buildLineIndex];
+	let build = Number(buildLine.split(" = ")[1].trim().replace(/;$/, ""));
+
+	const versionLineIndex = projectLines.findIndex((line) =>
+		/\s+MARKETING_VERSION = \d+\.\d+\.\d+/.test(line),
+	);
+	if (versionLineIndex === -1) {
+		throw new Error("missing version line");
+	}
+	const versionLine = projectLines[versionLineIndex];
+	let version = versionLine.split(" = ")[1].trim().replace(/;$/, "");
+
+	if (!part) {
+		print(`${version}(${build})\n`);
+	} else {
+		let [major, minor, patch] = version.split(".").map(Number);
+
+		build += 1;
+
+		switch (part) {
+			case "major":
+				major += 1;
+				minor = 0;
+				patch = 0;
+				break;
+			case "minor":
+				minor += 1;
+				patch = 0;
+				break;
+			case "patch":
+				patch += 1;
+		}
+
+		const buildLineParts = buildLine.split(" = ");
+		projectLines[buildLineIndex] = `${buildLineParts[0]} = ${build};`;
+
+		const versionLineParts = versionLine.split(" = ");
+		projectLines[versionLineIndex] =
+			`${versionLineParts[0]} = ${major}.${minor}.${patch};`;
+
+		writeFileSync(projectFile, projectLines.join("\n"));
+	}
+}
+
+/**
+ * @param {Platform} platform
+ * @param {Record<string, string>} env
+ */
+async function buildApp(platform, env) {
 	const buildDir = `build/${platform}`;
 
-	const mkdirRes = spawnSync("mkdir", ["-p", buildDir]);
-	if (mkdirRes.status !== 0) {
-		console.error(`Failed to create build directory: ${buildDir}`);
-		process.exit(1);
-	}
+	await run("mkdir", ["-p", buildDir]);
 
-	process.stdout.write(`>>> Building ${platform} app...`);
+	print(`>>> Building ${platform} app...`);
 
-	const spinner = new Spinner();
-	spinner.start();
+	await spin(() =>
+		run("xcodebuild", [
+			`DEV_TEAM=${env.DEV_TEAM}`,
+			"-scheme",
+			`SpellingBeePlus (${platform})`,
+			"-destination",
+			`generic/platform=${platform}`,
+			"-archivePath",
+			`${buildDir}/SpellingBeePlus.xcarchive`,
+			"archive",
+		]),
+	);
+}
 
-	/** @type {{ status: number; stdout: string }} */
-	const buildRes = await new Promise((resolve) => {
-		const proc = spawn(
+/**
+ * @param {Platform} platform
+ * @param {Record<string, string>} env
+ */
+async function exportApp(platform, env) {
+	const buildDir = `build/${platform}`;
+	const archive = `${buildDir}/SpellingBeePlus.xcarchive`;
+	const exportPath = `${buildDir}/export`;
+	const exportOptionsFile = `${buildDir}/exportOptions.plist`;
+	const exportPlists = {
+		iOS: dedent`
+			<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+			<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+			<plist version=\"1.0\">
+				<dict>
+					<key>method</key>
+					<string>release-testing</string>
+
+					<key>teamID</key>
+					<string>${env.DEV_TEAM}</string>
+				</dict>
+			</plist>
+		`,
+		macOS: dedent`
+			<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+			<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+			<plist version=\"1.0\">
+				<dict>
+					<key>method</key>
+					<string>app-store-connect</string>
+
+					<key>testFlightInternalTestingOnly</key>
+					<true/>
+
+					<key>teamID</key>
+					<string>${env.DEV_TEAM}</string>
+				</dict>
+			</plist>
+		`,
+	};
+
+	writeFileSync(exportOptionsFile, exportPlists[platform]);
+
+	print(`>>> Archiving ${platform}app...`);
+
+	await spin(() =>
+		run(
 			"xcodebuild",
 			[
-				`DEV_TEAM=${process.env.DEV_TEAM}`,
-				"-scheme",
-				`SpellingBeePlus (${platform})`,
-				"-destination",
-				`generic/platform=${platform}`,
+				`DEV_TEAM=${env.DEV_TEAM}`,
+				"-exportArchive",
+				"-allowProvisioningUpdates",
 				"-archivePath",
-				`${buildDir}/SpellingBeePlus.xcarchive`,
-				"archive",
+				archive,
+				"-exportPath",
+				exportPath,
+				"-exportOptionsPlist",
+				exportOptionsFile,
 			],
-			{
-				encoding: "utf-8",
-			},
-		);
-
-		let stdout = "";
-
-		proc.stdout.on("data", (data) => {
-			stdout += data;
-		});
-
-		proc.stderr.on("data", (data) => {
-			stdout += data;
-		});
-
-		proc.on("exit", (status) => {
-			resolve({ status, stdout });
-		});
-	});
-
-	spinner.stop();
-
-	if (buildRes.status !== 0) {
-		const logFile = `${buildDir}/build.log`;
-		writeFileSync(logFile, buildRes.stdout);
-		die(`Error building app; see ${logFile}`);
-	}
+			{ logFile: `${buildDir}/archive.log` },
+		),
+	);
 }
 
-function printUsage() {
-	console.log("Usage: ./dev COMMAND");
-	console.log("");
-	console.log("Commands:");
-	console.log("  sim");
-	console.log("  build");
-	console.log("  publish");
+/**
+ * @param {Platform} platform
+ * @param {Record<string, string>} env
+ */
+async function validateApp(platform, env) {
+	const buildDir = `build/${platform}`;
+	const artifact = `${buildDir}/export/SpellingBeePlus.${exportExts[platform]}`;
+
+	const { output } = await run("op", ["read", env.DEV_PASSWORD]);
+	const devPassword = output.trim();
+
+	print(`>>> Validating ${platform} app...`);
+
+	await spin(() =>
+		run(
+			"xcrun",
+			[
+				"altool",
+				"--validate-app",
+				"--file",
+				artifact,
+				"--username",
+				env.DEV_USERNAME,
+				"--password",
+				devPassword,
+				"--type",
+				exportTypes[platform],
+			],
+			{ logFile: `${buildDir}/validate.log` },
+		),
+	);
 }
 
-function loadEnv() {
-	/** @type {string} */
-	const data = readFileSync("env.xcconfig", { encoding: "utf8" });
-	const lines = data.trim().split("\n");
-	for (const line of lines) {
-		const eql = line.indexOf("=");
-		const key = line.slice(0, eql);
-		const value = line.slice(eql + 1);
-		process.env[key] = value;
-	}
-}
+/**
+ * @param {Platform} platform
+ * @param {Record<string, string>} env
+ */
+async function uploadApp(platform, env) {
+	const buildDir = `build/${platform}`;
+	const artifact = `${buildDir}/export/SpellingBeePlus.${exportExts[platform]}`;
 
-loadEnv();
+	const { output } = await run("op", ["read", env.DEV_PASSWORD]);
+	const devPassword = output.trim();
 
-const args = process.argv.slice(2);
+	print(`>>> Uploading ${platform} app...`);
 
-/** @type {string | undefined} */
-const command = args.shift();
-
-let result = 0;
-
-switch (command) {
-	case "sim":
-		result = await sim(args);
-		break;
-
-	case "build":
-		result = await build(args);
-		break;
-
-	case "publish":
-		break;
-
-	default:
-		console.error(`Invalid command "${command ?? ""}"\n`);
-		printUsage();
-		process.exit(1);
-}
-
-if (result !== 0) {
-	process.exit(result);
+	await spin(() =>
+		run(
+			"xcrun",
+			[
+				"altool",
+				"--upload-app",
+				"--file",
+				artifact,
+				"--username",
+				env.DEV_USERNAME,
+				"--password",
+				devPassword,
+				"--type",
+				exportTypes[platform],
+			],
+			{ logFile: `${buildDir}/upload.log` },
+		),
+	);
 }

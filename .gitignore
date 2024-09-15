@@ -1,4 +1,5 @@
 extension/xcuserdata/
 extension/env.xcconfig
 extension/build/
+extension/env.*.json
 server/target
