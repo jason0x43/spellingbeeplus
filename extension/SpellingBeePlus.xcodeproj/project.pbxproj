@@ -126,7 +126,7 @@
 		9607DB8627CBD87400DBC4E3 /* SpellingBeePlus.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SpellingBeePlus.entitlements; sourceTree = "<group>"; };
 		9614A260293D1A2F00302F11 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		9614A261293D1EBB00302F11 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
-		966C8D56293D7DC100820342 /* SpellingBeePlus--macOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "SpellingBeePlus--macOS--Info.plist"; sourceTree = "<group>"; };
+		966C8D56293D7DC100820342 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		96822EB92BFB0BD700973BB6 /* config.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = config.js; sourceTree = "<group>"; };
 		96D44A352BF02B7700969FB1 /* info.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = info.js; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -166,7 +166,6 @@
 		9607DB3B27CBD87300DBC4E3 = {
 			isa = PBXGroup;
 			children = (
-				966C8D56293D7DC100820342 /* SpellingBeePlus--macOS--Info.plist */,
 				9614A260293D1A2F00302F11 /* Config.xcconfig */,
 				9607DB4027CBD87300DBC4E3 /* Shared (App) */,
 				9607DB4927CBD87300DBC4E3 /* Shared (Extension) */,
@@ -255,6 +254,7 @@
 				9607DB6C27CBD87300DBC4E3 /* AppDelegate.swift */,
 				9607DB6E27CBD87300DBC4E3 /* Main.storyboard */,
 				9607DB7127CBD87300DBC4E3 /* SpellingBeePlus.entitlements */,
+				966C8D56293D7DC100820342 /* Info.plist */,
 			);
 			path = "macOS (App)";
 			sourceTree = "<group>";
