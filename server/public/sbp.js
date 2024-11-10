@@ -32,6 +32,7 @@ import {
 	selElement,
 	selInput,
 	selSelect,
+	sendMessage,
 	setClass,
 } from "./util.js";
 
@@ -609,6 +610,8 @@ export async function main(config) {
 	console.debug("Installed key handler");
 
 	await state.update({ status: "Connecting" });
+
+	await sendMessage(config, { type: "setStatus", status: "OK" });
 
 	const playerId = /** @type {ClientId} */ (getUserId());
 	if (!playerId) {

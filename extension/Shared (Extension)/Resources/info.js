@@ -12,7 +12,7 @@ export async function getNativeInfo(name, type) {
 		try {
 			const info = await browser.runtime.sendMessage({ type });
 			console.log(`Got response: ${JSON.stringify(info)}`);
-			if (info) {
+			if (info !== undefined) {
 				return info;
 			}
 		} catch (error) {

@@ -1,11 +1,14 @@
-/// <reference path="global.d.ts" />
+/** @typedef {import("./global").Config} Config */
 
-let status = "";
+/** @type {string|undefined} */
+let statusText;
 
 /** @type {Config | undefined} */
 let config = undefined;
 
 browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+	console.log("Received request:", request);
+
 	if (typeof request !== "object" || !request) {
 		return;
 	}
@@ -44,9 +47,26 @@ browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 			);
 		}
 	} else if (request.type === "setStatus") {
-		status = request.status;
+		statusText = request.status;
 	} else if (request.type === "getStatus") {
-		sendResponse(status);
+		sendResponse(statusText);
+	}
+
+	return true;
+});
+
+browser.runtime.onMessageExternal.addListener((request, _sender) => {
+	console.log("Received external request:", request);
+
+	if (typeof request !== "object" || !request) {
+		return;
+	}
+
+	console.log("Handling request:", request);
+	console.log("Config:", config);
+
+	if (request.type === "setStatus") {
+		statusText = request.status;
 	}
 
 	return true;

@@ -21,7 +21,7 @@
  * }} Device
  */
 
-import { Command, Argument } from "@commander-js/extra-typings";
+import { Command, Argument, Option } from "@commander-js/extra-typings";
 import dedent from "dedent";
 import { spawn } from "node:child_process";
 import { writeFileSync, readFileSync, createWriteStream } from "node:fs";
@@ -62,8 +62,9 @@ program
 		new Argument("<platform>", "Platform to build for").choices(platforms),
 	)
 	.option("--adhoc", "If platform is macOS, create an adhoc build")
+	.option("--dev", "If true, build in dev mode")
 	.action(async (platform, options) => {
-		loadEnv("prod");
+		loadEnv(options?.dev ? "dev" : "prod");
 
 		if (platform === "sim") {
 			await buildSimApp();
@@ -99,13 +100,17 @@ program
 	.argument("[id]", "Device or simulator ID to install to")
 	.action(async (app, id) => {
 		if (app.endsWith(".app")) {
-			const udid = id
-				? await getMatchingSimId(id)
-				: (await getSimulators())[0].udid;
-			print(`🔨 Installing ${app} on device ${udid}...\n`);
-			await run("xcrun", ["simctl", "install", udid, app], {
-				inheritStdio: true,
-			});
+			if (id === "local") {
+				await run("mv", [app, `/Applications/SpellingBeePlus.app`]);
+			} else {
+				const udid = id
+					? await getMatchingSimId(id)
+					: (await getSimulators())[0].udid;
+				print(`🔨 Installing ${app} on device ${udid}...\n`);
+				await run("xcrun", ["simctl", "install", udid, app], {
+					inheritStdio: true,
+				});
+			}
 			print("🚀 Done!\n");
 		} else {
 			const identifier = id
@@ -463,17 +468,17 @@ async function buildSimApp() {
 			),
 		);
 
-		run("mv", [
+		await run("mv", [
 			`${buildDir}/Build/Products/Debug-iphonesimulator/SpellingBeePlus.app`,
 			`build-${Date.now()}.app`,
 		]);
 
-		run("rm", ["-rf", buildDir]);
+		await run("rm", ["-rf", buildDir]);
+
+		print("\n🚀 Done!\n");
 	} catch (error) {
 		print(`🚨 Build failed -- see logs in ${buildDir}\n`);
 	}
-
-	print("🚀 Done!\n");
 }
 
 /**
@@ -567,6 +572,8 @@ async function buildApp(platform, options) {
 		]);
 
 		await run("rm", ["-rf", buildDir]);
+
+		print("\n🚀 Done!\n");
 	} catch {
 		print(`🚨 Build failed -- see logs in ${buildDir}\n`);
 	}
@@ -623,11 +630,11 @@ function getEnv(name) {
  * @param {{ adhoc?: boolean }} [options]
  */
 function getExportExt(platform, options) {
-	if (platform === 'macOS') {
+	if (platform === "macOS") {
 		if (options?.adhoc) {
-			return 'app'
+			return "app";
 		}
-		return 'pkg';
+		return "pkg";
 	}
-	return 'ipa';
+	return "ipa";
 }

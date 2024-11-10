@@ -6,6 +6,8 @@
 	<string>$(API_KEY)</string>
 	<key>API_HOST</key>
 	<string>$(API_HOST)</string>
+	<key>DEV_TEAM</key>
+	<string>$(DEV_TEAM)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSExtension</key>

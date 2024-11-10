@@ -11,5 +11,12 @@ function setElemText(selector, text) {
 	}
 }
 
-const version = await getNativeInfo("version", "getVersion");
-setElemText("#version", version);
+try {
+	const version = await getNativeInfo("version", "getVersion");
+	setElemText("#version", version);
+
+	const status = await getNativeInfo("status", "getStatus");
+	setElemText("#status", status);
+} catch (error) {
+	console.warn('Error getting info:', error);
+}

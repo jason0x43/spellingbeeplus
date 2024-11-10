@@ -1,3 +1,5 @@
+/** @typedef {import('./sbpTypes').Config} Config */
+
 /**
  * @param {(string | Record<string, boolean>)[]} names
  * @return {string}
@@ -207,4 +209,22 @@ export function deepEquals(a, b) {
 		return JSON.stringify(a) === JSON.stringify(b);
 	}
 	return a === b;
+}
+
+/**
+ * @param {Config} config
+ * @param {{ type: string, [key: string]: unknown }} message
+ */
+export async function sendMessage(config, message) {
+	console.log('sending message with config:', config);
+	return new Promise((resolve) => {
+		browser.runtime.sendMessage(
+			`${config.extensionId} (${config.teamId})`,
+			message,
+			/** @param {unknown} response */
+			(response) => {
+				resolve(response);
+			},
+		);
+	});
 }

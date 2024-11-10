@@ -194,7 +194,7 @@ export async function connect(config, delegate) {
 		try {
 			await handleMessage(delegate, JSON.parse(event.data));
 		} catch (error) {
-			console.warn(`${error}`);
+			console.warn(error);
 		}
 	};
 }

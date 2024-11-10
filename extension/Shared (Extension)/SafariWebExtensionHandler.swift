@@ -15,6 +15,8 @@ class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
   let apiHost = Bundle.main.object(forInfoDictionaryKey: "API_HOST") as? String
   let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
   let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+  let teamId = Bundle.main.object(forInfoDictionaryKey: "TEAM_ID") as? String
+  let extensionId = "\(Bundle.main.bundleIdentifier!).Extension"
 
   func beginRequest(with context: NSExtensionContext) {
     let item = context.inputItems.first as! NSExtensionItem
@@ -27,7 +29,9 @@ class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
         response.userInfo = [SFExtensionMessageKey: [
           "apiKey": apiKey,
           "apiHost": apiHost,
-          "appVersion": "\(version ?? "")(\(build ?? ""))"
+          "appVersion": "\(version ?? "")(\(build ?? ""))",
+          "extensionId": extensionId,
+          "teamId": teamId,
         ]]
       }
     }
