@@ -1,6 +1,6 @@
 extension/xcuserdata/
 extension/env.xcconfig
-extension/build/
+extension/.build/
 extension/env.*.json
 extension/build-*.*
 server/target

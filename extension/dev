@@ -41,12 +41,6 @@ const versionParts = /** @type {const} */ ([
 /** @typedef {versionParts[number]} VersionPart */
 
 /** @type {Record<Exclude<Platform, 'sim'>, string>} */
-const exportExts = {
-	iOS: "ipa",
-	macOS: "pkg",
-};
-
-/** @type {Record<Exclude<Platform, 'sim'>, string>} */
 const exportTypes = {
 	iOS: "ios",
 	macOS: "macos",
@@ -67,13 +61,14 @@ program
 	.addArgument(
 		new Argument("<platform>", "Platform to build for").choices(platforms),
 	)
-	.action(async (platform) => {
+	.option("--adhoc", "If platform is macOS, create an adhoc build")
+	.action(async (platform, options) => {
 		loadEnv("prod");
 
 		if (platform === "sim") {
 			await buildSimApp();
 		} else {
-			await buildApp(platform);
+			await buildApp(platform, { adhoc: options.adhoc });
 		}
 	});
 
@@ -483,8 +478,9 @@ async function buildSimApp() {
 
 /**
  * @param {Exclude<Platform, 'sim'>} platform
+ * @param {{ adhoc?: boolean }} [options]
  */
-async function buildApp(platform) {
+async function buildApp(platform, options) {
 	const archive = `${buildDir}/SpellingBeePlus.xcarchive`;
 	const exportPath = `${buildDir}/export`;
 	const exportOptionsFile = `${buildDir}/exportOptions.plist`;
@@ -508,7 +504,7 @@ async function buildApp(platform) {
 			<plist version=\"1.0\">
 				<dict>
 					<key>method</key>
-					<string>app-store-connect</string>
+					<string>${options?.adhoc ? "mac-application" : "app-store-connect"}</string>
 
 					<key>testFlightInternalTestingOnly</key>
 					<true/>
@@ -525,23 +521,27 @@ async function buildApp(platform) {
 	try {
 		await run("mkdir", ["-p", buildDir]);
 		await spin(() =>
-			run("xcodebuild", [
-				`DEV_TEAM=${getEnv("DEV_TEAM")}`,
-				"-scheme",
-				`SpellingBeePlus (${platform})`,
-				"-destination",
-				`generic/platform=${platform}`,
-				"-archivePath",
-				`${buildDir}/SpellingBeePlus.xcarchive`,
-				"archive",
-			]),
+			run(
+				"xcodebuild",
+				[
+					`DEV_TEAM=${getEnv("DEV_TEAM")}`,
+					"-scheme",
+					`SpellingBeePlus (${platform})`,
+					"-destination",
+					`generic/platform=${platform}`,
+					"-archivePath",
+					`${buildDir}/SpellingBeePlus.xcarchive`,
+					"archive",
+				],
+				{ logFile: `${buildDir}/archive.log` },
+			),
 		);
 
 		print("\n");
 		writeFileSync(exportOptionsFile, exportPlists[platform]);
 		print(`📦 Exporting ${platform} app...`);
 
-		const ext = exportExts[platform];
+		const ext = getExportExt(platform, options);
 
 		await spin(() =>
 			run(
@@ -557,16 +557,16 @@ async function buildApp(platform) {
 					"-exportOptionsPlist",
 					exportOptionsFile,
 				],
-				{ logFile: `${buildDir}/archive.log` },
+				{ logFile: `${buildDir}/export.log` },
 			),
 		);
 
-		run("mv", [
+		await run("mv", [
 			`${exportPath}/SpellingBeePlus.${ext}`,
 			`build-${Date.now()}.${ext}`,
 		]);
 
-		run("rm", ["-rf", buildDir]);
+		await run("rm", ["-rf", buildDir]);
 	} catch {
 		print(`🚨 Build failed -- see logs in ${buildDir}\n`);
 	}
@@ -616,4 +616,18 @@ function getEnv(name) {
 		throw new Error(`${name} must be defined`);
 	}
 	return val;
+}
+
+/**
+ * @param {Exclude<Platform, 'sim'>} platform
+ * @param {{ adhoc?: boolean }} [options]
+ */
+function getExportExt(platform, options) {
+	if (platform === 'macOS') {
+		if (options?.adhoc) {
+			return 'app'
+		}
+		return 'pkg';
+	}
+	return 'ipa';
 }
