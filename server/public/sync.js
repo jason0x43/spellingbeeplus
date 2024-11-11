@@ -27,7 +27,6 @@ async function getToken(config) {
 		},
 	});
 	const text = await resp.text();
-	console.debug(`Got token response: ${text}`);
 	const json = JSON.parse(text);
 	return json.token;
 }

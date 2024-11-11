@@ -216,7 +216,6 @@ export function deepEquals(a, b) {
  * @param {{ type: string, [key: string]: unknown }} message
  */
 export async function sendMessage(config, message) {
-	console.log('sending message with config:', config);
 	return new Promise((resolve) => {
 		browser.runtime.sendMessage(
 			`${config.extensionId} (${config.teamId})`,

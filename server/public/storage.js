@@ -73,19 +73,22 @@ export class SbpStore {
 	 * @returns {Promise<void>}
 	 */
 	async load() {
-		/** @type {{ [key: string]: Partial<SbpState> }} */
-		const result = await browser.storage.sync.get(this.#key);
+		const value = localStorage.getItem(this.#key);
+		if (value) {
+			/** @type {{ [key: string]: Partial<SbpState> }} */
+			const data = JSON.parse(value);
 
-		// clear any values that shouldn't have been saved
-		delete result.syncing;
-		delete result.status;
-		delete result.error;
-		delete result.activeView;
-		delete result.friends;
-		delete result.friendId;
-		delete result.newName;
+			// clear any values that shouldn't have been saved
+			delete data.syncing;
+			delete data.status;
+			delete data.error;
+			delete data.activeView;
+			delete data.friends;
+			delete data.friendId;
+			delete data.newName;
 
-		this.#updateValue(result[this.#key]);
+			this.#updateValue(data);
+		}
 	}
 
 	/**
@@ -116,7 +119,7 @@ export class SbpStore {
 			newName,
 			...toSave
 		} = this.#value;
-		await browser.storage.sync.set({ [this.#key]: toSave });
+		localStorage.setItem(this.#key, JSON.stringify(toSave));
 	}
 
 	// Base properties

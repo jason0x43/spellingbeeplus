@@ -610,8 +610,10 @@ export async function main(config) {
 	console.debug("Installed key handler");
 
 	await state.update({ status: "Connecting" });
+	console.debug("Updated state");
 
-	await sendMessage(config, { type: "setStatus", status: "OK" });
+	sendMessage(config, { type: "setStatus", status: "OK" });
+	console.debug("Updated popup state");
 
 	const playerId = /** @type {ClientId} */ (getUserId());
 	if (!playerId) {
@@ -619,6 +621,7 @@ export async function main(config) {
 	}
 
 	try {
+		console.log('Connecting...');
 		await connect(
 			{
 				apiKey: config.apiKey,
