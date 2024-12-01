@@ -135,6 +135,7 @@ program
 	.description("Upload a build to the app store")
 	.argument("<app>", "Path to app bundle")
 	.action(async (app) => {
+		loadEnv("prod");
 		await uploadApp(app);
 	});
 
@@ -154,7 +155,7 @@ process.on("SIGINT", () => {
 try {
 	await program.parseAsync();
 } catch (error) {
-	console.error("Error:", error);
+	console.error(`🚨 Error: ${error}`);
 }
 
 /**
@@ -591,7 +592,9 @@ async function uploadApp(app, options) {
 	const { output } = await run("op", ["read", getEnv("DEV_PASSWORD")]);
 	const devPassword = output.trim();
 
-	print(`>>> Uploading ${app}...`);
+	print(`📤 Uploading ${app}...`);
+
+	await run("mkdir", ["-p", buildDir]);
 
 	await spin(() =>
 		run(
