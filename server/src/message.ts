@@ -20,13 +20,18 @@ export const Sync = z.object({
 });
 export type Sync = z.infer<typeof Sync>;
 
+export const AddWords = z.object({
+	words: z.array(z.string()),
+});
+export type AddWords = z.infer<typeof AddWords>;
+
 export const ErrMsg = z.object({
 	kind: z.enum(["nameUnavailable", "missingName", "invalidCommand"]),
 	message: z.string(),
 });
 export type ErrMsg = z.infer<typeof ErrMsg>;
 
-export const Message = z.union([Connect, Joined, Sync, ErrMsg]);
+export const Message = z.union([Connect, Joined, Sync, AddWords, ErrMsg]);
 export type Message = z.infer<typeof Message>;
 
 export type GameId = string & { __type: "GameId" };
@@ -62,6 +67,8 @@ export const MessageContent = z.union([
 	z.object({ joined: Joined }),
 	// A client is requesting to sync with another client
 	z.object({ sync: Sync }),
+	// A client is adding words to a synced game
+	z.object({ words: z.array(z.string()) }),
 	// A client is requesting the status of a game with another client
 	z.object({ getStatus: StatusRequest }),
 	// A client is requesting the status of a game with another client

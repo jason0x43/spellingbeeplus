@@ -220,3 +220,17 @@ export async function sendSyncRequest(friendId, words) {
 		content: { sync: { requestId: syncRequestId, words } },
 	});
 }
+
+/**
+ * Send new words to a synced game.
+ *
+ * @param {ClientId} friendId
+ * @param {string[]} words
+ */
+export async function sendWords(friendId, words) {
+	syncRequestId = Math.random().toString(36).slice(2);
+	send({
+		to: friendId,
+		content: { sync: { requestId: syncRequestId, words } },
+	});
+}

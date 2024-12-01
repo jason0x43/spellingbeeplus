@@ -175,6 +175,21 @@ export async function ws(socket: Websocket) {
 					}),
 				);
 			}
+		} else if ("words" in msg.content) {
+			// A client is adding words to a synced game; update the internal game and
+			// notify the other player
+			//
+			// TODO: Syncing will set the initial set of words in a game. Each word
+			// will be attributed to one or both players. New words will be attributed
+			// to whoever adds them first. The server will store the game state, and
+			// the client will request it one or more times during the game to update
+			// the word list.
+			//
+			// When a player receives a word from another player, the first player's
+			// UI will add the word to a "received" list. The first player can add the
+			// word themselves (it will still be attributed to the other player), or
+			// they can periodically add the list of received words, which will act
+			// much like a sync, but will be locally initiated.
 		} else if (msg.to) {
 			// Forward any other messages to the proper receiver
 			for (const [otherSocket, otherClientId] of locals.connections) {

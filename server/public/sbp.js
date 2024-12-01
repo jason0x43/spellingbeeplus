@@ -536,6 +536,21 @@ function injectCss(host) {
 }
 
 /**
+ * Add newly added words to the app state.
+ *
+ * This function should be run after words have been added to the word list
+ * since it needs to see the player's current rank.
+ *
+ * @param {string[]} addedWords
+ */
+function addWords(addedWords) {
+	state.update({
+		words: [...state.words, ...addedWords],
+		rank: /** @type {Rank} */ (getRank()),
+	});
+}
+
+/**
  * @param {Config} config
  */
 export async function main(config) {
@@ -591,10 +606,7 @@ export async function main(config) {
 			const addedWords = Array.from(mutation.addedNodes).map((node) =>
 				(node.textContent ?? "").trim(),
 			);
-			state.update({
-				words: [...state.words, ...addedWords],
-				rank: /** @type {Rank} */ (getRank()),
-			});
+			addWords(addedWords);
 		}
 	});
 	wordsObserver.observe(wordList, { childList: true });
@@ -621,7 +633,7 @@ export async function main(config) {
 	}
 
 	try {
-		console.log('Connecting...');
+		console.log("Connecting...");
 		await connect(
 			{
 				apiKey: config.apiKey,
