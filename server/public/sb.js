@@ -27,6 +27,14 @@ export function getUserId() {
 		}
 	}
 
+	const storageKeys = Object.keys({ ...localStorage });
+	for (const key of storageKeys) {
+		if (key.startsWith('games-state-spelling_bee/')) {
+			const parts = key.split('/');
+			return /** @type {ClientId} */ (parts[1]);
+		}
+	}
+
 	throw new Error("No user ID");
 }
 
