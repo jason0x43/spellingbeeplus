@@ -631,6 +631,7 @@ async function uploadApp(app, options) {
 				{ logFile: `${buildDir}/upload.log` },
 			),
 		);
+		print("\n🚀 Done!\n");
 	} catch (error) {
 		print("\n");
 		throw error;
