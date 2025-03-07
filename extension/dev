@@ -21,7 +21,7 @@
  * }} Device
  */
 
-import { Command, Argument, Option } from "@commander-js/extra-typings";
+import { Command, Argument } from "@commander-js/extra-typings";
 import dedent from "dedent";
 import { spawn } from "node:child_process";
 import { writeFileSync, readFileSync, createWriteStream } from "node:fs";
@@ -155,7 +155,7 @@ process.on("SIGINT", () => {
 try {
 	await program.parseAsync();
 } catch (error) {
-	console.error(`🚨 Error: ${error}`);
+	console.error("🚨 Error:", error);
 }
 
 /**
@@ -387,22 +387,23 @@ function getSetVersion(part) {
 		encoding: "utf8",
 	}).split("\n");
 
-	const buildLineIndex = projectLines.findIndex((line) =>
+	/** @type {{ line: string; i: number }[]} */
+	const buildNumberLines = findLines(projectLines, (line) =>
 		/\s+CURRENT_PROJECT_VERSION = \d+/.test(line),
 	);
-	if (buildLineIndex === -1) {
-		throw new Error("missing build number line");
+	if (buildNumberLines.length === 0) {
+		throw new Error("missing build number");
 	}
-	const buildLine = projectLines[buildLineIndex];
+	const buildLine = projectLines[buildNumberLines[0].i];
 	let build = Number(buildLine.split(" = ")[1].trim().replace(/;$/, ""));
 
-	const versionLineIndex = projectLines.findIndex((line) =>
+	const versionLines = findLines(projectLines, (line) =>
 		/\s+MARKETING_VERSION = \d+\.\d+\.\d+/.test(line),
 	);
-	if (versionLineIndex === -1) {
-		throw new Error("missing version line");
+	if (versionLines.length === 0) {
+		throw new Error("missing version");
 	}
-	const versionLine = projectLines[versionLineIndex];
+	const versionLine = projectLines[versionLines[0].i];
 	let version = versionLine.split(" = ")[1].trim().replace(/;$/, "");
 
 	if (!part) {
@@ -427,14 +428,29 @@ function getSetVersion(part) {
 		}
 
 		const buildLineParts = buildLine.split(" = ");
-		projectLines[buildLineIndex] = `${buildLineParts[0]} = ${build};`;
+		for (const entry of buildNumberLines) {
+			projectLines[entry.i] = `${buildLineParts[0]} = ${build};`;
+		}
 
 		const versionLineParts = versionLine.split(" = ");
-		projectLines[versionLineIndex] =
-			`${versionLineParts[0]} = ${major}.${minor}.${patch};`;
+		for (const entry of versionLines) {
+			projectLines[entry.i] =
+				`${versionLineParts[0]} = ${major}.${minor}.${patch};`;
+		}
 
 		writeFileSync(projectFile, projectLines.join("\n"));
 	}
+}
+
+/**
+ * @param {string[]} lines
+ * @param {(val: string) => boolean} test
+ * @return {{ line: string; i: number }[]}
+ */
+function findLines(lines, test) {
+	return lines
+		.map((line, i) => ({ line, i }))
+		.filter((entry) => test(entry.line));
 }
 
 async function buildSimApp() {
@@ -596,24 +612,29 @@ async function uploadApp(app, options) {
 
 	await run("mkdir", ["-p", buildDir]);
 
-	await spin(() =>
-		run(
-			"xcrun",
-			[
-				"altool",
-				options?.validate ? "--validate-app" : "--upload-app",
-				"--file",
-				app,
-				"--username",
-				getEnv("DEV_USERNAME"),
-				"--password",
-				devPassword,
-				"--type",
-				exportTypes[platform],
-			],
-			{ logFile: `${buildDir}/upload.log` },
-		),
-	);
+	try {
+		await spin(() =>
+			run(
+				"xcrun",
+				[
+					"altool",
+					options?.validate ? "--validate-app" : "--upload-app",
+					"--file",
+					app,
+					"--username",
+					getEnv("DEV_USERNAME"),
+					"--password",
+					devPassword,
+					"--type",
+					exportTypes[platform],
+				],
+				{ logFile: `${buildDir}/upload.log` },
+			),
+		);
+	} catch (error) {
+		print("\n");
+		throw error;
+	}
 }
 
 /**
