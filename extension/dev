@@ -328,7 +328,7 @@ function showCursor() {
  */
 async function spin(callback) {
 	const out = process.stdout;
-	const spinners = ["-", "\\", "|", "/"];
+	const spinners = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 	let index = 0;
 
 	hideCursor();
@@ -338,7 +338,7 @@ async function spin(callback) {
 		out.write(line);
 		moveCursor(out, -1, 0);
 		index = (index + 1) % spinners.length;
-	}, 90);
+	}, 100);
 
 	try {
 		return await callback();
@@ -456,7 +456,7 @@ function findLines(lines, test) {
 async function buildSimApp() {
 	loadEnv("dev");
 
-	print("🔨 Building...");
+	print("🔨 Building... ");
 
 	try {
 		await run("mkdir", ["-p", buildDir]);
@@ -538,7 +538,7 @@ async function buildApp(platform, options) {
 		`,
 	};
 
-	print(`🔨 Building ${platform} app...`);
+	print(`🔨 Building ${platform} app... `);
 
 	try {
 		await run("mkdir", ["-p", buildDir]);
@@ -561,7 +561,7 @@ async function buildApp(platform, options) {
 
 		print("\n");
 		writeFileSync(exportOptionsFile, exportPlists[platform]);
-		print(`📦 Exporting ${platform} app...`);
+		print(`📦 Exporting ${platform} app... `);
 
 		const ext = getExportExt(platform, options);
 
@@ -608,7 +608,7 @@ async function uploadApp(app, options) {
 	const { output } = await run("op", ["read", getEnv("DEV_PASSWORD")]);
 	const devPassword = output.trim();
 
-	print(`📤 Uploading ${app}...`);
+	print(`📤 Uploading ${app}... `);
 
 	await run("mkdir", ["-p", buildDir]);
 
