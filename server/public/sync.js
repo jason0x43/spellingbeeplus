@@ -1,8 +1,13 @@
 /** @typedef {import("../src/message").MessageFrom} MessageFrom */
 /** @typedef {import("../src/message").MessageTo} MessageTo */
-/** @typedef {import("../src/message").ClientId} ClientId */
+/** @typedef {import("../src/types").PlayerId} PlayerId */
+/** @typedef {import("../src/types").NytGameId} NytGameId */
+/** @typedef {import("../src/types").GameId} GameId */
+/** @typedef {import("../src/types").GameInfo} GameInfo */
 /** @typedef {import("./sbpTypes").SyncConfig} SyncConfig */
 /** @typedef {import("./sbpTypes").SyncDelegate} SyncDelegate */
+
+import { isMessageType } from "./util.js";
 
 /** @type {WebSocket | undefined} */
 let socket;
@@ -10,8 +15,10 @@ let socket;
 /** @type {number | undefined} */
 let version;
 
-/** @type {string | undefined} */
-let syncRequestId;
+/** @typedef {`${PlayerId}:${NytGameId}`} SyncKey */
+
+/** @type {Set<SyncKey>} */
+const syncRequests = new Set();
 
 /**
  * Get a token
@@ -55,83 +62,127 @@ function send(msg) {
 async function handleMessage(delegate, message) {
 	console.debug("Handling message:", message);
 
-	if ("connect" in message.content) {
+	if (isMessageType("connect", message)) {
 		// Reload the page if the server version has changed
 		if (version === undefined) {
-			version = message.content.connect.version;
-		} else if (version !== message.content.connect.version) {
+			version = message.content.version;
+		} else if (version !== message.content.version) {
 			window.location.reload();
 		}
 
-		const clientId = delegate.getState().player.id;
+		const playerId = delegate.getState().player.id;
 		send({
 			to: null,
-			content: { setClientId: clientId },
+			content: { type: "setClientId", id: playerId },
 		});
-		console.debug(`Sent request to set client ID to ${clientId}`);
+		console.debug(`Sent request to set client ID to ${playerId}`);
 
 		const name = delegate.getState().player.name;
 		if (name) {
+			delegate.log(`Setting name to ${name}`);
 			send({
 				to: null,
-				content: { setName: name },
+				content: { type: "setDisplayName", name },
 			});
 		}
-	} else if ("joined" in message.content) {
-		if (message.content.joined.id === delegate.getState().player.id) {
-			if (message.content.joined.name) {
-				await delegate.updateState({
-					player: message.content.joined,
-				});
-			}
+	} else if (isMessageType("joined", message)) {
+		if (message.content.id === delegate.getState().player.id) {
+			// This player joined
+			await delegate.updateState({
+				player: {
+					id: message.content.id,
+					name: message.content.name,
+				},
+			});
+			delegate.log(`Name is ${message.content.name}`);
+
+			delegate.onConnect();
 		} else {
-			delegate.onJoin(message.content.joined);
+			// Another player joined
+			delegate.onJoin(message.content);
+			delegate.log(`${message.content.name} joined`);
 		}
-	} else if ("left" in message.content) {
-		delegate.onLeave(message.content.left);
-	} else if ("noSync" in message.content) {
-		// Sync was refused
-		delegate.onSyncRefused(message.content.noSync);
-	} else if ("sync" in message.content) {
-		if (message.content.sync.requestId) {
-			if (message.content.sync.requestId === syncRequestId) {
-				// This is a confirmation response from a player we requested to
-				// sync with -- perform the sync and clear the request ID
-				delegate.onSync(message.content.sync.words);
-				syncRequestId = undefined;
-			} else {
-				// This is a new incoming sync request; if we agree to it, sync the
-				// provided words and send a confirmation response
-				const gameWords = delegate.onSyncRequest(message.from);
-				if (gameWords) {
-					send({
-						to: message.from,
-						content: {
-							sync: {
-								words: gameWords,
-								requestId: message.content.sync.requestId,
-							},
-						},
-					});
-					delegate.onSync(message.content.sync.words);
-				} else {
-					send({
-						to: message.from,
-						content: {
-							noSync: message.content.sync.requestId,
-						},
-					});
-				}
-			}
+	} else if (message.content.type === "left") {
+		if (message.content.id !== delegate.getState().player.id) {
+			const player = delegate.findPlayer(message.content.id);
+			delegate.log(`${player?.name} left`);
+			delegate.onLeave(message.content.id);
+		}
+	} else if (isMessageType("syncRequest", message)) {
+		// Another player requested a sync. Send the appropriate response.
+		const player = delegate.findPlayer(message.from);
+		delegate.log(`${player?.name} requested to sync`);
+		const syncData = delegate.onSyncRequest(message.from);
+		if (syncData) {
+			delegate.log(`Acknowledging request from ${player?.name}`);
+			send({
+				to: message.from,
+				content: {
+					type: "syncAccept",
+					request: { ...message.content },
+					words: syncData.words,
+				},
+			});
 		} else {
-			console.warn("Ignoring invalid sync request (missing ID)");
+			delegate.log(`Refusing request from ${player?.name}`);
+			send({
+				to: message.from,
+				content: {
+					type: "syncReject",
+					gameId: message.content.gameId,
+				},
+			});
 		}
-	} else if ("error" in message.content) {
+	} else if (isMessageType("syncReject", message)) {
+		// The other player refused the sync; cancel the operation.
+		const requestId = getSyncKey(message.from, message.content.gameId);
+		if (syncRequests.has(requestId)) {
+			const player = delegate.findPlayer(message.from);
+			delegate.log(`${player?.name} refused sync request`);
+			delegate.onSyncRejected(message.from, message.content.gameId);
+		}
+	} else if (isMessageType("syncAccept", message)) {
+		// The other player has accepted our sync request; verify that we have an
+		// open sync request for that player and game, then add the other player's
+		// words
+		const requestId = getSyncKey(message.from, message.content.request.gameId);
+
+		if (!syncRequests.has(requestId)) {
+			console.warn("Not accepting unsolicited sync request:", message);
+		} else {
+			const player = delegate.findPlayer(message.from);
+			delegate.log(`${player?.name} confirmed sync request`);
+		}
+	} else if (isMessageType("syncStart", message)) {
+		const otherPlayer = message.content.playerIds.find(
+			(p) => p !== delegate.getState().player.id,
+		);
+		if (otherPlayer) {
+			delegate.onSync(
+				otherPlayer,
+				message.content.gameId,
+				message.content.words,
+			);
+		} else {
+			delegate.log(`Got sync message without other player`);
+		}
+	} else if (isMessageType("wordAdded", message)) {
+		const activeGameId = delegate.getState().syncData.gameId;
+		if (activeGameId && message.content.gameId !== activeGameId) {
+			console.debug(
+				"Ignoring wordAdded for inactive game:",
+				message.content.gameId,
+			);
+			return;
+		}
+
+		if (message.content.playerId !== delegate.getState().player.id) {
+			delegate.onWordAdded(message.content.word, message.content.playerId);
+		}
+	} else if (isMessageType("error", message)) {
+		// There was an error with a request or on the server
 		console.debug("Server error:", message);
-		alert(`Error: ${message.content.error.message}`);
-		if (message.content.error.kind === "nameUnavailable") {
-			// nameInput.value = name;
-		}
+		alert(`Error: ${message.content.message}`);
 	}
 }
 
@@ -189,7 +240,6 @@ export async function connect(config, delegate) {
 	};
 
 	socket.onmessage = async (event) => {
-		console.debug("Received message:", event.data);
 		try {
 			await handleMessage(delegate, JSON.parse(event.data));
 		} catch (error) {
@@ -204,33 +254,63 @@ export async function connect(config, delegate) {
  * @param {string} name
  */
 export async function setName(name) {
-	send({ to: null, content: { setName: name } });
+	send({ to: null, content: { type: "setDisplayName", name } });
 }
 
 /**
  * Send a request to sync words to another player
  *
- * @param {ClientId} friendId
+ * @param {PlayerId} friendId
+ * @param {NytGameId} gameId
  * @param {string[]} words
  */
-export async function sendSyncRequest(friendId, words) {
-	syncRequestId = Math.random().toString(36).slice(2);
+export async function sendSyncRequest(friendId, gameId, words) {
+	const syncKey = getSyncKey(friendId, gameId);
+	syncRequests.add(syncKey);
 	send({
 		to: friendId,
-		content: { sync: { requestId: syncRequestId, words } },
+		content: { type: "syncRequest", gameId, words },
 	});
 }
 
 /**
- * Send new words to a synced game.
+ * Send new words for the user for the given game.
  *
- * @param {ClientId} friendId
- * @param {string[]} words
+ * The server will update all active synced games. For example, if user A has
+ * synced with users B and C for a given game, then if user A sends words, the
+ * server will add those words to the synced games for B and C (if either of
+ * them are missing the words).
+ *
+ * @param {GameId} gameId
+ * @param {string} word
  */
-export async function sendWords(friendId, words) {
-	syncRequestId = Math.random().toString(36).slice(2);
+export async function sendWord(gameId, word) {
 	send({
-		to: friendId,
-		content: { sync: { requestId: syncRequestId, words } },
+		to: null,
+		content: { type: "addWord", gameId, word },
 	});
+}
+
+/**
+ * @param {SyncConfig} config
+ * @param {GameId} gameId
+ * @returns {Promise<GameInfo | null>}
+ */
+export async function getGameInfo(config, gameId) {
+	const resp = await fetch(`https://${config.apiHost}/game/${gameId}`, {
+		method: "GET",
+		headers: {
+			"x-api-key": config.apiKey,
+		},
+	});
+	return await resp.json();
+}
+
+/**
+ * @param {PlayerId} player
+ * @param {NytGameId} game
+ * @returns {SyncKey}
+ */
+function getSyncKey(player, game) {
+	return `${player}:${game}`;
 }

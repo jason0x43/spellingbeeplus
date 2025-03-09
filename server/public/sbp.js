@@ -1,27 +1,30 @@
-// firstLetters maps a letter to an array of word lengths. For example,
-// firstLetters.a[4] is the number of 4 letter 'a' words.
-
 /** @typedef {import('./sbpTypes').Config} Config */
+/** @typedef {import('./sbpTypes').Player} Player */
 /** @typedef {import('./sbpTypes').Rank} Rank */
-/** @typedef {import('../src/message').ClientId} ClientId */
+/** @typedef {import('../src/types').NytGameId} NytGameId */
+/** @typedef {import('../src/types').PlayerId} PlayerId */
+/** @typedef {import('../src/types').GameId} GameId */
 
 import {
 	getGameData,
+	getHiveActions,
+	getNextRank,
 	getProgressBar,
+	getRank,
+	getUserId,
 	getWordList,
 	getWordListInner,
 	getWordListOuter,
+	getWordStats,
 	getWords,
 	hightlightWord,
 	sbProgressMarker,
 	sbProgressValue,
-	getRank,
-	getNextRank,
-	getUserId,
+	updateAnonGame,
 	uploadWords,
 } from "./sb.js";
 import { SbpStore } from "./storage.js";
-import { connect, setName, sendSyncRequest } from "./sync.js";
+import * as sync from "./sync.js";
 import {
 	className,
 	def,
@@ -48,7 +51,6 @@ const lettersClass = "sbp-letters";
 const progressMarkerClass = "sbp-progress-marker";
 const rowClass = "sbp-table-row";
 const tableClass = "sbp-table";
-
 const buttonBoxId = "sbp-button-box";
 const countTableId = "sbp-count-table";
 const digraphTableId = "sbp-digraph-table";
@@ -57,10 +59,14 @@ const sbpViewId = "sbp-hints-view";
 const viewBoxId = "sbp-view-box";
 const syncViewButtonId = "sbp-sync-view-button";
 const syncButtonId = "sbp-sync-button";
+const friendSelectId = "sbp-friend-select";
+const sbpNameInputId = "sbp-name-input";
+const sbpNameInputBoxId = "sbp-name-input-box";
+const sbpOtherWordsId = "sbp-other-words";
 
 const state = new SbpStore();
 
-/** @type {number} */
+/** @type {ReturnType<typeof setTimeout>} */
 let syncTimeout;
 
 /**
@@ -95,6 +101,84 @@ function installKeyHandler(onKeydown) {
  */
 function getViewBox() {
 	return def(document.querySelector(`#${viewBoxId}`));
+}
+
+/**
+ * Rebuild the list of words in the "other words" bar.
+ *
+ * This shows words found by the other player that this player doesn't have yet.
+ */
+function updateOtherWordsBox() {
+	/** @type {Element | null} */
+	const box = document.querySelector(`#${sbpOtherWordsId}`);
+	if (!box) {
+		return;
+	}
+
+	if (!state.syncData.gameId) {
+		box.innerHTML = "";
+		return;
+	}
+
+	/** @type {Set<string>} */
+	let have;
+	try {
+		have = new Set(getWords());
+	} catch {
+		return;
+	}
+
+	const otherWords = Object.keys(state.syncData.words)
+		.filter((word) => {
+			const owner = state.syncData.words[word];
+			return (
+				owner !== null &&
+				owner !== undefined &&
+				owner !== state.player.id &&
+				!have.has(word)
+			);
+		})
+		.sort();
+
+	box.innerHTML = "";
+	for (const word of otherWords) {
+		box.append(h("span", {}, word));
+	}
+}
+
+/**
+ * If we have a persisted synced game, load its latest state from the server.
+ *
+ * @param {Config} config
+ */
+async function restoreSyncedGame(config) {
+	if (!state.syncData.gameId) {
+		return;
+	}
+
+	try {
+		const gameInfo = await sync.getGameInfo(
+			{ apiKey: config.apiKey, apiHost: config.apiHost },
+			state.syncData.gameId,
+		);
+
+		if (gameInfo && gameInfo.nytGameId === state.gameData.id) {
+			await state.update({
+				syncData: {
+					...gameInfo,
+					friend: state.syncData.friend,
+				},
+			});
+			log("Restored synced game");
+		} else {
+			await state.clearSyncData();
+			log("Saved synced game doesn't match this puzzle");
+		}
+	} catch (error) {
+		log(`Error restoring synced game: ${error}`);
+	} finally {
+		updateOtherWordsBox();
+	}
 }
 
 /**
@@ -134,18 +218,18 @@ function addSyncView() {
 	const view = h("div", { id: sbpSyncViewId }, [
 		h("div", { id: "sbp-sync-view-content" }, [
 			h("div", { class: "sbp-form-field" }, [
-				h("label", { for: "sbp-name-input" }, "Name"),
-				h("div", { id: "sbp-name-input-box" }, [
+				h("label", { for: sbpNameInputId }, "Name"),
+				h("div", { id: sbpNameInputBoxId }, [
 					h("input", {
-						id: "sbp-name-input",
+						id: sbpNameInputId,
 						"data-1p-ignore": "true",
 					}),
 					h("button", { id: "sbp-name-button" }, "💾"),
 				]),
 			]),
 			h("div", { class: "sbp-form-field" }, [
-				h("label", { for: "sbp-friend-select" }, "Friend"),
-				h("select", { id: "sbp-friend-select" }),
+				h("label", { for: friendSelectId }, "Friend"),
+				h("select", { id: friendSelectId }),
 			]),
 			h("button", { id: syncButtonId }, "Sync Words"),
 			h("div", { id: "sbp-sync-info" }, [
@@ -153,47 +237,61 @@ function addSyncView() {
 				h("div", { id: "sbp-sync-log" }),
 			]),
 		]),
-		h("div", { id: "sbp-sync-spinner" }, [
-			h("div", { class: "sbp-spinner" }),
-		]),
+		h("div", { id: "sbp-sync-spinner" }, [h("div", { class: "sbp-spinner" })]),
 	]);
 	getViewBox().append(view);
 
 	const syncButton = selButton(`#${syncButtonId}`);
-	syncButton?.addEventListener("click", () => {
+	syncButton?.addEventListener("click", async () => {
 		// Initiate the sync process -- syncing will be true until we receive
-		// confirmation that the other end acceped the sync request.
+		// confirmation that the other end accepted the sync request.
 		state.update({ syncing: true });
 		log("Syncing...");
 		syncTimeout = setTimeout(() => {
 			log("Sync timed out");
 			state.update({ syncing: false });
 		}, 5000);
-		sendSyncRequest(state.friendId, state.words);
+		try {
+			sync.sendSyncRequest(
+				state.syncData.friend.id,
+				state.gameData.id,
+				getWords(),
+			);
+		} catch (error) {
+			console.error(error);
+		}
 	});
 
-	const nameInput = selInput("#sbp-name-input");
+	const nameInput = selInput(`#${sbpNameInputId}`);
 	nameInput?.addEventListener("keydown", (event) => {
 		event.stopPropagation();
 	});
 	nameInput?.addEventListener("input", () => {
 		state.update({ newName: nameInput.value });
-		log(`Updated name to ${nameInput.value}`);
 	});
 
 	const nameButton = selButton("#sbp-name-button");
 	nameButton?.addEventListener("click", () => {
 		if (state.newName) {
-			setName(state.newName);
+			sync.setName(state.newName);
 			state.update({ newName: "" });
 		}
 	});
 
-	const friendSelect = selSelect("#sbp-friend-select");
+	const friendSelect = selSelect(`#${friendSelectId}`);
 	friendSelect?.addEventListener("change", () => {
-		state.update({
-			friendId: /** @type {ClientId} */ (friendSelect.value),
-		});
+		const friendId = /** @type {PlayerId} */ (Number(friendSelect.value));
+		const friend = state.friends.find((f) => f.id === friendId);
+		if (friend) {
+			state.update({
+				syncData: {
+					friend,
+					nytGameId: /** @type {NytGameId} */ (0),
+					gameId: /** @type {GameId} */ (0),
+					words: {},
+				},
+			});
+		}
 	});
 }
 
@@ -203,13 +301,19 @@ function addSyncView() {
  * @returns {void}
  */
 function render() {
+	updateOtherWordsBox();
+
 	const view = document.querySelector(`#${sbpViewId}`);
 	if (!view) {
 		return;
 	}
 
-	const wantLetters = state.gameStats.firstLetters[state.letter];
-	const haveLetters = state.wordStats.firstLetters[state.letter];
+	// firstLetters maps a letter to an array of word lengths. For example,
+	// firstLetters.a[4] is the number of 4 letter 'a' words.
+	const gameStats = getWordStats(state.gameData.answers);
+	const wantLetters = gameStats.firstLetters[state.letter];
+	const wordStats = getWordStats();
+	const haveLetters = wordStats.firstLetters[state.letter];
 
 	/** @type {number[]} */
 	const counts = [];
@@ -223,7 +327,9 @@ function render() {
 
 	const wantCounts = counts.map((count) => wantLetters?.[count] ?? 0);
 	const haveCounts = counts.map((count) => haveLetters?.[count] ?? 0);
-	const needCounts = counts.map((_, i) => wantCounts[i] - haveCounts[i]);
+	const needCounts = counts.map(
+		(_, i) => (wantCounts[i] ?? 0) - (haveCounts[i] ?? 0),
+	);
 
 	const countTable = h("div", { id: countTableId, class: tableClass }, [
 		h("div", { class: rowClass }, [
@@ -258,26 +364,18 @@ function render() {
 
 	replace(countTableId, view, countTable);
 
-	const digraphs = Object.keys(state.gameStats.digraphs).filter(
+	const digraphs = Object.keys(gameStats.digraphs).filter(
 		(dg) => dg[0] === state.letter,
 	);
-	const wantDigraphs = digraphs.map(
-		(dg) => state.gameStats.digraphs[dg] ?? 0,
-	);
-	const haveDigraphs = digraphs.map(
-		(dg) => state.wordStats.digraphs[dg] ?? 0,
-	);
+	const wantDigraphs = digraphs.map((dg) => gameStats.digraphs[dg] ?? 0);
+	const haveDigraphs = digraphs.map((dg) => wordStats.digraphs[dg] ?? 0);
 	const needDigraphs = digraphs.map(
-		(_, i) => wantDigraphs[i] - haveDigraphs[i],
+		(_, i) => (wantDigraphs[i] ?? 0) - (haveDigraphs[i] ?? 0),
 	);
 
 	const digraphTable = h("div", { id: digraphTableId, class: tableClass }, [
 		h("div", { class: rowClass }, [
-			h(
-				"div",
-				{ class: className(leftLabelClass, cellClass) },
-				"Digraph",
-			),
+			h("div", { class: className(leftLabelClass, cellClass) }, "Digraph"),
 			...digraphs.map((digraph, i) => {
 				return h(
 					"div",
@@ -313,12 +411,12 @@ function render() {
 		setClass(ltr, activeLetterClass, ltrLetter === state.letter);
 
 		const wantCount =
-			state.gameStats.firstLetters[ltrLetter]?.reduce(
+			gameStats.firstLetters[ltrLetter]?.reduce(
 				(sum, count) => sum + count,
 				0,
 			) ?? 0;
 		const haveCount =
-			state.wordStats.firstLetters[ltrLetter]?.reduce(
+			wordStats.firstLetters[ltrLetter]?.reduce(
 				(sum, count) => sum + count,
 				0,
 			) ?? 0;
@@ -328,7 +426,7 @@ function render() {
 	const progressBar = getProgressBar();
 	const nextMarker = selElement(`.${progressMarkerClass}`);
 
-	if (state.rank === "genius" || state.rank === "queen bee") {
+	if (state.rank === "Genius" || state.rank === "Queen Bee") {
 		const wordListBox = getWordListOuter();
 		if (wordListBox && !wordListBox.classList.contains(baseClass)) {
 			wordListBox.classList.add(baseClass);
@@ -366,14 +464,15 @@ function render() {
 
 	const summary = def(document.querySelector(".sb-wordlist-summary"));
 	if (/You have found/.test(def(summary.textContent))) {
-		const found = state.words.length;
+		const words = getWords();
+		const found = words.length;
 		const total = state.gameData.answers.length;
 		const totalPgs = state.gameData.pangrams.length;
 		const foundPgs = state.gameData.pangrams.filter((pg) =>
-			state.words.includes(pg),
+			words.includes(pg),
 		).length;
 		let summaryText = `You have found ${found} of ${total} words`;
-		if (state.rank === "genius") {
+		if (state.rank === "Genius") {
 			summaryText += `, ${foundPgs} of ${totalPgs} pangrams`;
 		}
 		summary.textContent = summaryText;
@@ -381,7 +480,7 @@ function render() {
 
 	getWordListInner().setAttribute("data-sbp-pane", state.activeView ?? "");
 
-	const nameInput = selInput("#sbp-name-input");
+	const nameInput = selInput(`#${sbpNameInputId}`);
 	if (nameInput) {
 		if (state.newName) {
 			nameInput.value = state.newName;
@@ -390,16 +489,16 @@ function render() {
 		}
 	}
 
-	const friendSelect = selSelect("#sbp-friend-select");
+	const friendSelect = selSelect(`#${friendSelectId}`);
 	if (friendSelect) {
 		friendSelect.innerHTML = "";
 		for (const friend of state.friends) {
-			friendSelect.append(h("option", { value: friend.id }, friend.name));
+			friendSelect.append(h("option", { value: `${friend.id}` }, friend.name));
 		}
-		friendSelect.value = state.friendId;
+		friendSelect.value = `${state.syncData.friend.id}`;
 	}
 
-	const nameBox = selDiv("#sbp-name-input-box");
+	const nameBox = selDiv(`#${sbpNameInputBoxId}`);
 	if (state.newName && state.newName !== state.player.name) {
 		nameBox?.classList.add("sbp-modified");
 	} else {
@@ -408,12 +507,15 @@ function render() {
 
 	const syncButton = selButton(`#${syncButtonId}`);
 	if (syncButton) {
-		syncButton.disabled = !state.friendId || state.syncing;
+		syncButton.disabled = !state.syncData.friend.id || state.syncing;
 	}
 
 	// highlight borrowed words
-	for (const word of state.borrowedWords) {
-		hightlightWord(word);
+	for (const word in state.syncData.words) {
+		const player = state.syncData.words[word];
+		if (player && player !== state.player.id) {
+			hightlightWord(word);
+		}
 	}
 
 	const syncView = def(selDiv("#sbp-sync-view"));
@@ -468,11 +570,7 @@ function addHintsButton() {
 function addSyncButton() {
 	document.querySelector(`#${syncViewButtonId}`)?.remove();
 
-	const button = h(
-		"button",
-		{ id: syncViewButtonId, type: "button" },
-		"Sync",
-	);
+	const button = h("button", { id: syncViewButtonId, type: "button" }, "Sync");
 
 	button.addEventListener("click", () => {
 		state.update({
@@ -480,6 +578,15 @@ function addSyncButton() {
 		});
 	});
 	document.querySelector(`#${buttonBoxId}`)?.append(button);
+}
+
+/**
+ * Add the bar used to display words added by other players
+ */
+function addOtherWordsBar() {
+	const bar = h("div", { id: sbpOtherWordsId });
+	const actions = getHiveActions();
+	actions.parentElement?.append(bar);
 }
 
 /**
@@ -536,18 +643,30 @@ function injectCss(host) {
 }
 
 /**
- * Add newly added words to the app state.
+ * This should be called when a user has added words to the local game.
  *
  * This function should be run after words have been added to the word list
  * since it needs to see the player's current rank.
  *
- * @param {string[]} addedWords
+ * @param {string} word
  */
-function addWords(addedWords) {
-	state.update({
-		words: [...state.words, ...addedWords],
-		rank: /** @type {Rank} */ (getRank()),
-	});
+async function wordAdded(word) {
+	console.log(`Adding word "${word}"`);
+	if (state.syncData.gameId && !state.syncData.words[word]) {
+		try {
+			console.log("Sending word...");
+			await sync.sendWord(state.syncData.gameId, word);
+		} catch (error) {
+			console.warn(`Error adding words: ${error}`);
+		}
+	}
+}
+
+/**
+ * @param {PlayerId} id
+ */
+function isRealPlayerId(id) {
+	return id > 0;
 }
 
 /**
@@ -555,15 +674,12 @@ function addWords(addedWords) {
  */
 export async function main(config) {
 	log("Starting SBP...");
-	log("Starting SBP...");
 
 	injectCss(config.apiHost);
-
 	setStatus(state.status);
 
 	const gameData = await getGameData();
 	if (!getGameData) {
-		log("Could not load game data -- aborting!");
 		log("Could not load game data -- aborting!");
 		return;
 	}
@@ -583,7 +699,6 @@ export async function main(config) {
 
 	await state.update({
 		gameData,
-		words: getWords(),
 		rank: /** @type {Rank} */ (getRank()),
 		player: {
 			...state.player,
@@ -597,17 +712,31 @@ export async function main(config) {
 	addSyncButton();
 	addHintsView();
 	addHintsButton();
+	addOtherWordsBar();
+
+	await restoreSyncedGame(config);
 
 	// Add a word list observer that will update the app state when the word
 	// list is updated.
 	const wordList = getWordList();
 	const wordsObserver = new MutationObserver((mutations) => {
 		for (const mutation of mutations) {
-			const addedWords = Array.from(mutation.addedNodes).map((node) =>
-				(node.textContent ?? "").trim(),
-			);
-			addWords(addedWords);
+			for (const node of Array.from(mutation.addedNodes)) {
+				const word = (node.textContent ?? "").trim();
+				if (!word) {
+					continue;
+				}
+
+				wordAdded(word);
+
+				const owner = state.syncData.words[word];
+				if (owner && owner !== state.player.id) {
+					hightlightWord(word);
+				}
+			}
 		}
+
+		updateOtherWordsBox();
 	});
 	wordsObserver.observe(wordList, { childList: true });
 	console.debug("Installed word list observer");
@@ -627,23 +756,23 @@ export async function main(config) {
 	sendMessage(config, { type: "setStatus", status: "OK" });
 	console.debug("Updated popup state");
 
-	const playerId = /** @type {ClientId} */ (getUserId());
-	if (!playerId) {
-		throw new Error("No player ID");
-	}
-
 	try {
 		console.log("Connecting...");
-		await connect(
+		await sync.connect(
 			{
 				apiKey: config.apiKey,
 				apiHost: config.apiHost,
 			},
 			{
+				onConnect: async () => {
+					console.log(
+						`Connected with syncData ID ${state.syncData.nytGameId} and gameId ${state.gameData.id}`,
+					);
+					await restoreSyncedGame(config);
+				},
 				onJoin: ({ id, name }) => {
-					console.debug("got join event");
 					const friends = state.friends;
-					let index = friends.findIndex((f) => f.id === id);
+					const index = friends.findIndex((f) => f.id === id);
 					if (index !== -1) {
 						state.update({
 							friends: [
@@ -657,7 +786,6 @@ export async function main(config) {
 					}
 				},
 				onLeave: (id) => {
-					console.debug("got leave event");
 					const friends = state.friends;
 					const index = friends.findIndex((f) => f.id === id);
 					if (index !== -1) {
@@ -669,24 +797,48 @@ export async function main(config) {
 						});
 					}
 				},
-				onSync: async (words) => {
+				onSync: async (playerId, gameId, words) => {
+					log(`Syncing with ${playerId}`);
+
 					// The other end accepted the sync request -- add its words and
-					// end the syncing state
+					// end the syncing operation.
+
 					clearTimeout(syncTimeout);
 
 					try {
-						// Add the borrowed words to our game
-						const addedWords = await uploadWords(
-							state.gameData.id,
-							words,
+						const borrowedWords = Object.keys(words).filter(
+							(word) => !(word in state.words),
 						);
 
-						// All the received words have been added -- syncing is done
-						await state.update({
-							borrowedWords: addedWords,
-							syncing: false,
-						});
+						// Add the borrowed words to our game
+						if (isRealPlayerId(state.player.id)) {
+							await uploadWords(state.gameData.id, borrowedWords);
+						} else {
+							await updateAnonGame({
+								gameId: state.gameData.id,
+								words: borrowedWords,
+								answers: state.gameData.answers,
+								pangrams: state.gameData.pangrams,
+							});
+						}
 
+						// Update the sync state
+						const friend = state.friends.find((f) => f.id === playerId);
+						if (friend) {
+							await state.update({
+								syncData: {
+									friend,
+									nytGameId: state.gameData.id,
+									gameId,
+									words,
+								},
+								syncing: false,
+							});
+						} else {
+							log(`Couldn't find ${playerId} in friends list`);
+						}
+
+						// All the received words have been added -- syncing is done
 						log("Sync complete");
 
 						// refresh the app
@@ -699,17 +851,17 @@ export async function main(config) {
 					// We received a sync request from another player. If it's
 					// accepted, enable the syncing state.
 					const friend = state.friends.find((f) => f.id === from);
-					if (
-						friend &&
-						confirm(`Accept sync request from ${friend.name}?`)
-					) {
+					if (friend && confirm(`Accept sync request from ${friend.name}?`)) {
 						// The request was accepted -- start syncing
 						state.update({ syncing: true });
-						return state.words;
+						return {
+							words: getWords(),
+							gameId: state.gameData.id,
+						};
 					}
 					return false;
 				},
-				onSyncRefused: () => {
+				onSyncRejected: () => {
 					clearTimeout(syncTimeout);
 					log("Sync request rejected");
 					state.update({ syncing: false });
@@ -718,7 +870,20 @@ export async function main(config) {
 					log(`Error: ${kind} - ${message}`);
 					state.update({ error: "Connection errored" });
 				},
+				onWordAdded: async (word, playerId) => {
+					await state.update({
+						syncData: {
+							...state.syncData,
+							words: {
+								...state.syncData.words,
+								[word]: playerId,
+							},
+						},
+					});
+					updateOtherWordsBox();
+				},
 				getState: () => state,
+				findPlayer: (id) => state.friends.find((f) => f.id === id),
 				updateState: (newState) => state.update(newState),
 				log: (message) => log(message),
 			},

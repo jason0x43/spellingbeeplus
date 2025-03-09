@@ -2,8 +2,11 @@ import { click, def, h, selDiv, wait } from "./util.js";
 
 /** @typedef {import("./sbpTypes").GameData} GameData */
 /** @typedef {import("./sbTypes").GameState} GameState */
+/** @typedef {import("./sbpTypes").Rank} Rank */
+/** @typedef {import("./sbpTypes").SbState} SbState */
 /** @typedef {import("./sbTypes").LatestsResponse} LatestsResponse */
-/** @typedef {import("../src/message").ClientId} ClientId */
+/** @typedef {import("../src/types").PlayerId} PlayerId */
+/** @typedef {import("../src/types").NytGameId} NytGameId */
 
 /** The element containing the player's current progress rank. */
 export const sbProgressRank = "sb-progress-rank";
@@ -13,29 +16,98 @@ export const sbProgressMarker = "sb-progress-marker";
 export const sbProgressValue = "sb-progress-value";
 
 /**
- * Get the NYT user ID
+ * Get the NYT user ID.
  *
- * @returns {ClientId}
+ * When no NYT ID is available (anonymous / not logged in), generate a
+ * persistent, device-scoped fake ID stored in localStorage.
+ *
+ * @returns {PlayerId}
  */
 export function getUserId() {
 	const cookies = document.cookie.split(/;\s*/);
 	for (const cookie of cookies) {
-		if (cookie.startsWith("nyt-jkidd=")) {
-			const val = cookie.slice("nyt-jkidd=".length);
-			const params = new URLSearchParams(val);
-			return /** @type {ClientId} */ (params.get("uid"));
+		if (!cookie.startsWith("nyt-jkidd=")) {
+			continue;
+		}
+
+		const val = cookie.slice("nyt-jkidd=".length);
+		const params = new URLSearchParams(val);
+		const idStr = params.get("uid");
+		// uid will be '0' for anonymous user
+		if (!idStr || idStr === "0") {
+			continue;
+		}
+
+		const id = Number(idStr);
+		if (Number.isInteger(id) && id > 0) {
+			return /** @type {PlayerId} */ (id);
 		}
 	}
 
-	const storageKeys = Object.keys({ ...localStorage });
-	for (const key of storageKeys) {
-		if (key.startsWith('games-state-spelling_bee/')) {
-			const parts = key.split('/');
-			return /** @type {ClientId} */ (parts[1]);
+	try {
+		const storageKeys = Object.keys({ ...localStorage });
+		for (const key of storageKeys) {
+			if (!key.startsWith("games-state-spelling_bee/")) {
+				continue;
+			}
+
+			const parts = key.split("/");
+			const idStr = parts[1];
+			// id will be ANON for anonymous user
+			if (!idStr || idStr === "ANON") {
+				continue;
+			}
+
+			const id = Number(idStr);
+			if (Number.isInteger(id) && id > 0) {
+				return /** @type {PlayerId} */ (id);
+			}
 		}
+	} catch {
+		// localStorage may be unavailable in some contexts
 	}
 
-	throw new Error("No user ID");
+	return getOrCreateAnonId();
+}
+
+/**
+ * @returns {PlayerId}
+ */
+function getOrCreateAnonId() {
+	const anonIdKey = "sbp-anon-id";
+	try {
+		const stored = localStorage.getItem(anonIdKey);
+		const storedId = stored === null ? NaN : Number(stored);
+		if (Number.isInteger(storedId) && storedId < 0) {
+			return /** @type {PlayerId} */ (storedId);
+		}
+
+		const anonId = generateAnonId();
+		localStorage.setItem(anonIdKey, `${anonId}`);
+		return anonId;
+	} catch {
+		return generateAnonId();
+	}
+}
+
+/**
+ * @returns {PlayerId}
+ */
+function generateAnonId() {
+	/** @type {number} */
+	let rand;
+	try {
+		const arr = new Uint32Array(1);
+		crypto.getRandomValues(arr);
+		rand = arr[0] ?? 0;
+	} catch {
+		rand = Math.floor(Math.random() * 0xffffffff);
+	}
+
+	// Keep fake IDs negative so the client can treat them as "not logged in".
+	// Avoid 0 and -1, which have special meaning in a few places.
+	const anonId = -(2 + (rand % 1999999998));
+	return /** @type {PlayerId} */ (anonId);
 }
 
 /**
@@ -80,22 +152,24 @@ export function getWordList() {
  * @returns {string[]}
  */
 export function getWords() {
-	return Array.from(getWordList().querySelectorAll(".sb-anagram")).map(
-		(node) => def(node.textContent).trim(),
+	return Array.from(getWordList().querySelectorAll(".sb-anagram")).map((node) =>
+		def(node.textContent).trim(),
 	);
 }
 
 /**
  * Get the current rank.
  *
- * @returns {string}
+ * @returns {Rank}
  */
 export function getRank() {
-	const currentRank = def(document.body.querySelector(".sb-modal-ranks__current"));
-	const rank = def(
-		currentRank.querySelector(".sb-modal-ranks__rank-title .current-rank"),
-	).textContent ?? "";
-	return rank.trim().toLowerCase();
+	const currentRank = def(
+		document.body.querySelector(".sb-modal-ranks__current"),
+	);
+	const rank =
+		def(currentRank.querySelector(".sb-modal-ranks__rank-title .current-rank"))
+			.textContent ?? "";
+	return /** @type {Rank} */ (rank.trim());
 }
 
 /**
@@ -131,6 +205,24 @@ export function getProgressBar() {
 }
 
 /**
+ * Get the controls container
+ *
+ * @returns {Element}
+ */
+export function getControls() {
+	return def(document.querySelector(".sb-controls"));
+}
+
+/**
+ * Get the hive actions buttons container
+ *
+ * @returns {Element}
+ */
+export function getHiveActions() {
+	return def(document.querySelector(".sb-controls .hive-actions"));
+}
+
+/**
  * @param {string} word
  */
 export async function addWord(word) {
@@ -149,8 +241,10 @@ export async function addWord(word) {
 	);
 
 	for (const letter of word) {
-		click(letters[letter]);
-		await wait(20);
+		if (letters[letter]) {
+			click(letters[letter]);
+			await wait(20);
+		}
 	}
 
 	click(enter);
@@ -161,9 +255,7 @@ export async function addWord(word) {
 }
 
 export async function clearWord() {
-	const del = def(
-		selDiv(".sb-controls .hive-actions > .hive-action__delete"),
-	);
+	const del = def(selDiv(".sb-controls .hive-actions > .hive-action__delete"));
 
 	while (document.querySelector('[data-testid="sb-input"]')) {
 		click(del);
@@ -176,8 +268,8 @@ export async function clearWord() {
  */
 export async function getGameData() {
 	async function getData() {
-		/** @type {Promise<GameData>} */
-		return new Promise((resolve) => {
+		/** @type {GameData} */
+		const data = await new Promise((resolve) => {
 			const script = h(
 				"script",
 				"postMessage({ gameData: window.gameData.today })",
@@ -197,6 +289,8 @@ export async function getGameData() {
 			console.debug("injecting script");
 			document.body.append(script);
 		});
+
+		return data;
 	}
 
 	let tries = 3;
@@ -210,12 +304,18 @@ export async function getGameData() {
 
 		await new Promise((resolve) => setTimeout(resolve, 500));
 	}
+
+	throw new Error("Couldn't get game data");
 }
 
 /**
- * @param {string[]} words
+ * @param {string[]} [words]
  */
 export function getWordStats(words) {
+	if (!words) {
+		words = getWords();
+	}
+
 	/** @type {Record<string, number[]>} */
 	const firstLetters = {};
 	/** @type {Record<string, number>} */
@@ -223,9 +323,13 @@ export function getWordStats(words) {
 
 	for (const word of words) {
 		const firstLetter = word[0];
-		firstLetters[firstLetter] ??= [];
-		firstLetters[firstLetter][word.length] ??= 0;
-		firstLetters[firstLetter][word.length]++;
+		if (firstLetter) {
+			const firstLetterArr = firstLetters[firstLetter] ?? [];
+			firstLetters[firstLetter] = firstLetterArr;
+
+			const firstLetterLen = firstLetters[firstLetter][word.length] ?? 0;
+			firstLetters[firstLetter][word.length] = firstLetterLen + 1;
+		}
 
 		const digraph = word.slice(0, 2);
 		digraphs[digraph] ??= 0;
@@ -323,11 +427,18 @@ async function getGameState(gameId) {
 
 	/** @type {LatestsResponse} */
 	const data = await resp.json();
+
+	if (!data.states[0]) {
+		throw new Error(`Invalid gameId ${gameId}`);
+	}
+
 	return data.states[0];
 }
 
 /**
- * @param {number} gameId
+ * Upload words to an NYT game.
+ *
+ * @param {NytGameId} gameId
  * @param {string[]} words
  * @returns {Promise<string[]>}
  */
@@ -362,4 +473,143 @@ export async function uploadWords(gameId, words) {
 	}
 
 	return newWords;
+}
+
+/**
+ * Add words to a locally stored NYT game, as for an anonymous user.
+ *
+ * @param {{
+ *   gameId: NytGameId;
+ *   words: string[];
+ *   answers: string[];
+ *   pangrams: string[];
+ * }} input
+ * @returns {Promise<void>}
+ */
+export async function updateAnonGame({ gameId, words, answers, pangrams }) {
+	const gameStr = localStorage.getItem("games-state-spelling_bee/ANON");
+	const now = new Date();
+
+	/** @type {SbState} */
+	let gameState;
+
+	if (gameStr) {
+		gameState = JSON.parse(gameStr);
+		let state = gameState.states.find(
+			(state) => state.puzzleId === `${gameId}`,
+		);
+		if (!state) {
+			state = {
+				puzzleId: `${gameId}`,
+				data: {
+					answers: words,
+					isRevealed: false,
+					rank: computeScoreAndRank({ words, answers, pangrams }).rank,
+					isPlayingArchive: false,
+				},
+				schemaVersion: "0.31.0",
+				timestamp: now.getTime(),
+				printDate: now.toISOString().slice(0, 10),
+			};
+			gameState.states.push(state);
+		} else {
+			for (const word of words) {
+				if (!state.data.answers.includes(word)) {
+					state.data.answers.push(word);
+				}
+			}
+			state.timestamp = now.getTime();
+		}
+	} else {
+		gameState = {
+			states: [
+				{
+					puzzleId: `${gameId}`,
+					data: {
+						answers: words,
+						isRevealed: false,
+						rank: "Beginner",
+						isPlayingArchive: false,
+					},
+					schemaVersion: "0.31.0",
+					timestamp: now.getTime(),
+					printDate: now.toISOString().slice(0, 10),
+				},
+			],
+		};
+	}
+
+	localStorage.setItem(
+		"games-state-spelling_bee/ANON",
+		JSON.stringify(gameState),
+	);
+}
+
+/**
+ * Compute the score and rank of a given set of words.
+ *
+ * @param {{ words: string[], answers: string[], pangrams: string[] }} input
+ * @returns {{ score: number; rank: Rank }}
+ */
+export function computeScoreAndRank({ words, answers, pangrams }) {
+	const total = computeScore(answers, pangrams);
+	const score = computeScore(words, pangrams);
+	const rank = computeRank(score, total);
+	return { score, rank };
+}
+
+/**
+ * Compute the score of a set of words
+ *
+ * @param {string[]} words
+ * @param {string[]} pangrams
+ */
+function computeScore(words, pangrams) {
+	let score = 0;
+	for (const word of words) {
+		let wordValue = word.length === 4 ? 1 : word.length;
+		if (pangrams.includes(word)) {
+			wordValue += 7;
+		}
+		score += wordValue;
+	}
+	return score;
+}
+
+/**
+ * Compute a given score's rank in the daily game
+ *
+ * @param {number} score
+ * @param {number} total
+ * @returns {Rank}
+ */
+function computeRank(score, total) {
+	if (score < Math.round(total * 0.018348)) {
+		return "Beginner";
+	}
+	if (score < Math.round(total * 0.050458)) {
+		return "Good Start";
+	}
+	if (score < Math.round(total * 0.077981)) {
+		return "Moving Up";
+	}
+	if (score < Math.round(total * 0.151376)) {
+		return "Good";
+	}
+	if (score < Math.round(total * 0.252293)) {
+		return "Solid";
+	}
+	if (score < Math.round(total * 0.399082)) {
+		return "Nice";
+	}
+	if (score < Math.round(total * 0.5)) {
+		return "Great";
+	}
+	if (score < Math.round(total * 0.701834)) {
+		return "Amazing";
+	}
+	if (score < total) {
+		return "Genius";
+	}
+	return "Queen Bee";
 }

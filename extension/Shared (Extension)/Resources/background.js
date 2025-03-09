@@ -1,4 +1,4 @@
-/** @typedef {import("./global").Config} Config */
+/** @typedef {import("./global.js").Config} Config */
 
 /** @type {string|undefined} */
 let statusText;
@@ -50,6 +50,21 @@ browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 		statusText = request.status;
 	} else if (request.type === "getStatus") {
 		sendResponse(statusText);
+	} else if (request.type === "getApiHost") {
+		if (config) {
+			sendResponse(config.apiHost);
+		} else {
+			browser.runtime.sendNativeMessage(
+				"application.id",
+				{ type: "getConfig" },
+				(response) => {
+					if (response) {
+						config = response;
+					}
+					sendResponse(response?.apiHost);
+				},
+			);
+		}
 	}
 
 	return true;

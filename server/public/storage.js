@@ -3,9 +3,9 @@
  * @typedef {import('./sbpTypes').Listener<T>} Listener<T>
  */
 /** @typedef {import('./sbpTypes').SbpState} SbpState */
-/** @typedef {import('../src/message').ClientId} ClientId */
-
-import { getWordStats } from "./sb.js";
+/** @typedef {import('../src/types').PlayerId} PlayerId */
+/** @typedef {import('../src/types').NytGameId} NytGameId */
+/** @typedef {import('../src/types').GameId} GameId */
 
 export class SbpStore {
 	/** @type {Set<Listener<SbpState>>} */
@@ -27,15 +27,18 @@ export class SbpStore {
 				outerLetter: "",
 				pangrams: [],
 				validLetters: [],
-				id: -1,
+				id: /** @type {NytGameId} */ (0),
 			},
-			borrowedWords: [],
-			words: [],
-			rank: "beginner",
+			rank: "Beginner",
 			activeView: null,
-			player: { id: /** @type {ClientId} */ (""), name: "" },
+			player: { id: /** @type {PlayerId} */ (0), name: "" },
 			friends: [],
-			friendId: /** @type {ClientId} */ (""),
+			syncData: {
+				friend: { id: /** @type {PlayerId} */ (-1), name: "" },
+				nytGameId: /** @type {NytGameId} */ (0),
+				gameId: /** @type {GameId} */ (0),
+				words: {},
+			},
 			newName: "",
 			syncing: false,
 			status: "Starting",
@@ -75,17 +78,12 @@ export class SbpStore {
 	async load() {
 		const value = localStorage.getItem(this.#key);
 		if (value) {
-			/** @type {{ [key: string]: Partial<SbpState> }} */
+			/** @type {Partial<SbpState>} */
 			const data = JSON.parse(value);
 
-			// clear any values that shouldn't have been saved
-			delete data.syncing;
-			delete data.status;
-			delete data.error;
-			delete data.activeView;
-			delete data.friends;
-			delete data.friendId;
-			delete data.newName;
+			if (data.syncData) {
+				data.friends = [data.syncData.friend];
+			}
 
 			this.#updateValue(data);
 		}
@@ -109,17 +107,23 @@ export class SbpStore {
 
 		this.#updateValue(newVal);
 
-		const {
-			syncing,
-			status,
-			error,
-			activeView,
-			friends,
-			friendId,
-			newName,
-			...toSave
-		} = this.#value;
+		const { syncing, status, error, activeView, friends, newName, ...toSave } =
+			this.#value;
 		localStorage.setItem(this.#key, JSON.stringify(toSave));
+	}
+
+	/**
+	 * Clear syncData
+	 */
+	async clearSyncData() {
+		this.update({
+			syncData: {
+				...this.#value.syncData,
+				nytGameId: /** @type {NytGameId} */ (0),
+				gameId: /** @type {GameId} */ (0),
+				words: {},
+			},
+		});
 	}
 
 	// Base properties
@@ -132,12 +136,8 @@ export class SbpStore {
 		return this.#value.gameData;
 	}
 
-	get borrowedWords() {
-		return this.#value.borrowedWords;
-	}
-
 	get words() {
-		return this.#value.words;
+		return this.syncData.words;
 	}
 
 	get rank() {
@@ -156,8 +156,8 @@ export class SbpStore {
 		return this.#value.friends;
 	}
 
-	get friendId() {
-		return this.#value.friendId;
+	get syncData() {
+		return this.#value.syncData;
 	}
 
 	get newName() {
@@ -176,13 +176,13 @@ export class SbpStore {
 		return this.#value.error;
 	}
 
-	// Derived properties
-
-	get gameStats() {
-		return getWordStats(this.#value.gameData.answers);
-	}
-
-	get wordStats() {
-		return getWordStats(this.#value.words);
-	}
+	// // Derived properties
+	//
+	// get gameStats() {
+	// 	return getWordStats(this.#value.gameData.answers);
+	// }
+	//
+	// get wordStats() {
+	// 	return getWordStats(this.#value.words);
+	// }
 }

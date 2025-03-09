@@ -1,4 +1,4 @@
-import type { ClientId } from '../src/message.js';
+import type { GameId, GameInfo, NytGameId, PlayerId } from "../src/types.js";
 
 export type Listener<T> = (newVal: T, oldVal: T) => void;
 
@@ -18,60 +18,65 @@ export type Store<T> = {
 };
 
 export type GameData = {
+	id: NytGameId;
 	answers: string[];
 	centerLetter: string;
 	outerLetter: string;
 	pangrams: string[];
 	validLetters: string[];
-	id: number;
 };
 
-type Player = {
-	id: ClientId;
+export type Player = {
+	id: PlayerId;
 	name: string;
 };
-
-export type Rank =
-	| "beginner"
-	| "good start"
-	| "moving up"
-	| "good"
-	| "solid"
-	| "nice"
-	| "great"
-	| "amazing"
-	| "genius"
-	| "queen bee";
 
 export type SbpState = {
 	letter: string;
 	gameData: GameData;
-	borrowedWords: string[];
-	words: string[];
 	rank: Rank;
 	activeView: "hints" | "sync" | null;
 	player: Player;
 	friends: Player[];
-	friendId: ClientId;
 	newName: string;
 	syncing: boolean;
-	status: 'Starting' | 'Connecting' | 'Connected' | 'Not connected';
+	syncData: GameInfo & {
+		friend: Player;
+	};
+	status: "Starting" | "Connecting" | "Connected" | "Not connected";
 	error?: string | undefined;
 };
 
 export type SyncDelegate = {
-	onJoin: (data: { id: ClientId; name: string }) => void;
-	onLeave: (id: ClientId) => void;
-	// Called when a device that made a sync request receives confirmation
-	// that the request was accepted
-	onSync: (words: string[]) => Promise<void>;
-	// Called when the extension receives a sync request
-	onSyncRequest: (id: string) => string[] | false;
-	// Called when the other player refused a sync request
-	onSyncRefused: (id: string) => void;
+	/** Called when this player has joined the server */
+	onConnect: () => void;
+	/** Called when another player joins the server */
+	onJoin: (data: { id: PlayerId; name: string }) => void;
+	/** Called when a client leaves */
+	onLeave: (id: PlayerId) => void;
+	/** Called when a sync request has been accepted */
+	onSync: (
+		player: PlayerId,
+		game: GameId,
+		words: Record<string, PlayerId | null>,
+	) => Promise<void>;
+	/** Called when the extension receives a sync request */
+	onSyncRequest: (
+		player: PlayerId,
+	) => { gameId: NytGameId; words: string[] } | false;
+	/** Called when the other player refused a sync request */
+	onSyncRejected: (player: PlayerId, game: NytGameId) => void;
+	/** Called when an error has occured on the server */
 	onError: (kind: string, message: string) => void;
+	/** A word was added to the game by another player */
+	onWordAdded: (word: string, playerId: PlayerId) => void;
+	/** Return the current app state */
 	getState: () => SbpState;
+	/** Find a player record  */
+	findPlayer: (id: PlayerId) => Player | undefined;
+	/** Update the app state */
 	updateState: (update: Partial<SbpState>) => Promise<void>;
+	/** Log a message to the console */
 	log: (message: string) => void;
 };
 
@@ -86,4 +91,41 @@ export type SyncConfig = {
 
 export type StoreOptions<T> = {
 	noPersist?: (keyof T)[];
+};
+
+export type Rank =
+	| "Beginner"
+	| "Good Start"
+	| "Moving Up"
+	| "Good"
+	| "Solid"
+	| "Nice"
+	| "Great"
+	| "Amazing"
+	| "Genius"
+	| "Queen Bee";
+
+export type SbState = {
+	states: {
+		puzzleId: `${number}`;
+		data: {
+			answers: string[];
+			isRevealed: boolean;
+			rank:
+				| "Beginner"
+				| "Good Start"
+				| "Moving Up"
+				| "Good"
+				| "Solid"
+				| "Nice"
+				| "Great"
+				| "Amazing"
+				| "Genius"
+				| "Queen Bee";
+			isPlayingArchive: boolean;
+		};
+		schemaVersion: `${number}.${number}.${number}`;
+		timestamp: number;
+		printDate: string;
+	}[];
 };

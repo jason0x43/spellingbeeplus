@@ -2,10 +2,7 @@ import { Command } from "@commander-js/extra-typings";
 import { readFileSync } from "node:fs";
 import * as cheerio from "cheerio";
 import * as vm from "node:vm";
-
-/** @typedef {import("./types.ts").GameState} GameState */
-/** @typedef {import("./types.ts").GameData} GameData */
-/** @typedef {import("./types.ts").TodayData} TodayData */
+import type { GameData, GameState, TodayData } from "./types.js";
 
 const program = new Command();
 
@@ -19,7 +16,7 @@ program
 program
 	.command("game")
 	.description("Get full information for today's game")
-	.action(async (id) => {
+	.action(async () => {
 		const data = await getTodaysGame();
 		console.log(JSON.stringify(data, null, 2));
 	});
@@ -95,10 +92,7 @@ function loadCookie() {
 	return readFileSync("cookie.txt", "utf8");
 }
 
-/*
- * @returns {Promise<GameData>}
- */
-async function getTodaysGame() {
+async function getTodaysGame(): Promise<GameData> {
 	const resp = await fetch(`https://www.nytimes.com/puzzles/spelling-bee`, {
 		headers: {
 			cookie: loadCookie(),
@@ -116,24 +110,18 @@ async function getTodaysGame() {
 		throw new Error("Couldn't find reactContext script");
 	}
 
-	/** @type {Record<string, any>} */
-	const context = {
+	const context: Record<string, any> = {
 		window: {},
 	};
 
 	vm.createContext(context);
 	vm.runInContext(script, context);
 
-	/** @type {TodayData} */
-	const today = context.window.gameData;
+	const today: TodayData = context.window.gameData;
 	return today.today;
 }
 
-/**
- * @param {number} gameId
- * @returns {Promise<GameState>}
- */
-async function getGameState(gameId) {
+async function getGameState(gameId: number): Promise<GameState> {
 	const params = new URLSearchParams({ puzzle_ids: `${gameId}` });
 	const resp = await fetch(
 		`https://www.nytimes.com/svc/games/state/spelling_bee/latests?${params}`,
@@ -145,17 +133,24 @@ async function getGameState(gameId) {
 	);
 
 	if (!resp.ok) {
-		throw new Error("Failed to get game state");
+		const text = await resp.text();
+		throw new Error(`Failed to get game state: ${text}`);
 	}
 
-	const data = await resp.json();
-	return data.states[0];
+	const data = (await resp.json()) as {
+		states: GameState[];
+	};
+
+	const state = data.states[0];
+
+	if (!state) {
+		throw new Error(`No state for game ID ${gameId}`);
+	}
+
+	return state;
 }
 
-/**
- * @param {GameState} state
- */
-async function setGameState(state) {
+async function setGameState(state: GameState) {
 	console.log(JSON.stringify(state));
 	const resp = await fetch("https://www.nytimes.com/svc/games/state", {
 		method: "POST",

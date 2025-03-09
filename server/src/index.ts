@@ -1,56 +1,67 @@
-import { connect, getFile, getToken, hello, ws } from "./handlers.js";
-import { ClientId } from "./message.js";
-import { keyRequired, tokenRequired, useCors } from "./middlewares.js";
-import { Client, createServer, Websocket } from "./server.js";
-import { getEnv, log } from "./util.js";
+import { readFileSync } from "node:fs";
+import { createServer } from "node:https";
+import { serve } from "@hono/node-server";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { Context } from "./context.js";
+import { Db } from "./db.js";
+import { runMigrations } from "./migrate.js";
+import { injectWebSocket, routes } from "./routes.js";
+import type { AppEnv } from "./types.js";
 
-const apiKey = getEnv("API_KEY");
-const clients = new Map<ClientId, Client>();
-const connections = new Map<Websocket, ClientId>();
-const tokens = new Map<string, Date>();
-const version = Number(Date.now());
-const port = process.env.API_PORT ?? 3000;
+// Initialize DB and run migrations
+const db = new Db();
+console.log("Running database migrations...");
+await runMigrations(db.db);
+console.log("Database is up to date");
 
-// If an SSL key is defined in the environment, create an HTTPS server.
-// Otherwise, use HTTP.
-const server = process.env.SSL_KEY_NAME
-	? createServer(
-			{ clients, connections, apiKey, tokens, version },
-			{
-				cert_file_name: `${process.env.SSL_KEY_NAME}.pem`,
-				key_file_name: `${process.env.SSL_KEY_NAME}-key.pem`,
-			},
-		)
-	: createServer({ clients, connections, apiKey, tokens, version });
+const context = new Context(db);
+const port = Number(process.env.API_PORT ?? 3000);
+const shutdownTasks: (() => void)[] = [];
+const app = new Hono<AppEnv>();
 
-server.set_error_handler((_request, response, error) => {
-	log.warn(error);
-	if (error.message === "not authorized") {
-		return response.status(401).send(error.message);
-	}
-	return response.status(500).send(error.message);
+// Log requests
+app.use(async (c, next) => {
+	const { method, path } = c.req;
+	const url = new URL(c.req.url);
+	const search = url.search;
+	const origin = c.req.header("origin");
+	console.debug(`[${method}] ${path}${search ?? ""} (origin=${origin})`);
+	await next();
+	const { status = 200 } = c.res;
+	console.debug(`[${method}] ${path}${search ?? ""} ${status}`);
 });
 
-server.use(useCors({ extraHeaders: "x-api-key" }));
+app.use(
+	cors({
+		origin: ["https://www.nytimes.com", `http://localhost:${port}`],
+		allowHeaders: ["x-api-key"],
+	}),
+);
 
-// Test route
-server.get("/", {}, hello);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const appRoutes = app
+	.get("/hello", (c) => c.text("Hello, world!"))
+	.route("/", routes(context));
 
-// Get a token to use when opening a websocket connection
-server.get("/token", { middlewares: [keyRequired] }, getToken);
-
-// Open a websocket connection
-server.upgrade("/ws", { middlewares: [tokenRequired] }, connect);
-
-// Connect to a websocket
-server.ws("/ws", ws);
-
-// Load a static file
-server.get("/:file", {}, getFile);
+export type AppRoutes = typeof appRoutes;
 
 try {
-	await server.listen(Number(port));
-	log.info(`Listening on port ${port}...`);
+	const server = serve({
+		fetch: app.fetch,
+		createServer: createServer,
+		port,
+		serverOptions: {
+			key: readFileSync("./localhost-key.pem"),
+			cert: readFileSync("./localhost.pem"),
+		},
+	});
+
+	// Enable websocket support for the server
+	injectWebSocket(server);
+
+	shutdownTasks.push(() => server.close());
+	console.log(`Listening on port ${port}`);
 } catch (error) {
-	log.error(`Failed to attach to port ${port}:`, error);
+	console.log(`Failed to attach to port ${port}:`, error);
 }

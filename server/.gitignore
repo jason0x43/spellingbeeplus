@@ -1,3 +1,5 @@
 build/
 *.pem
 .env
+data.db
+server

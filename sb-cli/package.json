@@ -6,13 +6,12 @@
   "main": "index.js",
   "author": "Jason Cheatham <jason@jasoncheatham.com>",
   "license": "ISC",
-  "packageManager": "pnpm@9.6.0+sha256.dae0f7e822c56b20979bb5965e3b73b8bdabb6b8b8ef121da6d857508599ca35",
   "dependencies": {
-    "@commander-js/extra-typings": "^12.1.0",
-    "cheerio": "1.0.0-rc.12",
-    "commander": "^12.1.0"
+    "@commander-js/extra-typings": "^13.0.0",
+    "cheerio": "1.0.0",
+    "commander": "^13.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0"
+    "@types/node": "^25.0.3"
   }
 }

@@ -1,18 +1,7 @@
 {
+	"extends": "../tsconfig.json",
 	"compilerOptions": {
-		"lib": ["ES2022", "DOM", "DOM.Iterable"],
-		"target": "es2022",
-		"module": "es2022",
-		"moduleResolution": "node",
-		"strict": true,
-		"allowJs": true,
-		"checkJs": true,
-		"noEmit": true,
-		"skipLibCheck": true,
-		"types": []
-	},
-	"include": [
-		"./*.js",
-		"./*.d.ts"
-	]
+		"lib": ["ES2022", "DOM", "DOM.AsyncIterable", "DOM.Iterable"],
+		"checkJs": true
+	}
 }

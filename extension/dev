@@ -1,25 +1,20 @@
-#!/usr/bin/env node
-
-// @ts-check
+#!/usr/bin/env bun
 
 // This script can be used to list available Apple simulators and install
 // builds on them.
 
-/**
- * @typedef {{
- *   udid: string;
- *   deviceIdentifier: string;
- *   state: string;
- *   name: string;
- * }} Simulator
- */
-/**
- * @typedef {{
- *   identifier: string;
- *   name: string;
- *   deviceType: string;
- * }} Device
- */
+type Simulator = {
+	udid: string;
+	deviceIdentifier: string;
+	state: string;
+	name: string;
+};
+
+type Device = {
+	identifier: string;
+	name: string;
+	deviceType: string;
+};
 
 import { Command, Argument } from "@commander-js/extra-typings";
 import dedent from "dedent";
@@ -29,19 +24,13 @@ import { moveCursor } from "node:readline";
 
 const program = new Command();
 
-const platforms = /** @type {const} */ (["sim", "iOS", "macOS"]);
-/** @typedef {platforms[number]} Platform */
+const platforms = ["sim", "iOS", "macOS"] as const;
+type Platform = (typeof platforms)[number];
 
-const versionParts = /** @type {const} */ ([
-	"major",
-	"minor",
-	"patch",
-	"build",
-]);
-/** @typedef {versionParts[number]} VersionPart */
+const versionParts = ["major", "minor", "patch", "build"] as const;
+type VersionPart = (typeof versionParts)[number];
 
-/** @type {Record<Exclude<Platform, 'sim'>, string>} */
-const exportTypes = {
+const exportTypes: Record<Exclude<Platform, "sim">, string> = {
 	iOS: "ios",
 	macOS: "macos",
 };
@@ -97,8 +86,10 @@ program
 	.command("install")
 	.description("Install a build on a device or simulator")
 	.argument("<app>", "Path to app bundle")
-	.argument("[id]", "Device or simulator ID to install to")
-	.action(async (app, id) => {
+	.option("-u, --udid <udid>", "UDID to install to, or 'local' for host Mac")
+	.action(async (app, options) => {
+		const id = options?.udid;
+
 		if (app.endsWith(".app")) {
 			if (id === "local") {
 				await run("mv", [app, `/Applications/SpellingBeePlus.app`]);
@@ -144,7 +135,7 @@ program
 	.description("Show or update the current project version")
 	.addArgument(new Argument("[part]", "Part to bump").choices(versionParts))
 	.action(async (part) => {
-		getSetVersion(part);
+		getSetVersion(part!);
 	});
 
 process.on("SIGINT", () => {
@@ -158,17 +149,14 @@ try {
 	console.error("🚨 Error:", error);
 }
 
-/**
- * @return {Promise<Simulator[]>}
- */
-async function getSimulators() {
+async function getSimulators(): Promise<Simulator[]> {
 	const { output } = await run("xcrun", ["simctl", "list", "--json"]);
 
-	/** @type {{ devices: { [runtime: string]: Simulator[] } }} */
-	const simInfo = JSON.parse(output.trim());
+	const simInfo: { devices: { [runtime: string]: Simulator[] } } = JSON.parse(
+		output.trim(),
+	);
 
-	/** @type {Simulator[]} */
-	const sims = [];
+	const sims: Simulator[] = [];
 
 	for (const sim of Object.values(simInfo.devices)) {
 		for (const dev of sim) {
@@ -181,10 +169,7 @@ async function getSimulators() {
 	return sims;
 }
 
-/**
- * @return {Promise<Device[]>}
- */
-async function getDevices() {
+async function getDevices(): Promise<Device[]> {
 	await run("xcrun", [
 		"devicectl",
 		"list",
@@ -194,32 +179,28 @@ async function getDevices() {
 		"-q",
 	]);
 
-	/**
-	 * @type {{
-	 *   result: {
-	 *     devices: {
-	 *       identifier: string;
-	 *       connectionProperties: {
-	 *				 pairingState: string;
-	 *				 tunnelState: string;
-	 *       };
-	 *       deviceProperties: {
-	 *         name: string;
-	 *       };
-	 *       hardwareProperties: {
-	 *         deviceType: string;
-	 *       };
-	 *     }[]
-	 *   }
-	 * }}
-	 */
 	const deviceInfo = JSON.parse(
 		readFileSync(".devctl.json", { encoding: "utf8" }),
-	);
+	) as {
+		result: {
+			devices: {
+				identifier: string;
+				connectionProperties: {
+					pairingState: string;
+					tunnelState: string;
+				};
+				deviceProperties: {
+					name: string;
+				};
+				hardwareProperties: {
+					deviceType: string;
+				};
+			}[];
+		};
+	};
 	await run("rm", [".devctl.json"]);
 
-	/** @type {Device[]} */
-	const devices = [];
+	const devices: Device[] = [];
 
 	for (const device of deviceInfo.result.devices) {
 		if (
@@ -237,13 +218,9 @@ async function getDevices() {
 	return devices;
 }
 
-/**
- * @param {string} partialUdid
- */
-async function getMatchingSimId(partialUdid) {
+async function getMatchingSimId(partialUdid: string) {
 	const sims = await getSimulators();
 
-	let udid;
 	partialUdid = partialUdid.toUpperCase();
 
 	const sim = sims.find((s) => s.udid.startsWith(partialUdid));
@@ -251,16 +228,12 @@ async function getMatchingSimId(partialUdid) {
 		return sim.udid;
 	}
 
-	throw new Error(`Invalid partial device ID "${udid}"`);
+	throw new Error(`Invalid partial device ID "${partialUdid}"`);
 }
 
-/**
- * @param {string} partialIdentifier
- */
-async function getMatchingDeviceId(partialIdentifier) {
+async function getMatchingDeviceId(partialIdentifier: string) {
 	const devs = await getDevices();
 
-	let identifier;
 	partialIdentifier = partialIdentifier.toUpperCase();
 
 	const dev = devs.find((d) => d.identifier.startsWith(partialIdentifier));
@@ -268,20 +241,17 @@ async function getMatchingDeviceId(partialIdentifier) {
 		return dev.identifier;
 	}
 
-	throw new Error(`Invalid partial device ID "${identifier}"`);
+	throw new Error(`Invalid partial device ID "${partialIdentifier}"`);
 }
 
-/**
- * @param {string} cmd
- * @param {string[]} args
- * @param {{logFile?: string, inheritStdio?: boolean }} [opts]
- *
- * @return {Promise<{
- *   output: string,
- *   status: number | null,
- * }>}
- */
-async function run(cmd, args, opts) {
+async function run(
+	cmd: string,
+	args: string[],
+	opts?: { logFile?: string; inheritStdio?: boolean },
+): Promise<{
+	output: string;
+	status: number | null;
+}> {
 	return new Promise((resolve, reject) => {
 		const proc = spawn(cmd, args, {
 			stdio: opts?.inheritStdio ? "inherit" : "pipe",
@@ -321,12 +291,7 @@ function showCursor() {
 	process.stdout.write("\u001B[?25h");
 }
 
-/**
- * @template T
- * @param {() => Promise<T>} callback
- * @return Promise<T>
- */
-async function spin(callback) {
+async function spin<T>(callback: () => Promise<T>): Promise<T> {
 	const out = process.stdout;
 	const spinners = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 	let index = 0;
@@ -349,18 +314,11 @@ async function spin(callback) {
 	}
 }
 
-/**
- * @param {string} str
- */
-function print(str) {
+function print(str: string) {
 	process.stdout.write(str);
 }
 
-/**
- * @param {'dev' | 'prod'} envName
- * @return {Record<string, string>}
- */
-function loadEnv(envName) {
+function loadEnv(envName: "dev" | "prod"): Record<string, string> {
 	const env = JSON.parse(
 		readFileSync(`env.${envName}.json`, { encoding: "utf8" }),
 	);
@@ -368,7 +326,7 @@ function loadEnv(envName) {
 		process.env[key] = env[key];
 	}
 
-	const xcconfig = [];
+	const xcconfig: string[] = [];
 	for (const key of Object.keys(env)) {
 		xcconfig.push(`${key}=${env[key]}`);
 	}
@@ -378,18 +336,15 @@ function loadEnv(envName) {
 	return env;
 }
 
-/**
- * @param {VersionPart} [part]
- */
-function getSetVersion(part) {
+function getSetVersion(part: VersionPart) {
 	const projectFile = "SpellingBeePlus.xcodeproj/project.pbxproj";
 	const projectLines = readFileSync(projectFile, {
 		encoding: "utf8",
 	}).split("\n");
 
-	/** @type {{ line: string; i: number }[]} */
-	const buildNumberLines = findLines(projectLines, (line) =>
-		/\s+CURRENT_PROJECT_VERSION = \d+/.test(line),
+	const buildNumberLines: { line: string; i: number }[] = findLines(
+		projectLines,
+		(line) => /\s+CURRENT_PROJECT_VERSION = \d+/.test(line),
 	);
 	if (buildNumberLines.length === 0) {
 		throw new Error("missing build number");
@@ -442,12 +397,10 @@ function getSetVersion(part) {
 	}
 }
 
-/**
- * @param {string[]} lines
- * @param {(val: string) => boolean} test
- * @return {{ line: string; i: number }[]}
- */
-function findLines(lines, test) {
+function findLines(
+	lines: string[],
+	test: (val: string) => boolean,
+): { line: string; i: number }[] {
 	return lines
 		.map((line, i) => ({ line, i }))
 		.filter((entry) => test(entry.line));
@@ -498,11 +451,10 @@ async function buildSimApp() {
 	}
 }
 
-/**
- * @param {Exclude<Platform, 'sim'>} platform
- * @param {{ adhoc?: boolean }} [options]
- */
-async function buildApp(platform, options) {
+async function buildApp(
+	platform: Exclude<Platform, "sim">,
+	options?: { adhoc?: boolean },
+) {
 	const archive = `${buildDir}/SpellingBeePlus.xcarchive`;
 	const exportPath = `${buildDir}/export`;
 	const exportOptionsFile = `${buildDir}/exportOptions.plist`;
@@ -597,14 +549,9 @@ async function buildApp(platform, options) {
 	}
 }
 
-/**
- * @param {string} app
- * @param {{ validate?: boolean }} [options]
- */
-async function uploadApp(app, options) {
+async function uploadApp(app: string, options?: { validate?: boolean }) {
 	const ext = app.split(".").pop();
-	/** @type {Platform} */
-	const platform = ext === "pkg" ? "macOS" : "iOS";
+	const platform: Platform = ext === "pkg" ? "macOS" : "iOS";
 
 	const { output } = await run("op", ["read", getEnv("DEV_PASSWORD")]);
 	const devPassword = output.trim();
@@ -639,11 +586,7 @@ async function uploadApp(app, options) {
 	}
 }
 
-/**
- * @param {string} name
- * @return {string}
- */
-function getEnv(name) {
+function getEnv(name: string): string {
 	const val = process.env[name];
 	if (val === undefined) {
 		throw new Error(`${name} must be defined`);
@@ -651,11 +594,10 @@ function getEnv(name) {
 	return val;
 }
 
-/**
- * @param {Exclude<Platform, 'sim'>} platform
- * @param {{ adhoc?: boolean }} [options]
- */
-function getExportExt(platform, options) {
+function getExportExt(
+	platform: Exclude<Platform, "sim">,
+	options?: { adhoc?: boolean },
+) {
 	if (platform === "macOS") {
 		if (options?.adhoc) {
 			return "app";

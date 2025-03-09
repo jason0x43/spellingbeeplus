@@ -15,6 +15,9 @@ try {
 	const version = await getNativeInfo("version", "getVersion");
 	setElemText("#version", version);
 
+	const apiHost = await getNativeInfo("apiHost", "getApiHost");
+	setElemText("#apiHost", apiHost);
+
 	const status = await getNativeInfo("status", "getStatus");
 	setElemText("#status", status);
 } catch (error) {

@@ -88,7 +88,7 @@ export function h(tag, attrsOrContent, content) {
 	const elem = document.createElement(tag);
 
 	/** @type {Attributes | undefined} */
-	let attrs = undefined;
+	let attrs;
 
 	if (isContent(attrsOrContent)) {
 		content = attrsOrContent;
@@ -226,4 +226,39 @@ export async function sendMessage(config, message) {
 			},
 		);
 	});
+}
+
+/** @typedef {import("../src/message").MessageFrom} MessageFrom */
+/** @typedef {import("../src/message").ClientMessageContent} ClientMessageContent */
+/** @typedef {import("../src/message").ClientMessageType} ClientMessageType */
+/** @typedef {import("../src/message").ClientMessageTypes} ClientMessageTypes */
+/** @typedef {import("../src/message").ServerMessageContent} ServerMessageContent */
+/** @typedef {import("../src/message").ServerMessageType} ServerMessageType */
+/** @typedef {import("../src/message").ServerMessageTypes} ServerMessageTypes */
+
+/**
+ * @template {ClientMessageContent} T
+ * @typedef {import("../src/message").ClientMessage<T>} ClientMessage
+ */
+
+/**
+ * @template {ServerMessageContent} T
+ * @typedef {import("../src/message").ServerMessage<T>} ServerMessage
+ */
+
+/**
+ * Type guard indicating if a message is of a given type.
+ *
+ * @template {ClientMessageType | ServerMessageType} T
+ * @param {T} type
+ * @param {MessageFrom} message
+ * @returns {message is T extends ClientMessageType
+ *   ? ClientMessage<ClientMessageTypes[T]>
+ *   : T extends ServerMessageType
+ *     ? ServerMessage<ServerMessageTypes[T]>
+ *     : never
+ * }
+ */
+export function isMessageType(type, message) {
+	return message.content.type === type;
 }

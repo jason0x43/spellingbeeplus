@@ -4,12 +4,12 @@ type Runtime = Omit<typeof chrome.runtime, "onSuspend" | "onSuspendCanceled">;
 
 type ExtensionStorage = {
 	sync: {
-		async get(
+		get(
 			keys: string | string[] | Record<string, unknown>,
 		): Promise<StorageResult>;
-		async set(input: { [key: string]: unknown }): Promise<void>;
-		async remove(keys: string | string[]): Promise<void>;
-		async clear(): Promise<void>;
+		set(input: { [key: string]: unknown }): Promise<void>;
+		remove(keys: string | string[]): Promise<void>;
+		clear(): Promise<void>;
 	};
 };
 
