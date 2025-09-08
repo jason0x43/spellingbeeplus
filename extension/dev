@@ -553,6 +553,7 @@ async function buildApp(platform, options) {
 					`generic/platform=${platform}`,
 					"-archivePath",
 					`${buildDir}/SpellingBeePlus.xcarchive`,
+					"-allowProvisioningUpdates",
 					"archive",
 				],
 				{ logFile: `${buildDir}/archive.log` },
