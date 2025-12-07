@@ -304,18 +304,28 @@
   }
 }
 
-@media (width < 500px) {
+.pz-mobile {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  &.enable-scrolling {
+    overflow-y: hidden;
+  }
+
   #spelling-bee-container {
     display: flex;
     flex-direction: column;
     overflow: hidden;
     margin: 0;
+    flex: 1;
   }
 
   .pz-content {
     display: fixed;
     top: 0;
-    height: 100vh;
+    height: 100%;
   }
 
   .pz-header {
@@ -353,6 +363,14 @@
   }
 
   .pz-game-screen {
+    height: 100%;
+  }
+
+  .pz-mobile:not(.pz-play-tab) #spelling-bee-container .pz-game-screen,
+  .pz-mobile:not(.pz-play-tab) #connections-container .pz-game-screen,
+  .pz-mobile:not(.pz-play-tab) .pz-moment__loading,
+  .pz-mobile:not(.pz-play-tab) .pz-moment__frame {
+    overflow: hidden;
     height: 100%;
   }
 
