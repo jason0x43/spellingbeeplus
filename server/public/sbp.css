@@ -320,6 +320,7 @@
     overflow: hidden;
     margin: 0;
     flex: 1;
+    height: 100%;
   }
 
   .pz-content {
@@ -365,16 +366,25 @@
   .pz-game-screen {
     height: 100%;
   }
+  #pz-game-root {
+    flex: 1;
+  }
+}
 
+@media (max-height: 600px) {
   .pz-mobile:not(.pz-play-tab) #spelling-bee-container .pz-game-screen,
   .pz-mobile:not(.pz-play-tab) #connections-container .pz-game-screen,
   .pz-mobile:not(.pz-play-tab) .pz-moment__loading,
   .pz-mobile:not(.pz-play-tab) .pz-moment__frame {
     overflow: hidden;
-    height: 100%;
   }
+}
 
-  #pz-game-root {
-    flex: 1;
+@media (min-width: 375px) {
+  .pz-mobile:not(.pz-play-tab) #spelling-bee-container .pz-game-screen,
+  .pz-mobile:not(.pz-play-tab) #connections-container .pz-game-screen,
+  .pz-mobile:not(.pz-play-tab) .pz-moment__loading,
+  .pz-mobile:not(.pz-play-tab) .pz-moment__frame {
+    height: 100%;
   }
 }
