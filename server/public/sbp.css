@@ -303,3 +303,17 @@
 		-webkit-transform: rotate(360deg);
 	}
 }
+
+.pz-content {
+	display: fixed;
+	top: 0;
+	height: 100%;
+}
+
+.pz-header {
+	display: none;
+}
+
+.pz-footer {
+	display: none;
+}
