@@ -304,7 +304,7 @@
   }
 }
 
-@media (width < 500) {
+@media (width < 500px) {
   #spelling-bee-container {
     display: flex;
     flex-direction: column;
@@ -328,7 +328,7 @@
 
   .pz-game-titlebar {
     padding-top: 0;
-    padding-bottom: 12px;
+    padding-bottom: 0;
   }
 
   .pz-desktop .pz-byline {
