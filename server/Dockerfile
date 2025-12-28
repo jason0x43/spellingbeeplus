@@ -1,11 +1,6 @@
 FROM oven/bun:1 AS base
 WORKDIR /app
 
-FROM base AS prod-deps
-RUN --mount=source=package.json,target=package.json \
-    --mount=source=bun.lock,target=bun.lock \
-    bun install --production --frozen-lockfile
-
 FROM base AS build
 RUN --mount=source=package.json,target=package.json \
     --mount=source=bun.lock,target=bun.lock \
