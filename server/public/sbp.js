@@ -480,8 +480,10 @@ function render() {
 
 	getWordListInner().setAttribute("data-sbp-pane", state.activeView ?? "");
 
+	const activeElement = document.activeElement;
+
 	const nameInput = selInput(`#${sbpNameInputId}`);
-	if (nameInput) {
+	if (nameInput && activeElement !== nameInput) {
 		if (state.newName) {
 			nameInput.value = state.newName;
 		} else {
@@ -490,7 +492,7 @@ function render() {
 	}
 
 	const friendSelect = selSelect(`#${friendSelectId}`);
-	if (friendSelect) {
+	if (friendSelect && activeElement !== friendSelect) {
 		friendSelect.innerHTML = "";
 		for (const friend of state.friends) {
 			friendSelect.append(h("option", { value: `${friend.id}` }, friend.name));
@@ -716,10 +718,28 @@ export async function main(config) {
 
 	await restoreSyncedGame(config);
 
+	/** @type {ReturnType<typeof setTimeout> | undefined} */
+	let wordListUpdateTimeout;
+	const scheduleWordListUpdate = () => {
+		if (wordListUpdateTimeout) {
+			clearTimeout(wordListUpdateTimeout);
+		}
+
+		wordListUpdateTimeout = setTimeout(() => {
+			wordListUpdateTimeout = undefined;
+			state.update({
+				rank: /** @type {Rank} */ (getRank()),
+				lastWordAddedAt: Date.now(),
+			});
+		}, 0);
+	};
+
 	// Add a word list observer that will update the app state when the word
 	// list is updated.
 	const wordList = getWordList();
 	const wordsObserver = new MutationObserver((mutations) => {
+		let sawWord = false;
+
 		for (const mutation of mutations) {
 			for (const node of Array.from(mutation.addedNodes)) {
 				const word = (node.textContent ?? "").trim();
@@ -727,6 +747,7 @@ export async function main(config) {
 					continue;
 				}
 
+				sawWord = true;
 				wordAdded(word);
 
 				const owner = state.syncData.words[word];
@@ -737,6 +758,9 @@ export async function main(config) {
 		}
 
 		updateOtherWordsBox();
+		if (sawWord) {
+			scheduleWordListUpdate();
+		}
 	});
 	wordsObserver.observe(wordList, { childList: true });
 	console.debug("Installed word list observer");

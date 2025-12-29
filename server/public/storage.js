@@ -30,6 +30,7 @@ export class SbpStore {
 				id: /** @type {NytGameId} */ (0),
 			},
 			rank: "Beginner",
+			lastWordAddedAt: 0,
 			activeView: null,
 			player: { id: /** @type {PlayerId} */ (0), name: "" },
 			friends: [],
@@ -107,8 +108,16 @@ export class SbpStore {
 
 		this.#updateValue(newVal);
 
-		const { syncing, status, error, activeView, friends, newName, ...toSave } =
-			this.#value;
+		const {
+			syncing,
+			status,
+			error,
+			activeView,
+			friends,
+			newName,
+			lastWordAddedAt,
+			...toSave
+		} = this.#value;
 		localStorage.setItem(this.#key, JSON.stringify(toSave));
 	}
 
@@ -142,6 +151,10 @@ export class SbpStore {
 
 	get rank() {
 		return this.#value.rank || "beginner";
+	}
+
+	get lastWordAddedAt() {
+		return this.#value.lastWordAddedAt;
 	}
 
 	get activeView() {

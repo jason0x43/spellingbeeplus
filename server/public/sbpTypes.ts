@@ -35,6 +35,7 @@ export type SbpState = {
 	letter: string;
 	gameData: GameData;
 	rank: Rank;
+	lastWordAddedAt: number;
 	activeView: "hints" | "sync" | null;
 	player: Player;
 	friends: Player[];
