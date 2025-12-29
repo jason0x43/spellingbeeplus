@@ -18,5 +18,7 @@ LABEL org.opencontainers.image.description="A sync server for SpellingBeePlus"
 LABEL org.opencontainers.image.licenses="MIT"
 COPY --from=build /app/server server
 COPY public public/
+
+USER bun
 EXPOSE 3066
-CMD [ "./server" ]
+ENTRYPOINT [ "./server" ]
