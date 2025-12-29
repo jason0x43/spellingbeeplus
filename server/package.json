@@ -4,8 +4,8 @@
 	"description": "",
 	"type": "module",
 	"scripts": {
-		"build": "bun build --compile ./src/index.ts --outfile=server",
-		"dev": "bun run --watch ./src/index.ts"
+		"build": "bun build --compile --minify --sourcemap ./src/index.ts --outfile=server",
+		"dev": "USE_SSL=true bun run --watch ./src/index.ts"
 	},
 	"keywords": [],
 	"author": "",

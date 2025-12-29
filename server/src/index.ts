@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { createServer } from "node:https";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
@@ -47,14 +46,17 @@ const appRoutes = app
 export type AppRoutes = typeof appRoutes;
 
 try {
+	const serverOptions: Record<string, string> = {};
+	if (process.env.USE_SSL === "true") {
+		serverOptions.key = await Bun.file("./localhost-key.pem").text();
+		serverOptions.cert = await Bun.file("./localhost.pem").text();
+	}
+
 	const server = serve({
 		fetch: app.fetch,
 		createServer: createServer,
 		port,
-		serverOptions: {
-			key: readFileSync("./localhost-key.pem"),
-			cert: readFileSync("./localhost.pem"),
-		},
+		serverOptions,
 	});
 
 	// Enable websocket support for the server
