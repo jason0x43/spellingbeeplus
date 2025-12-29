@@ -7,6 +7,7 @@ import {
 
 import * as initMigration from "./migrations/202503091617_init.js";
 import * as playersIdIsNytIdMigration from "./migrations/202512210000_players_id_is_nyt_id.js";
+import * as gamesPlayersKeyUniqueMigration from "./migrations/202512290000_games_players_key_unique.js";
 
 const provider: MigrationProvider = {
 	async getMigrations(): Promise<Record<string, Migration>> {
@@ -17,6 +18,9 @@ const provider: MigrationProvider = {
 			},
 			"202512210000_players_id_is_nyt_id": {
 				up: playersIdIsNytIdMigration.up,
+			},
+			"202512290000_games_players_key_unique": {
+				up: gamesPlayersKeyUniqueMigration.up,
 			},
 		};
 	},

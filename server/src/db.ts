@@ -8,7 +8,7 @@ import type {
 	Selectable,
 	Updateable,
 } from "kysely";
-import { CamelCasePlugin, Kysely } from "kysely";
+import { CamelCasePlugin, Kysely, sql } from "kysely";
 import { BunSqliteDialect } from "kysely-bun-sqlite";
 import type { GameId, NytGameId, PlayerId, WordId } from "./types.js";
 import { log } from "./util.js";
@@ -35,6 +35,8 @@ export type GamesTable = {
 	id: Generated<GameId>;
 	/** The NYT ID of the game */
 	nytGameId: NytGameId;
+	/** Canonical key for the set of synced player IDs */
+	playersKey: string;
 	createdAt: ColumnType<string, never, never>;
 };
 
@@ -84,6 +86,12 @@ export type Database = {
 	gamePlayers: GamePlayersTable;
 	words: WordsTable;
 };
+
+function createPlayersKey(playerIds: PlayerId[]): string {
+	const uniqueIds = Array.from(new Set(playerIds));
+	uniqueIds.sort((a, b) => a - b);
+	return uniqueIds.join("-");
+}
 
 function resolveDbPath(): string {
 	const envPath = process.env.DB_PATH;
@@ -168,33 +176,48 @@ export class Db {
 		return await this.getPlayer(data.playerId);
 	}
 
-	async createGame(data: {
+	async getOrCreateGame(data: {
 		gameId: NytGameId;
-		player1Id: PlayerId;
-		player2Id: PlayerId;
+		playerIds: PlayerId[];
 	}): Promise<Game> {
-		const result = await this.#db
-			.insertInto("games")
-			.values({ nytGameId: data.gameId })
-			.executeTakeFirstOrThrow();
+		const playersKey = createPlayersKey(data.playerIds);
+		const uniquePlayerIds = Array.from(new Set(data.playerIds));
+		uniquePlayerIds.sort((a, b) => a - b);
 
-		const insertId = Number(result.insertId);
-		if (!Number.isInteger(insertId)) {
-			throw new Error(
-				`Failed to insert game (insertId=${String(result.insertId)})`,
-			);
+		for (const playerId of uniquePlayerIds) {
+			await this.getPlayer(playerId);
 		}
 
-		const game = await this.getGame(insertId as GameId);
-		const player1 = await this.getPlayer(data.player1Id);
-		const player2 = await this.getPlayer(data.player2Id);
+		await this.#db
+			.insertInto("games")
+			.values({ nytGameId: data.gameId, playersKey })
+			.onConflict((oc) =>
+				oc.columns(["nytGameId", "playersKey"]).doNothing(),
+			)
+			.execute();
+
+		const game = await this.#db
+			.selectFrom("games")
+			.selectAll()
+			.where(({ eb, and }) =>
+				and([
+					eb("nytGameId", "=", data.gameId),
+					eb("playersKey", "=", playersKey),
+				]),
+			)
+			.executeTakeFirstOrThrow();
+
 		await this.#db
 			.insertInto("gamePlayers")
-			.values([
-				{ gameId: game.id, playerId: player1.id },
-				{ gameId: game.id, playerId: player2.id },
-			])
+			.values(
+				uniquePlayerIds.map((playerId) => ({
+					gameId: game.id,
+					playerId,
+				})),
+			)
+			.onConflict((oc) => oc.columns(["gameId", "playerId"]).doNothing())
 			.execute();
+
 		return game;
 	}
 
@@ -210,13 +233,15 @@ export class Db {
 		gameId: NytGameId,
 		playerIds: PlayerId[],
 	): Promise<Game> {
+		const playersKey = createPlayersKey(playerIds);
 		return await this.#db
 			.selectFrom("games")
 			.selectAll()
-			.innerJoin("gamePlayers", "games.id", "gamePlayers.gameId")
-			.innerJoin("players", "players.id", "gamePlayers.playerId")
 			.where(({ eb, and }) =>
-				and([eb("nytGameId", "=", gameId), eb("players.id", "in", playerIds)]),
+				and([
+					eb("nytGameId", "=", gameId),
+					eb("playersKey", "=", playersKey),
+				]),
 			)
 			.executeTakeFirstOrThrow();
 	}
@@ -247,7 +272,16 @@ export class Db {
 	}
 
 	async addWord(data: NewWord): Promise<void> {
-		await this.#db.insertInto("words").values(data).execute();
+		await this.#db
+			.insertInto("words")
+			.values(data)
+			.onConflict((oc) =>
+				oc.columns(["gameId", "word"]).doUpdateSet({
+					playerId:
+						sql`CASE WHEN excluded.player_id IS NULL OR player_id IS NULL THEN NULL ELSE player_id END`,
+				}),
+			)
+			.execute();
 	}
 
 	async getWords(gameId: GameId): Promise<Word[]> {

@@ -99,7 +99,9 @@ export function h(tag, attrsOrContent, content) {
 	if (attrs) {
 		for (const attr in attrs) {
 			const val = attrs[attr];
-			elem.setAttribute(attr, val);
+			if (val !== undefined) {
+				elem.setAttribute(attr, val);
+			}
 		}
 	}
 

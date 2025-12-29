@@ -142,11 +142,10 @@ export function routes(ctx: Context) {
 								throw new Error("Could not determine players in game");
 							}
 
-							// Create a game.
-							const game = await ctx.db.createGame({
+							// Create (or reuse) a game.
+							const game = await ctx.db.getOrCreateGame({
 								gameId: msg.content.request.gameId,
-								player1Id: player1,
-								player2Id: player2,
+								playerIds: [player1, player2],
 							});
 
 							// Add the game words
@@ -170,12 +169,18 @@ export function routes(ctx: Context) {
 								words: gameWords,
 							});
 
+							const gameWordsSaved = await ctx.db.getWords(game.id);
+							const syncedWords: Record<string, PlayerId | null> = {};
+							for (const wordRow of gameWordsSaved) {
+								syncedWords[wordRow.word] = wordRow.playerId ?? null;
+							}
+
 							// Send a syncStart message to all players
 							const startMsg: SyncStart = {
 								type: "syncStart",
 								gameId: game.id,
 								playerIds: [player1, player2],
-								words: gameWords,
+								words: syncedWords,
 							};
 							for (const [socket, clientId] of ctx.connections) {
 								if (clientId === player1 || clientId === player2) {
