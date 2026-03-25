@@ -6,6 +6,7 @@
 /** @typedef {import('../src/types').GameId} GameId */
 
 import {
+	computeScoreAndRank,
 	getGameData,
 	getHiveActions,
 	getNextRank,
@@ -22,6 +23,7 @@ import {
 	sbProgressValue,
 	updateAnonGame,
 	uploadWords,
+	waitForUi,
 } from "./sb.js";
 import { SbpStore } from "./storage.js";
 import * as sync from "./sync.js";
@@ -314,6 +316,12 @@ function render() {
 	const wantLetters = gameStats.firstLetters[state.letter];
 	const wordStats = getWordStats();
 	const haveLetters = wordStats.firstLetters[state.letter];
+	const words = getWords();
+	const scoreAndRank = computeScoreAndRank({
+		answers: state.gameData.answers,
+		pangrams: state.gameData.pangrams,
+		words,
+	});
 
 	/** @type {number[]} */
 	const counts = [];
@@ -453,7 +461,7 @@ function render() {
 			progressBar.append(mrkr);
 		}
 
-		const nextRank = getNextRank();
+		const nextRank = getNextRank(scoreAndRank.rank, scoreAndRank.total);
 		if (nextRank) {
 			mrkr.style.left = `${nextRank.distance}%`;
 			const marker = def(mrkr.querySelector(`.${sbProgressValue}`));
@@ -698,6 +706,8 @@ export async function main(config) {
 			setStatus(state.status);
 		}
 	});
+
+	await waitForUi();
 
 	await state.update({
 		gameData,

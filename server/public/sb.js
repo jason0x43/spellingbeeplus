@@ -15,6 +15,20 @@ export const sbProgressMarker = "sb-progress-marker";
 /** The element containing the value of the player's progress. */
 export const sbProgressValue = "sb-progress-value";
 
+/** @type {Rank[]} */
+const ranks = [
+	"Beginner",
+	"Good Start",
+	"Moving Up",
+	"Good",
+	"Solid",
+	"Nice",
+	"Great",
+	"Amazing",
+	"Genius",
+	"Queen Bee",
+];
+
 /**
  * Get the NYT user ID.
  *
@@ -108,6 +122,21 @@ function generateAnonId() {
 	// Avoid 0 and -1, which have special meaning in a few places.
 	const anonId = -(2 + (rand % 1999999998));
 	return /** @type {PlayerId} */ (anonId);
+}
+
+/**
+ * Wait for the UI to load
+ */
+export async function waitForUi() {
+	while (true) {
+		try {
+			getWordList();
+			getRank();
+			return;
+		} catch {
+			await wait(500);
+		}
+	}
 }
 
 /**
@@ -340,40 +369,14 @@ export function getWordStats(words) {
 }
 
 /**
- * @returns {{ score: number, distance: number } | undefined}
+ * @param {Rank} rank
+ * @param {number} total
+ * @returns {{ score: number | undefined, distance: number } | undefined}
  */
-export function getNextRank() {
-	const table = def(document.querySelector("table.sb-modal-ranks__list"));
-	const rows = Array.from(table.querySelectorAll("tr")).reverse();
-
-	const current = rows.findIndex((row) =>
-		row.classList.contains("sb-modal-ranks__current"),
-	);
-
-	if (current === -1) {
-		return;
-	}
-
-	const next = current + 1;
-	if (!rows[next]) {
-		return;
-	}
-
-	const points = /** @type {Element} */ (
-		rows[next].querySelector(".sb-modal-ranks__rank-points")
-	);
-	const score = Number(points.textContent);
-
-	const dots = def(
-		document.querySelectorAll(".sb-progress-dots .sb-progress-dot"),
-	);
-	let currentIndex = 0;
-	for (const dot of dots) {
-		if (!dot.classList.contains("completed")) {
-			break;
-		}
-		currentIndex++;
-	}
+export function getNextRank(rank, total) {
+	const currentIndex = ranks.indexOf(rank);
+	const nextRank = ranks[currentIndex + 1];
+	const score = nextRank && getRankScore(nextRank, total);
 
 	// 100% / 8 steps
 	const delta = 100 / 8;
@@ -549,13 +552,13 @@ export async function updateAnonGame({ gameId, words, answers, pangrams }) {
  * Compute the score and rank of a given set of words.
  *
  * @param {{ words: string[], answers: string[], pangrams: string[] }} input
- * @returns {{ score: number; rank: Rank }}
+ * @returns {{ score: number; rank: Rank, total: number }}
  */
 export function computeScoreAndRank({ words, answers, pangrams }) {
 	const total = computeScore(answers, pangrams);
 	const score = computeScore(words, pangrams);
 	const rank = computeRank(score, total);
-	return { score, rank };
+	return { score, rank, total };
 }
 
 /**
@@ -576,6 +579,29 @@ function computeScore(words, pangrams) {
 	return score;
 }
 
+/** @typedef {{ rank: Rank, score: number }} RankScore */
+
+/**
+ * Get the table of rank scores
+ *
+ * @param {number} total
+ * @returns {RankScore[]}
+ */
+function getRankScores(total) {
+	return [
+		{ rank: "Beginner", score: Math.round(total * 0.018348) },
+		{ rank: "Good Start", score: Math.round(total * 0.018348) },
+		{ rank: "Moving Up", score: Math.round(total * 0.050458) },
+		{ rank: "Good", score: Math.round(total * 0.077981) },
+		{ rank: "Solid", score: Math.round(total * 0.151376) },
+		{ rank: "Nice", score: Math.round(total * 0.252293) },
+		{ rank: "Great", score: Math.round(total * 0.399082) },
+		{ rank: "Amazing", score: Math.round(total * 0.5) },
+		{ rank: "Genius", score: Math.round(total * 0.701834) },
+		{ rank: "Queen Bee", score: total },
+	];
+}
+
 /**
  * Compute a given score's rank in the daily game
  *
@@ -584,32 +610,29 @@ function computeScore(words, pangrams) {
  * @returns {Rank}
  */
 function computeRank(score, total) {
-	if (score < Math.round(total * 0.018348)) {
-		return "Beginner";
+	const rankScores = getRankScores(total);
+	for (let i = 1; i < rankScores.length - 1; i++) {
+		if (score < /** @type {RankScore} */ (rankScores[i]).score) {
+			return /** @type {RankScore} */ (rankScores[i - 1]).rank;
+		}
 	}
-	if (score < Math.round(total * 0.050458)) {
-		return "Good Start";
-	}
-	if (score < Math.round(total * 0.077981)) {
-		return "Moving Up";
-	}
-	if (score < Math.round(total * 0.151376)) {
-		return "Good";
-	}
-	if (score < Math.round(total * 0.252293)) {
-		return "Solid";
-	}
-	if (score < Math.round(total * 0.399082)) {
-		return "Nice";
-	}
-	if (score < Math.round(total * 0.5)) {
-		return "Great";
-	}
-	if (score < Math.round(total * 0.701834)) {
-		return "Amazing";
-	}
-	if (score < total) {
-		return "Genius";
-	}
+
 	return "Queen Bee";
+}
+
+/**
+ * Get the score for a given rank
+ *
+ * @param {Rank} rank
+ * @param {number} total
+ * @returns {number}
+ */
+function getRankScore(rank, total) {
+	const rankScores = getRankScores(total);
+	for (const rankScore of rankScores) {
+		if (rank === rankScore.rank) {
+			return rankScore.score;
+		}
+	}
+	return total;
 }
