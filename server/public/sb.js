@@ -192,12 +192,8 @@ export function getWords() {
  * @returns {Rank}
  */
 export function getRank() {
-	const currentRank = def(
-		document.body.querySelector(".sb-modal-ranks__current"),
-	);
-	const rank =
-		def(currentRank.querySelector(".sb-modal-ranks__rank-title .current-rank"))
-			.textContent ?? "";
+	const currentRank = def(document.body.querySelector(`.${sbProgressRank}`));
+	const rank = currentRank.textContent ?? "";
 	return /** @type {Rank} */ (rank.trim());
 }
 
