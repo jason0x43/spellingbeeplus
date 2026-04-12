@@ -45,7 +45,9 @@ export async function up(db) {
 	}
 
 	const gameColumns = await sql`PRAGMA table_info(games)`.execute(db);
-	const hasPlayersKey = gameColumns.rows.some((col) => col.name === "players_key");
+	const hasPlayersKey = gameColumns.rows.some(
+		(col) => col.name === "players_key",
+	);
 	if (!hasPlayersKey) {
 		await db.schema
 			.alterTable("games")

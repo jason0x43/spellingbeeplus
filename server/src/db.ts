@@ -191,9 +191,7 @@ export class Db {
 		await this.#db
 			.insertInto("games")
 			.values({ nytGameId: data.gameId, playersKey })
-			.onConflict((oc) =>
-				oc.columns(["nytGameId", "playersKey"]).doNothing(),
-			)
+			.onConflict((oc) => oc.columns(["nytGameId", "playersKey"]).doNothing())
 			.execute();
 
 		const game = await this.#db
@@ -238,10 +236,7 @@ export class Db {
 			.selectFrom("games")
 			.selectAll()
 			.where(({ eb, and }) =>
-				and([
-					eb("nytGameId", "=", gameId),
-					eb("playersKey", "=", playersKey),
-				]),
+				and([eb("nytGameId", "=", gameId), eb("playersKey", "=", playersKey)]),
 			)
 			.executeTakeFirstOrThrow();
 	}
@@ -277,8 +272,7 @@ export class Db {
 			.values(data)
 			.onConflict((oc) =>
 				oc.columns(["gameId", "word"]).doUpdateSet({
-					playerId:
-						sql`CASE WHEN excluded.player_id IS NULL OR player_id IS NULL THEN NULL ELSE player_id END`,
+					playerId: sql`CASE WHEN excluded.player_id IS NULL OR player_id IS NULL THEN NULL ELSE player_id END`,
 				}),
 			)
 			.execute();
