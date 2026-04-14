@@ -20,7 +20,6 @@ import {
 	getWords,
 	hightlightWord,
 	sbProgressMarker,
-	sbProgressRank,
 	sbProgressValue,
 	updateAnonGame,
 	uploadWords,
@@ -775,21 +774,6 @@ export async function main(config) {
 	});
 	wordsObserver.observe(wordList, { childList: true });
 	console.debug("Installed word list observer");
-
-	// Observe rank element directly so that when the user achieves Genius rank
-	// during a session, the Hints button appears without requiring a page reload.
-	const rankElement = document.body.querySelector(`.${sbProgressRank}`);
-	if (rankElement) {
-		const rankObserver = new MutationObserver(() => {
-			state.update({ rank: /** @type {Rank} */ (getRank()) });
-		});
-		rankObserver.observe(rankElement, {
-			childList: true,
-			characterData: true,
-			subtree: true,
-		});
-		console.debug("Installed rank observer");
-	}
 
 	installKeyHandler((event) => {
 		if (event.key === "ArrowLeft" && event.shiftKey) {
