@@ -381,12 +381,27 @@
 	}
 }
 
+@media (max-height: 740px) {
+	.sb-game-moment-with-banner {
+		padding-bottom: 0;
+	}
+}
+
 @media (max-height: 600px) {
 	.pz-mobile:not(.pz-play-tab) #spelling-bee-container .pz-game-screen,
 	.pz-mobile:not(.pz-play-tab) #connections-container .pz-game-screen,
 	.pz-mobile:not(.pz-play-tab) .pz-moment__loading,
 	.pz-mobile:not(.pz-play-tab) .pz-moment__frame {
 		overflow: hidden;
+	}
+}
+
+@media (min-width: 376px) {
+	.pz-mobile.pz-games-sale-banner:not(.pz-play-tab)
+		#spelling-bee-container
+		.pz-game-screen {
+		/* Use the value from the min-width: 300px selector */
+		height: calc(var(--vh, 1vh) * 100 - 48px);
 	}
 }
 
