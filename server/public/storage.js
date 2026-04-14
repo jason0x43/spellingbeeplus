@@ -65,6 +65,8 @@ export class SbpStore {
 	}
 
 	/**
+	 * Subscribe to state updates.
+	 *
 	 * @param {Listener<SbpState>} listener
 	 */
 	subscribe(listener) {
@@ -150,7 +152,7 @@ export class SbpStore {
 	}
 
 	get rank() {
-		return this.#value.rank || "beginner";
+		return this.#value.rank || "Beginner";
 	}
 
 	get lastWordAddedAt() {

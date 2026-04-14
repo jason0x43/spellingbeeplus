@@ -711,7 +711,7 @@ export async function main(config) {
 
 	await state.update({
 		gameData,
-		rank: /** @type {Rank} */ (getRank()),
+		rank: getRank(),
 		player: {
 			...state.player,
 			id: getUserId(),
@@ -737,8 +737,16 @@ export async function main(config) {
 
 		wordListUpdateTimeout = setTimeout(() => {
 			wordListUpdateTimeout = undefined;
+
+			const words = getWords();
+			const scoreAndRank = computeScoreAndRank({
+				answers: state.gameData.answers,
+				pangrams: state.gameData.pangrams,
+				words,
+			});
+
 			state.update({
-				rank: /** @type {Rank} */ (getRank()),
+				rank: scoreAndRank.rank,
 				lastWordAddedAt: Date.now(),
 			});
 		}, 0);
