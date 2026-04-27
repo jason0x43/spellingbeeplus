@@ -470,6 +470,8 @@ function render() {
 		}
 	}
 
+	// Update the summary text with the pangram count if the user has reached
+	// Genius rank
 	const summary = def(document.querySelector(".sb-wordlist-summary"));
 	if (/You have found/.test(def(summary.textContent))) {
 		const words = getWords();
@@ -480,7 +482,7 @@ function render() {
 			words.includes(pg),
 		).length;
 		let summaryText = `You have found ${found} of ${total} words`;
-		if (state.rank === "Genius") {
+		if (state.rank === "Genius" || state.rank === "Queen Bee") {
 			summaryText += `, ${foundPgs} of ${totalPgs} pangrams`;
 		}
 		summary.textContent = summaryText;
@@ -695,8 +697,8 @@ export async function main(config) {
 	}
 
 	await state.load();
-	state.subscribe(render);
 
+	// Update the displayed app status when the state changes
 	state.subscribe(() => {
 		if (state.error) {
 			setStatus(state.error);
@@ -708,6 +710,9 @@ export async function main(config) {
 	});
 
 	await waitForUi();
+
+	// Once the UI is visible, render whenever the state is updated
+	state.subscribe(render);
 
 	await state.update({
 		gameData,
@@ -730,6 +735,8 @@ export async function main(config) {
 
 	/** @type {ReturnType<typeof setTimeout> | undefined} */
 	let wordListUpdateTimeout;
+
+	// Schedule a state update after the word list has been changed
 	const scheduleWordListUpdate = () => {
 		if (wordListUpdateTimeout) {
 			clearTimeout(wordListUpdateTimeout);

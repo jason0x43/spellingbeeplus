@@ -548,7 +548,6 @@ export async function updateAnonGame({ gameId, words, answers, pangrams }) {
  * Compute the score and rank of a given set of words.
  *
  * @param {{ words: string[], answers: string[], pangrams: string[] }} input
- * @returns {{ score: number; rank: Rank, total: number }}
  */
 export function computeScoreAndRank({ words, answers, pangrams }) {
 	const total = computeScore(answers, pangrams);
@@ -558,21 +557,30 @@ export function computeScoreAndRank({ words, answers, pangrams }) {
 }
 
 /**
+ * Get the point value of a word
+ *
+ * @param {string} word
+ * @param {string[]} pangrams
+ */
+function getWordPoints(word, pangrams) {
+	let value = word.length === 4 ? 1 : word.length;
+	if (pangrams.includes(word)) {
+		value += 7;
+	}
+	return value;
+}
+
+/**
  * Compute the score of a set of words
  *
  * @param {string[]} words
  * @param {string[]} pangrams
  */
 function computeScore(words, pangrams) {
-	let score = 0;
-	for (const word of words) {
-		let wordValue = word.length === 4 ? 1 : word.length;
-		if (pangrams.includes(word)) {
-			wordValue += 7;
-		}
-		score += wordValue;
-	}
-	return score;
+	return words.reduce(
+		(score, word) => score + getWordPoints(word, pangrams),
+		0,
+	);
 }
 
 /** @typedef {{ rank: Rank, score: number }} RankScore */
@@ -581,21 +589,20 @@ function computeScore(words, pangrams) {
  * Get the table of rank scores
  *
  * @param {number} total
- * @returns {RankScore[]}
  */
 function getRankScores(total) {
-	return [
-		{ rank: "Beginner", score: Math.round(total * 0.018348) },
-		{ rank: "Good Start", score: Math.round(total * 0.018348) },
-		{ rank: "Moving Up", score: Math.round(total * 0.050458) },
-		{ rank: "Good", score: Math.round(total * 0.077981) },
-		{ rank: "Solid", score: Math.round(total * 0.151376) },
-		{ rank: "Nice", score: Math.round(total * 0.252293) },
-		{ rank: "Great", score: Math.round(total * 0.399082) },
-		{ rank: "Amazing", score: Math.round(total * 0.5) },
-		{ rank: "Genius", score: Math.round(total * 0.701834) },
+	return /** @type {const} */ ([
+		{ rank: "Beginner", score: 0 },
+		{ rank: "Good Start", score: Math.floor(total * 0.02) },
+		{ rank: "Moving Up", score: Math.floor(total * 0.05) },
+		{ rank: "Good", score: Math.floor(total * 0.08) },
+		{ rank: "Solid", score: Math.floor(total * 0.15) },
+		{ rank: "Nice", score: Math.floor(total * 0.25) },
+		{ rank: "Great", score: Math.floor(total * 0.4) },
+		{ rank: "Amazing", score: Math.floor(total * 0.5) },
+		{ rank: "Genius", score: Math.floor(total * 0.7) },
 		{ rank: "Queen Bee", score: total },
-	];
+	]);
 }
 
 /**
@@ -607,13 +614,15 @@ function getRankScores(total) {
  */
 function computeRank(score, total) {
 	const rankScores = getRankScores(total);
-	for (let i = 1; i < rankScores.length - 1; i++) {
-		if (score < /** @type {RankScore} */ (rankScores[i]).score) {
-			return /** @type {RankScore} */ (rankScores[i - 1]).rank;
+
+	for (let i = rankScores.length - 1; i >= 0; i--) {
+		const rankScore = /** @type {RankScore} */ (rankScores[i]);
+		if (score >= rankScore.score) {
+			return rankScore.rank;
 		}
 	}
 
-	return "Queen Bee";
+	return rankScores[0].rank;
 }
 
 /**
@@ -630,5 +639,5 @@ function getRankScore(rank, total) {
 			return rankScore.score;
 		}
 	}
-	return total;
+	return 0;
 }
