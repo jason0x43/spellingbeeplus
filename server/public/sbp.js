@@ -65,6 +65,7 @@ const friendSelectId = "sbp-friend-select";
 const sbpNameInputId = "sbp-name-input";
 const sbpNameInputBoxId = "sbp-name-input-box";
 const sbpOtherWordsId = "sbp-other-words";
+const sbpIncomingWordFlashId = "sbp-incoming-word-flash";
 
 const state = new SbpStore();
 
@@ -602,6 +603,28 @@ function addOtherWordsBar() {
 }
 
 /**
+ * Add the full-screen flash overlay used for incoming synced words.
+ */
+function addIncomingWordFlash() {
+	document.querySelector(`#${sbpIncomingWordFlashId}`)?.remove();
+	document.body.append(h("div", { id: sbpIncomingWordFlashId }));
+}
+
+/**
+ * Trigger the incoming word flash animation.
+ */
+function flashIncomingWord() {
+	const flash = document.querySelector(`#${sbpIncomingWordFlashId}`);
+	if (!(flash instanceof HTMLElement)) {
+		return;
+	}
+
+	flash.classList.remove("sbp-active");
+	void flash.offsetWidth;
+	flash.classList.add("sbp-active");
+}
+
+/**
  * Select the next letter to the left in the hints pane.
  */
 function selectLetterLeft() {
@@ -730,6 +753,7 @@ export async function main(config) {
 	addHintsView();
 	addHintsButton();
 	addOtherWordsBar();
+	addIncomingWordFlash();
 
 	await restoreSyncedGame(config);
 
@@ -930,6 +954,7 @@ export async function main(config) {
 						},
 					});
 					updateOtherWordsBox();
+					flashIncomingWord();
 				},
 				getState: () => state,
 				findPlayer: (id) => state.friends.find((f) => f.id === id),

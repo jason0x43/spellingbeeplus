@@ -280,6 +280,39 @@
 	overflow: hidden;
 }
 
+#sbp-incoming-word-flash {
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	opacity: 0;
+	background: rgba(255, 221, 0, 0.28);
+	z-index: 2147483647;
+}
+
+#sbp-incoming-word-flash.sbp-active {
+	animation: sbp-incoming-word-flash 220ms ease-out;
+}
+
+@keyframes sbp-incoming-word-flash {
+	0% {
+		opacity: 0;
+	}
+
+	35% {
+		opacity: 1;
+	}
+
+	100% {
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#sbp-incoming-word-flash.sbp-active {
+		animation-duration: 120ms;
+	}
+}
+
 .sbp {
 	.sb-kebob {
 		margin-bottom: 12px;
