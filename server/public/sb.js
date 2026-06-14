@@ -483,11 +483,13 @@ export async function uploadWords(gameId, words) {
  *   answers: string[];
  *   pangrams: string[];
  * }} input
- * @returns {Promise<void>}
+ * @returns {Promise<string[]>}
  */
 export async function updateAnonGame({ gameId, words, answers, pangrams }) {
 	const gameStr = localStorage.getItem("games-state-spelling_bee/ANON");
 	const now = new Date();
+	/** @type {string[]} */
+	const newWords = [];
 
 	/** @type {SbState} */
 	let gameState;
@@ -498,10 +500,11 @@ export async function updateAnonGame({ gameId, words, answers, pangrams }) {
 			(state) => state.puzzleId === `${gameId}`,
 		);
 		if (!state) {
+			newWords.push(...words);
 			state = {
 				puzzleId: `${gameId}`,
 				data: {
-					answers: words,
+					answers: newWords,
 					isRevealed: false,
 					rank: computeScoreAndRank({ words, answers, pangrams }).rank,
 					isPlayingArchive: false,
@@ -514,18 +517,20 @@ export async function updateAnonGame({ gameId, words, answers, pangrams }) {
 		} else {
 			for (const word of words) {
 				if (!state.data.answers.includes(word)) {
+					newWords.push(word);
 					state.data.answers.push(word);
 				}
 			}
 			state.timestamp = now.getTime();
 		}
 	} else {
+		newWords.push(...words);
 		gameState = {
 			states: [
 				{
 					puzzleId: `${gameId}`,
 					data: {
-						answers: words,
+						answers: newWords,
 						isRevealed: false,
 						rank: "Beginner",
 						isPlayingArchive: false,
@@ -542,6 +547,8 @@ export async function updateAnonGame({ gameId, words, answers, pangrams }) {
 		"games-state-spelling_bee/ANON",
 		JSON.stringify(gameState),
 	);
+
+	return newWords;
 }
 
 /**

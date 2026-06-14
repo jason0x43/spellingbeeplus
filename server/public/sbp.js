@@ -184,21 +184,17 @@ async function restoreSyncedGame(config) {
 		});
 		log(`Restored synced game with ${friend.name}`);
 
-		const localWords = new Set(getWords());
-		const missingWords = Object.keys(syncData.words).filter(
-			(word) => !localWords.has(word),
-		);
-		if (missingWords.length > 0) {
-			if (isRealPlayerId(state.player.id)) {
-				await uploadWords(state.gameData.id, missingWords);
-			} else {
-				await updateAnonGame({
+		const syncedWords = Object.keys(syncData.words);
+		const addedWords = isRealPlayerId(state.player.id)
+			? await uploadWords(state.gameData.id, syncedWords)
+			: await updateAnonGame({
 					gameId: state.gameData.id,
-					words: missingWords,
+					words: syncedWords,
 					answers: state.gameData.answers,
 					pangrams: state.gameData.pangrams,
 				});
-			}
+
+		if (addedWords.length > 0) {
 			window.location.reload();
 		}
 	} catch (error) {
