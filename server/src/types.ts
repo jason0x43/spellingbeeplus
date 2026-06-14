@@ -32,3 +32,13 @@ export const GameInfo = z.object({
 	words: z.record(z.string(), PlayerId.nullable()),
 });
 export type GameInfo = z.infer<typeof GameInfo>;
+
+export const SyncedGameInfo = GameInfo.extend({
+	players: z.array(
+		z.object({
+			id: PlayerId,
+			name: z.string(),
+		}),
+	),
+});
+export type SyncedGameInfo = z.infer<typeof SyncedGameInfo>;

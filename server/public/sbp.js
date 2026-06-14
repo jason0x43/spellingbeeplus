@@ -150,32 +150,56 @@ function updateOtherWordsBox() {
 }
 
 /**
- * If we have a persisted synced game, load its latest state from the server.
+ * Load this player's most recently synced game for the current puzzle.
  *
  * @param {Config} config
  */
 async function restoreSyncedGame(config) {
-	if (!state.syncData.gameId) {
-		return;
-	}
-
 	try {
-		const gameInfo = await sync.getGameInfo(
+		const gameInfo = await sync.getLatestGameInfo(
 			{ apiKey: config.apiKey, apiHost: config.apiHost },
-			state.syncData.gameId,
+			state.gameData.id,
+			state.player.id,
 		);
 
-		if (gameInfo && gameInfo.nytGameId === state.gameData.id) {
-			await state.update({
-				syncData: {
-					...gameInfo,
-					friend: state.syncData.friend,
-				},
-			});
-			log("Restored synced game");
-		} else {
+		if (!gameInfo) {
 			await state.clearSyncData();
-			log("Saved synced game doesn't match this puzzle");
+			return;
+		}
+
+		const { players, ...syncData } = gameInfo;
+		const friend =
+			players.find((player) => player.id !== state.player.id) ??
+			state.syncData.friend;
+		const friends = state.friends.some((player) => player.id === friend.id)
+			? state.friends
+			: [...state.friends, friend];
+
+		await state.update({
+			friends,
+			syncData: {
+				...syncData,
+				friend,
+			},
+		});
+		log(`Restored synced game with ${friend.name}`);
+
+		const localWords = new Set(getWords());
+		const missingWords = Object.keys(syncData.words).filter(
+			(word) => !localWords.has(word),
+		);
+		if (missingWords.length > 0) {
+			if (isRealPlayerId(state.player.id)) {
+				await uploadWords(state.gameData.id, missingWords);
+			} else {
+				await updateAnonGame({
+					gameId: state.gameData.id,
+					words: missingWords,
+					answers: state.gameData.answers,
+					pangrams: state.gameData.pangrams,
+				});
+			}
+			window.location.reload();
 		}
 	} catch (error) {
 		log(`Error restoring synced game: ${error}`);

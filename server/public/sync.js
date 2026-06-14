@@ -4,6 +4,7 @@
 /** @typedef {import("../src/types").NytGameId} NytGameId */
 /** @typedef {import("../src/types").GameId} GameId */
 /** @typedef {import("../src/types").GameInfo} GameInfo */
+/** @typedef {import("../src/types").SyncedGameInfo} SyncedGameInfo */
 /** @typedef {import("./sbpTypes").SyncConfig} SyncConfig */
 /** @typedef {import("./sbpTypes").SyncDelegate} SyncDelegate */
 
@@ -303,6 +304,25 @@ export async function getGameInfo(config, gameId) {
 			"x-api-key": config.apiKey,
 		},
 	});
+	return await resp.json();
+}
+
+/**
+ * @param {SyncConfig} config
+ * @param {NytGameId} nytGameId
+ * @param {PlayerId} playerId
+ * @returns {Promise<SyncedGameInfo | null>}
+ */
+export async function getLatestGameInfo(config, nytGameId, playerId) {
+	const resp = await fetch(
+		`https://${config.apiHost}/game/latest/${nytGameId}/${playerId}`,
+		{
+			method: "GET",
+			headers: {
+				"x-api-key": config.apiKey,
+			},
+		},
+	);
 	return await resp.json();
 }
 

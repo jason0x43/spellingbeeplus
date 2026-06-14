@@ -53,6 +53,7 @@ export type GamePlayersTable = {
 	/** Player in the PlayersTable */
 	playerId: PlayerId;
 	createdAt: ColumnType<string, never, never>;
+	lastSyncedAt: number;
 };
 
 export type GamePlayer = Selectable<GamePlayersTable>;
@@ -211,9 +212,20 @@ export class Db {
 				uniquePlayerIds.map((playerId) => ({
 					gameId: game.id,
 					playerId,
+					lastSyncedAt: sql<number>`MAX(
+						(SELECT COALESCE(MAX(last_synced_at), 0) + 1 FROM game_players),
+						${Date.now()}
+					)`,
 				})),
 			)
-			.onConflict((oc) => oc.columns(["gameId", "playerId"]).doNothing())
+			.onConflict((oc) =>
+				oc.columns(["gameId", "playerId"]).doUpdateSet({
+					lastSyncedAt: sql<number>`MAX(
+						(SELECT COALESCE(MAX(last_synced_at), 0) + 1 FROM game_players),
+						${Date.now()}
+					)`,
+				}),
+			)
 			.execute();
 
 		return game;
@@ -241,14 +253,34 @@ export class Db {
 			.executeTakeFirstOrThrow();
 	}
 
-	async getPlayerIds(gameId: GameId): Promise<PlayerId[]> {
-		const result = await this.#db
+	async getLatestGameForPlayer(
+		nytGameId: NytGameId,
+		playerId: PlayerId,
+	): Promise<Game | null> {
+		const game = await this.#db
+			.selectFrom("games")
+			.innerJoin("gamePlayers", "games.id", "gamePlayers.gameId")
+			.selectAll("games")
+			.where("games.nytGameId", "=", nytGameId)
+			.where("gamePlayers.playerId", "=", playerId)
+			.orderBy("gamePlayers.lastSyncedAt", "desc")
+			.orderBy("games.id", "desc")
+			.executeTakeFirst();
+		return game ?? null;
+	}
+
+	async getPlayers(gameId: GameId): Promise<Player[]> {
+		return await this.#db
 			.selectFrom("players")
 			.innerJoin("gamePlayers", "players.id", "gamePlayers.playerId")
-			.select("players.id")
+			.selectAll("players")
 			.where("gameId", "=", gameId)
 			.execute();
-		return result.map((row) => row.id);
+	}
+
+	async getPlayerIds(gameId: GameId): Promise<PlayerId[]> {
+		const players = await this.getPlayers(gameId);
+		return players.map((player) => player.id);
 	}
 
 	async addWords(data: {

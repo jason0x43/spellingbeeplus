@@ -11,7 +11,13 @@ import {
 } from "./message.js";
 import { keyRequired, tokenRequired } from "./middlewares.js";
 import type { AppEnv, Client } from "./types.js";
-import { GameId, type GameInfo, NytGameId, PlayerId } from "./types.js";
+import {
+	GameId,
+	type GameInfo,
+	NytGameId,
+	PlayerId,
+	type SyncedGameInfo,
+} from "./types.js";
 import { log } from "./util.js";
 
 const app = new Hono<AppEnv>();
@@ -57,8 +63,11 @@ export function routes(ctx: Context) {
 									// A client record already exists for the client's ID
 									client = ctxClient;
 								} else {
-									// Use the default record for this client ID
-									client.id = clientId;
+									const player = await ctx.db.getPlayerOptional(clientId);
+									client = {
+										id: clientId,
+										name: player?.name ?? "",
+									};
 									ctx.clients.set(client.id, client);
 								}
 
@@ -230,6 +239,13 @@ export function routes(ctx: Context) {
 			ctx.tokens.set(token, expiry);
 			return c.json({ token });
 		})
+		.get("/game/latest/:nytGameId/:playerId", keyRequired(ctx), async (c) => {
+			const game = await ctx.db.getLatestGameForPlayer(
+				NytGameId.parse(c.req.param("nytGameId")),
+				PlayerId.parse(c.req.param("playerId")),
+			);
+			return c.json(game ? await getGameInfo(ctx, game) : null);
+		})
 		.get("/game/:id", keyRequired(ctx), async (c) => {
 			const id = c.req.param("id");
 
@@ -245,22 +261,29 @@ export function routes(ctx: Context) {
 					})()
 				: await ctx.db.getGame(GameId.parse(id));
 
-			const gameWords = await ctx.db.getWords(game.id);
-
-			const words: GameInfo["words"] = {};
-			for (const word of gameWords) {
-				words[word.word] = word.playerId ?? null;
-			}
-
-			const gameInfo: GameInfo = {
-				nytGameId: game.nytGameId,
-				gameId: game.id,
-				words,
-			};
-
-			return c.json(gameInfo);
+			return c.json(await getGameInfo(ctx, game));
 		})
 		.get("/*", serveStatic({ root: "public" }));
+}
+
+async function getGameInfo(
+	ctx: Context,
+	game: Awaited<ReturnType<Context["db"]["getGame"]>>,
+): Promise<SyncedGameInfo> {
+	const gameWords = await ctx.db.getWords(game.id);
+	const players = await ctx.db.getPlayers(game.id);
+
+	const words: GameInfo["words"] = {};
+	for (const word of gameWords) {
+		words[word.word] = word.playerId ?? null;
+	}
+
+	return {
+		nytGameId: game.nytGameId,
+		gameId: game.id,
+		players: players.map(({ id, name }) => ({ id, name })),
+		words,
+	};
 }
 
 async function handleSetName(name: string, client: Client, ctx: Context) {
