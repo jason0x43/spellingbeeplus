@@ -66,6 +66,7 @@ const sbpNameInputId = "sbp-name-input";
 const sbpNameInputBoxId = "sbp-name-input-box";
 const sbpOtherWordsId = "sbp-other-words";
 const sbpIncomingWordFlashId = "sbp-incoming-word-flash";
+const restoredSyncSnapshotKey = "sbp-restored-sync-snapshot";
 
 const state = new SbpStore();
 
@@ -185,6 +186,14 @@ async function restoreSyncedGame(config) {
 		log(`Restored synced game with ${friend.name}`);
 
 		const syncedWords = Object.keys(syncData.words);
+		const snapshot = JSON.stringify({
+			gameId: syncData.gameId,
+			words: syncedWords.slice().sort(),
+		});
+		if (sessionStorage.getItem(restoredSyncSnapshotKey) === snapshot) {
+			return;
+		}
+
 		const addedWords = isRealPlayerId(state.player.id)
 			? await uploadWords(state.gameData.id, syncedWords)
 			: await updateAnonGame({
@@ -194,6 +203,7 @@ async function restoreSyncedGame(config) {
 					pangrams: state.gameData.pangrams,
 				});
 
+		sessionStorage.setItem(restoredSyncSnapshotKey, snapshot);
 		if (addedWords.length > 0) {
 			window.location.reload();
 		}
