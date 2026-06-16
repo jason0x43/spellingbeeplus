@@ -176,13 +176,43 @@ export function getWordList() {
 }
 
 /**
+ * Normalize a word scraped from the NYT word list.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+export function normalizeWordText(text) {
+	const hasPangramLabel = /\(pangram\)\s*$/i.test(text);
+	const word = text.replace(/\s*\(pangram\)\s*$/i, "").trim();
+
+	if (!hasPangramLabel || word.length % 2 !== 0) {
+		return word;
+	}
+
+	const midpoint = word.length / 2;
+	const firstHalf = word.slice(0, midpoint);
+	const secondHalf = word.slice(midpoint);
+	return firstHalf === secondHalf ? firstHalf : word;
+}
+
+/**
+ * Get the word text from a NYT word list node.
+ *
+ * @param {Node} node
+ * @returns {string}
+ */
+export function getWordText(node) {
+	return normalizeWordText(def(node.textContent));
+}
+
+/**
  * Get the visible words.
  *
  * @returns {string[]}
  */
 export function getWords() {
 	return Array.from(getWordList().querySelectorAll(".sb-anagram")).map((node) =>
-		def(node.textContent).trim(),
+		getWordText(node),
 	);
 }
 
@@ -204,7 +234,7 @@ export function getRank() {
  */
 export function hightlightWord(word) {
 	for (const wordElem of getWordList().querySelectorAll(".sb-anagram")) {
-		const text = def(wordElem.textContent).trim();
+		const text = getWordText(wordElem);
 		if (text === word) {
 			wordElem.classList.add("sbp-highlight");
 		}

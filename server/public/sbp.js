@@ -18,6 +18,7 @@ import {
 	getWordListOuter,
 	getWordStats,
 	getWords,
+	getWordText,
 	hightlightWord,
 	sbProgressMarker,
 	sbProgressValue,
@@ -821,7 +822,7 @@ export async function main(config) {
 
 		for (const mutation of mutations) {
 			for (const node of Array.from(mutation.addedNodes)) {
-				const word = (node.textContent ?? "").trim();
+				const word = getWordText(node);
 				if (!word) {
 					continue;
 				}
