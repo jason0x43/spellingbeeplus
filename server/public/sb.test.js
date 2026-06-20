@@ -10,6 +10,10 @@ describe("normalizeWordText", () => {
 		expect(normalizeWordText("hepatic (pangram)")).toBe("hepatic");
 	});
 
+	test("deduplicates a word rendered twice", () => {
+		expect(normalizeWordText("hepatichepatic")).toBe("hepatic");
+	});
+
 	test("deduplicates a pangram rendered twice before its label", () => {
 		expect(normalizeWordText("hepatichepatic (pangram)")).toBe("hepatic");
 	});

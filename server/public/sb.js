@@ -182,10 +182,9 @@ export function getWordList() {
  * @returns {string}
  */
 export function normalizeWordText(text) {
-	const hasPangramLabel = /\(pangram\)\s*$/i.test(text);
 	const word = text.replace(/\s*\(pangram\)\s*$/i, "").trim();
 
-	if (!hasPangramLabel || word.length % 2 !== 0) {
+	if (word.length % 2 !== 0) {
 		return word;
 	}
 
