@@ -179,9 +179,10 @@ export function getWordList() {
  * Normalize a word scraped from the NYT word list.
  *
  * @param {string} text
+ * @param {{ answers?: string[] }} [options]
  * @returns {string}
  */
-export function normalizeWordText(text) {
+function normalizeWordListText(text, options = {}) {
 	const word = text.replace(/\s*\(pangram\)\s*$/i, "").trim();
 
 	if (word.length % 2 !== 0) {
@@ -191,27 +192,43 @@ export function normalizeWordText(text) {
 	const midpoint = word.length / 2;
 	const firstHalf = word.slice(0, midpoint);
 	const secondHalf = word.slice(midpoint);
-	return firstHalf === secondHalf ? firstHalf : word;
+	if (firstHalf !== secondHalf) {
+		return word;
+	}
+
+	const answers = options.answers ? new Set(options.answers) : undefined;
+	if (answers?.has(word)) {
+		return word;
+	}
+	if (answers && !answers.has(firstHalf)) {
+		return word;
+	}
+
+	return firstHalf.length >= 4 ? firstHalf : word;
 }
 
 /**
  * Get the word text from a NYT word list node.
  *
  * @param {Node} node
+ * @param {GameData} [gameData]
  * @returns {string}
  */
-export function getWordText(node) {
-	return normalizeWordText(def(node.textContent));
+export function getWordText(node, gameData) {
+	return normalizeWordListText(def(node.textContent), {
+		answers: gameData?.answers,
+	});
 }
 
 /**
  * Get the visible words.
  *
+ * @param {GameData} [gameData]
  * @returns {string[]}
  */
-export function getWords() {
+export function getWords(gameData) {
 	return Array.from(getWordList().querySelectorAll(".sb-anagram")).map((node) =>
-		getWordText(node),
+		getWordText(node, gameData),
 	);
 }
 

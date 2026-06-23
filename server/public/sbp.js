@@ -128,7 +128,7 @@ function updateOtherWordsBox() {
 	/** @type {Set<string>} */
 	let have;
 	try {
-		have = new Set(getWords());
+		have = new Set(getWords(state.gameData));
 	} catch {
 		return;
 	}
@@ -289,7 +289,7 @@ function addSyncView() {
 			sync.sendSyncRequest(
 				state.syncData.friend.id,
 				state.gameData.id,
-				getWords(),
+				getWords(state.gameData),
 			);
 		} catch (error) {
 			console.error(error);
@@ -346,9 +346,9 @@ function render() {
 	// firstLetters.a[4] is the number of 4 letter 'a' words.
 	const gameStats = getWordStats(state.gameData.answers);
 	const wantLetters = gameStats.firstLetters[state.letter];
-	const wordStats = getWordStats();
+	const words = getWords(state.gameData);
+	const wordStats = getWordStats(words);
 	const haveLetters = wordStats.firstLetters[state.letter];
-	const words = getWords();
 	const scoreAndRank = computeScoreAndRank({
 		answers: state.gameData.answers,
 		pangrams: state.gameData.pangrams,
@@ -506,7 +506,7 @@ function render() {
 	// Genius rank
 	const summary = def(document.querySelector(".sb-wordlist-summary"));
 	if (/You have found/.test(def(summary.textContent))) {
-		const words = getWords();
+		const words = getWords(state.gameData);
 		const found = words.length;
 		const total = state.gameData.answers.length;
 		const totalPgs = state.gameData.pangrams.length;
@@ -800,7 +800,7 @@ export async function main(config) {
 		wordListUpdateTimeout = setTimeout(() => {
 			wordListUpdateTimeout = undefined;
 
-			const words = getWords();
+			const words = getWords(state.gameData);
 			const scoreAndRank = computeScoreAndRank({
 				answers: state.gameData.answers,
 				pangrams: state.gameData.pangrams,
@@ -822,7 +822,7 @@ export async function main(config) {
 
 		for (const mutation of mutations) {
 			for (const node of Array.from(mutation.addedNodes)) {
-				const word = getWordText(node);
+				const word = getWordText(node, state.gameData);
 				if (!word) {
 					continue;
 				}
@@ -959,7 +959,7 @@ export async function main(config) {
 						// The request was accepted -- start syncing
 						state.update({ syncing: true });
 						return {
-							words: getWords(),
+							words: getWords(state.gameData),
 							gameId: state.gameData.id,
 						};
 					}
