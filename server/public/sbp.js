@@ -67,7 +67,6 @@ const sbpNameInputId = "sbp-name-input";
 const sbpNameInputBoxId = "sbp-name-input-box";
 const sbpOtherWordsId = "sbp-other-words";
 const sbpIncomingWordFlashId = "sbp-incoming-word-flash";
-const restoredSyncSnapshotKey = "sbp-restored-sync-snapshot";
 
 const state = new SbpStore();
 
@@ -184,30 +183,9 @@ async function restoreSyncedGame(config) {
 				friend,
 			},
 		});
+		// Restoring an active synced game only restores its shared state. Remote
+		// words are added to the NYT game by onSync after an explicit sync.
 		log(`Restored synced game with ${friend.name}`);
-
-		const syncedWords = Object.keys(syncData.words);
-		const snapshot = JSON.stringify({
-			gameId: syncData.gameId,
-			words: syncedWords.slice().sort(),
-		});
-		if (sessionStorage.getItem(restoredSyncSnapshotKey) === snapshot) {
-			return;
-		}
-
-		const addedWords = isRealPlayerId(state.player.id)
-			? await uploadWords(state.gameData.id, syncedWords)
-			: await updateAnonGame({
-					gameId: state.gameData.id,
-					words: syncedWords,
-					answers: state.gameData.answers,
-					pangrams: state.gameData.pangrams,
-				});
-
-		sessionStorage.setItem(restoredSyncSnapshotKey, snapshot);
-		if (addedWords.length > 0) {
-			window.location.reload();
-		}
 	} catch (error) {
 		log(`Error restoring synced game: ${error}`);
 	} finally {
