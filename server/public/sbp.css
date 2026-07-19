@@ -267,17 +267,42 @@
 }
 
 #sbp-other-words {
+	box-sizing: border-box;
 	border: solid 1px var(--stroke-tertiary);
-	height: 2rem;
+	min-height: 3.25rem;
 	width: 100%;
 	margin-top: 1rem;
 	border-radius: 4px;
 	display: flex;
 	flex-direction: row;
 	gap: 8px;
-	padding: 24px;
+	padding: 0.75rem 1rem;
 	align-items: center;
 	overflow: hidden;
+	transition:
+		background-color 180ms ease-out,
+		border-color 180ms ease-out;
+}
+
+#sbp-other-words.sbp-has-other-words {
+	background: rgba(255, 221, 0, 0.2);
+	border-color: rgba(184, 150, 0, 0.55);
+}
+
+.sbp-other-words-count {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.6rem;
+	height: 1.6rem;
+	padding: 0 0.4rem;
+	border-radius: 999px;
+	background: #fd0;
+	color: #222;
+	font-size: 0.8rem;
+	font-weight: 700;
+	line-height: 1;
+	flex: none;
 }
 
 #sbp-incoming-word-flash {
@@ -290,7 +315,7 @@
 }
 
 #sbp-incoming-word-flash.sbp-active {
-	animation: sbp-incoming-word-flash 220ms ease-out;
+	animation: sbp-incoming-word-flash 900ms ease-out;
 }
 
 @keyframes sbp-incoming-word-flash {
@@ -309,7 +334,11 @@
 
 @media (prefers-reduced-motion: reduce) {
 	#sbp-incoming-word-flash.sbp-active {
-		animation-duration: 120ms;
+		animation: none;
+	}
+
+	#sbp-other-words {
+		transition: none;
 	}
 }
 

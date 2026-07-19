@@ -121,6 +121,7 @@ function updateOtherWordsBox() {
 
 	if (!state.syncData.gameId) {
 		box.innerHTML = "";
+		box.classList.remove("sbp-has-other-words");
 		return;
 	}
 
@@ -145,6 +146,19 @@ function updateOtherWordsBox() {
 		.sort();
 
 	box.innerHTML = "";
+	box.classList.toggle("sbp-has-other-words", otherWords.length > 0);
+	if (otherWords.length > 0) {
+		box.append(
+			h(
+				"span",
+				{
+					class: "sbp-other-words-count",
+					title: `${otherWords.length} ${otherWords.length === 1 ? "word" : "words"} added by the other player`,
+				},
+				String(otherWords.length),
+			),
+		);
+	}
 	for (const word of otherWords) {
 		box.append(h("span", {}, word));
 	}
