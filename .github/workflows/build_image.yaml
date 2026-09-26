@@ -52,9 +52,9 @@ jobs:
 
       - name: Setup SSH
         env:
-          SSH_USER: ${{ secrets.DEPLOY_USER }}
+          SSH_USER: ${{ vars.DEPLOY_USER }}
           SSH_KEY: ${{ secrets.DEPLOY_KEY }}
-          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+          SSH_HOST: ${{ vars.DEPLOY_HOST }}
           SSH_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
         run: |
           mkdir -p ~/.ssh/
@@ -70,7 +70,7 @@ jobs:
 
       - name: Deploy app
         env:
-          DOCKER_DIR: ${{ secrets.DOCKER_DIR }}
+          DOCKER_DIR: ${{ vars.DOCKER_DIR }}
         run: |
           ssh deploy_host "cd $DOCKER_DIR && \
             docker logout ghcr.io && \
