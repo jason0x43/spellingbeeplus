@@ -5,3 +5,4 @@ extension/env.*.json
 extension/build/
 server/target
 .pi/
+mise.local.toml
