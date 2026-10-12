@@ -60,7 +60,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Deploy
-        uses: jason0x43/portal-cli@v0.1.0
+        uses: jason0x43/portal-cli@v0.2.0
         with:
           config: server/portal.toml
           # deploy_only redeploys whatever latest currently points to
