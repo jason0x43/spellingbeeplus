@@ -20,5 +20,7 @@ COPY --from=build /app/server server
 COPY public public/
 
 USER bun
-EXPOSE 3066
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD [ "bun", "-e", "const r = await fetch(`http://localhost:${process.env.API_PORT ?? 3000}/hello`); process.exit(r.ok ? 0 : 1)" ]
 ENTRYPOINT [ "./server" ]

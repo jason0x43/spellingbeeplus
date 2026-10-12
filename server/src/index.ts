@@ -19,9 +19,12 @@ const port = Number(process.env.API_PORT ?? 3000);
 const shutdownTasks: (() => void)[] = [];
 const app = new Hono<AppEnv>();
 
-// Log requests
+// Log requests (except healthchecks)
 app.use(async (c, next) => {
 	const { method, path } = c.req;
+	if (path === "/hello") {
+		return next();
+	}
 	const url = new URL(c.req.url);
 	const search = url.search;
 	const origin = c.req.header("origin");
