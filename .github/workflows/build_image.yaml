@@ -16,15 +16,14 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  SERVICE_NAME: spellingbeeplus
 
 jobs:
   build-and-deploy-image:
     runs-on: ubuntu-latest
 
     steps:
+      # Always needed: the deploy step reads server/portal.toml
       - name: Checkout repository
-        if: ${{ !inputs.deploy_only }}
         uses: actions/checkout@v7
 
       - name: Set up Docker buildx
@@ -46,7 +45,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha,
+            type=sha,format=long
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push image
@@ -60,30 +59,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Setup SSH
-        env:
-          SSH_USER: ${{ vars.DEPLOY_USER }}
-          SSH_KEY: ${{ secrets.DEPLOY_KEY }}
-          SSH_HOST: ${{ vars.DEPLOY_HOST }}
-          SSH_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
-        run: |
-          mkdir -p ~/.ssh/
-          echo "$SSH_KEY" > ~/.ssh/staging.key
-          echo "$SSH_HOST_KEY" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/staging.key
-          cat >>~/.ssh/config <<END
-          Host deploy_host
-            HostName $SSH_HOST
-            User $SSH_USER
-            IdentityFile ~/.ssh/staging.key
-          END
-
-      - name: Deploy app
-        env:
-          DOCKER_DIR: ${{ vars.DOCKER_DIR }}
-        run: |
-          ssh deploy_host "cd $DOCKER_DIR && \
-            docker logout ghcr.io && \
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
-            docker pull ghcr.io/$IMAGE_NAME:latest && \
-            docker compose up -d $SERVICE_NAME"
+      - name: Deploy
+        uses: jason0x43/portal-cli@v0.1.0
+        with:
+          config: server/portal.toml
+          # deploy_only redeploys whatever latest currently points to
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.deploy_only && 'latest' || format('sha-{0}', github.sha) }}
+          host: ${{ vars.DEPLOY_HOST }}
+          user: ${{ vars.DEPLOY_USER }}
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          known-hosts: ${{ secrets.DEPLOY_HOST_KEY }}

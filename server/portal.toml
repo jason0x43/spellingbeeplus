@@ -1,0 +1,12 @@
+name = "spellingbeeplus"
+domain = "sbp.jason0x43.dev"
+port = 3000
+
+# Built and pushed by .github/workflows/build_image.yaml, which deploys it with
+# the portal-cli action
+image = "ghcr.io/jason0x43/spellingbeeplus"
+
+# Non-secret environment, written into the generated compose file.
+# Secrets live only on the server: portal env set KEY=value
+[env]
+DB_PATH = "/data/data.db"
