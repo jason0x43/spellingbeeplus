@@ -5,4 +5,4 @@ extension/env.*.json
 extension/build/
 server/target
 .pi/
-sbp-cli/mise.toml
+sbp-cli/.env

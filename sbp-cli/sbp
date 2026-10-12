@@ -2,4 +2,6 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-bun "$SCRIPT_DIR/index.ts" "$@"
+# Load sbp-cli/.env regardless of the current directory (bun only looks in the
+# cwd by default). Variables already set in the environment take precedence.
+bun --env-file="$SCRIPT_DIR/.env" "$SCRIPT_DIR/index.ts" "$@"

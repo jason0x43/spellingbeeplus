@@ -12,8 +12,8 @@ bun install
 
 ## Environment
 
-Configuration comes from environment variables, which can each be overridden
-with a command-line option.
+Configuration comes from environment variables. Each one except
+`SBP_CLI_STATE_DIR` can be overridden with a command-line option.
 
 | Variable           | Option           | Default          | Description                                       |
 | ------------------ | ---------------- | ---------------- | ------------------------------------------------- |
@@ -22,14 +22,14 @@ with a command-line option.
 | `SBP_TLS_INSECURE` | `--tls-insecure` | `false`          | Set to `true` to skip TLS certificate checks (dev only) |
 | `SBP_CLI_STATE_DIR`| none             | `$XDG_CONFIG_HOME/sbp-cli` or `~/.config/sbp-cli` | Where the CLI keeps its fake player's state |
 
-The usual way to set these is a `mise.toml` in this directory. It isn't
-committed, because it holds the API key:
+The usual way to set these is a `.env` file in this directory, which `./sbp`
+loads regardless of the current directory. It isn't committed, because it holds
+the API key. Variables set in your shell take precedence over the file.
 
-```toml
-[env]
-SBP_API_KEY = '<key>'
-SBP_API_HOST = 'localhost:3066'
-SBP_TLS_INSECURE = 'true'
+```sh
+SBP_API_KEY=<key>
+SBP_API_HOST=localhost:3066
+SBP_TLS_INSECURE=true
 ```
 
 ## Commands
