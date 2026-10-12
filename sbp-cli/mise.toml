@@ -1,3 +1,0 @@
-[env]
-SBP_API_HOST='localhost:3066'
-SBP_TLS_INSECURE='true'
